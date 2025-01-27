@@ -1,5 +1,6 @@
 import bpy, os, pathlib
 from typing import List
+import sys
 
 
 def remove_cube():
@@ -50,13 +51,15 @@ def add_semi_sphere(
    
    
 def main():
-    print("starting job")
+    print("starting job", str(sys.argv))
     #remove starting cube
     remove_cube()
 
     C = bpy.context
-    
-    image_path = pathlib.Path.home() / "Documents" / "Coding" / "golf-marker" / "Modeling" / "v1" / "miami_logo.svg"
+
+    #image_path = pathlib.Path.home() / "Documents" / "Coding" / "golf-marker" / "Modeling" / "v1" / "miami_logo.svg"
+    image_path = pathlib.Path.cwd() / sys.argv[4]
+
     if image_path.exists(): 
         print("path exists")   
         # Get list of objects before importing
@@ -74,6 +77,7 @@ def main():
         o.select_set(True)
         C.view_layer.objects.active = o
         
+        print("scale")
         # Move SVG to origin and scale up
         bpy.ops.object.origin_set(type='GEOMETRY_ORIGIN', center='MEDIAN')
         bpy.ops.transform.resize(value=(-300, -300, -300), orient_type='GLOBAL', orient_matrix=((1, 0, 0), (0, 1, 0), (0, 0, 1)), orient_matrix_type='GLOBAL', mirror=False, use_proportional_edit=False, proportional_edit_falloff='SMOOTH', proportional_size=1, use_proportional_connected=False, use_proportional_projected=False, snap=False, snap_elements={'INCREMENT'}, use_snap_project=False, snap_target='CLOSEST', use_snap_self=True, use_snap_edit=True, use_snap_nonedit=True, use_snap_selectable=False)
@@ -82,13 +86,15 @@ def main():
         
         # create the shape of the objh
         add_semi_sphere()
-        
+        print("sphere made")
         # Hide the SVG object
         o = C.scene.objects[ new_object_name ]
         o.hide_viewport = True
 
         # Download the file as STL
-        download_path = pathlib.Path.home() / "Documents" / "Coding" / "golf-marker" / "Modeling" / "v1" / "miami_marker.stl" 
+        print("ready for download")
+        file_name = sys.argv[4].split(".", 1)[0] + ".stl" 
+        download_path = pathlib.Path.cwd() / file_name 
         bpy.ops.wm.stl_export(filepath=str(download_path))
     else:
         print("path not found")
