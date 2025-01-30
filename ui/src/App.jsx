@@ -3,12 +3,12 @@ import "./App.css";
 import FileUpload from "./components/FileUpload";
 
 function App() {
-  const [count, setCount] = useState(0);
-
   return (
     <>
-      <h1>Golf Maker site</h1>
-      {/* <FileUpload></FileUpload> */}
+      <div>
+        <h1>Golf Marker</h1>
+        <FileUpload></FileUpload>
+      </div>
     </>
   );
 }

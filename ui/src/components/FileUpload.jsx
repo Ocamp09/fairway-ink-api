@@ -6,7 +6,7 @@ const FileUpload = () => {
   const [file, setFile] = useState(null);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  //const [stlUrl, setStlUrl] = useState(null); // State to store the STL file URL
+  const [stlUrl, setStlUrl] = useState(null); // State to store the STL file URL
 
   // Allowed file types and maximum file size (5MB)
   const allowedTypes = ["image/png", "image/jpeg", "image/jpg"];
@@ -59,10 +59,12 @@ const FileUpload = () => {
         }
       );
 
+      console.log(response);
+
       if (response.data.success) {
         alert("File processed successfully!");
         // Set the STL file URL for rendering
-        // setStlUrl(response.data.stlUrl);
+        setStlUrl(response.data.stlUrl);
       } else {
         setError("Error processing file. Please try again.");
       }
@@ -89,7 +91,7 @@ const FileUpload = () => {
       </form>
       {error && <p style={{ color: "red" }}>{error}</p>}
       Render the STL file if available
-      {/* {stlUrl && <STLViewer stlUrl={stlUrl} />} */}
+      {stlUrl && <STLViewer stlUrl={stlUrl} />}
     </div>
   );
 };
