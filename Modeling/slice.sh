@@ -1,12 +1,14 @@
 #! /bin/bash
 
 # Location of PrusaSlicer
-SLICER="C:\Program Files\Prusa3D\PrusaSlicer\prusa-slicer.exe"
+SLICER="C:/Program Files/Prusa3D/PrusaSlicer/prusa-slicer.exe"
 
-#echo $file
+# Input STL file
+INPUT_FILE="./output/miami_logo.stl"
 
-$SLICER \
+# Run PrusaSlicer
+"$SLICER" \
     --load ./config.ini \
     --slice \
     --export-gcode \
-    miami_logo.stl
+    "$INPUT_FILE"

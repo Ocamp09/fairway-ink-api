@@ -54,18 +54,34 @@ def run_blender(svg_path):
 
 
 # use PrusaSlicer command line to create GCODE
-def slice_stl(stl_path):
+import subprocess
+
+def slice_stl(stl_path, gcode_path):
+    # Path to PrusaSlicer executable
     slicer_path = r"C:\Program Files\Prusa3D\PrusaSlicer\prusa-slicer.exe"
+
+    # Path to the config file
     config_file = "./config.ini"
+
+    # Command to run PrusaSlicer
     slice_command = [
         slicer_path,
-        "--load",
-        config_file,
+        "--load", config_file,
         "--slice",
         "--export-gcode",
-        "miami_logo.stl"
+        "--output",
+        gcode_path,
+        stl_path  # Use the provided STL file path
     ]
-    subprocess.run(slice_command)
+
+    # Run the command
+    try:
+        subprocess.run(slice_command, check=True)
+        print("Slicing completed successfully.")
+    except subprocess.CalledProcessError as e:
+        print(f"Error during slicing: {e}")
+    except FileNotFoundError:
+        print("PrusaSlicer executable not found. Please check the path.")
 
 
 # default image for testing purposes
@@ -76,7 +92,8 @@ if len(sys.argv) == 2:
 
 filename = image_path.split(".")[0]
 svg_path = "./output/" + filename + ".svg"
-stl_path = "./output" + filename + ".stl"
+stl_path = "./output/" + filename + ".stl"
+gcode_path = "./output/gcode/" + filename + ".gcode"
 
 # svg_path = filename + ".svg"
 # stl_path = filename + ".stl"
@@ -84,4 +101,4 @@ stl_path = "./output" + filename + ".stl"
 # run scripts
 image_to_svg(image_path, svg_path)
 run_blender(svg_path)
-#slice_stl(stl_path)
+slice_stl(stl_path, gcode_path)
