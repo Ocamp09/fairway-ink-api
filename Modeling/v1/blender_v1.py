@@ -5,7 +5,6 @@ import sys
 
 def remove_cube():
     if "Cube" in bpy.data.objects:
-        print("found cube")
         # Get the cube object
         cube = bpy.data.objects["Cube"]
 
@@ -34,7 +33,7 @@ def delete_bottom():
 
 
 # method that generates a semi-sphere with the SVG cut out
-def add_semi_sphere(
+def add_semi_sphere(cut_mesh_name
 ) -> None:
     # create the sphere
     bpy.ops.mesh.primitive_uv_sphere_add(radius=23.3)
@@ -46,7 +45,7 @@ def add_semi_sphere(
     
     # Add Boolean modifier to cut out the SVG shape
     bpy.ops.object.modifier_add(type='BOOLEAN')
-    bpy.context.object.modifiers["Boolean"].object = bpy.data.objects["svg"]
+    bpy.context.object.modifiers["Boolean"].object = bpy.data.objects[cut_mesh_name]
     bpy.context.object.modifiers["Boolean"].solver = 'FAST'
    
    
@@ -56,12 +55,11 @@ def main():
     remove_cube()
 
     C = bpy.context
-
+    print(sys.argv)
     #image_path = pathlib.Path.home() / "Documents" / "Coding" / "golf-marker" / "Modeling" / "v1" / "miami_logo.svg"
     image_path = pathlib.Path.cwd() / sys.argv[4]
 
     if image_path.exists(): 
-        print("path exists")   
         # Get list of objects before importing
         names_pre_import = set([o.name for o in C.scene.objects])
         print("pre-import: ", str(names_pre_import))
@@ -77,7 +75,6 @@ def main():
         o.select_set(True)
         C.view_layer.objects.active = o
         
-        print("scale")
         # Move SVG to origin and scale up
         bpy.ops.object.origin_set(type='GEOMETRY_ORIGIN', center='MEDIAN')
         bpy.ops.transform.resize(value=(-300, -300, -300), orient_type='GLOBAL', orient_matrix=((1, 0, 0), (0, 1, 0), (0, 0, 1)), orient_matrix_type='GLOBAL', mirror=False, use_proportional_edit=False, proportional_edit_falloff='SMOOTH', proportional_size=1, use_proportional_connected=False, use_proportional_projected=False, snap=False, snap_elements={'INCREMENT'}, use_snap_project=False, snap_target='CLOSEST', use_snap_self=True, use_snap_edit=True, use_snap_nonedit=True, use_snap_selectable=False)
@@ -85,15 +82,14 @@ def main():
         bpy.ops.object.convert(target='MESH')
         
         # create the shape of the objh
-        add_semi_sphere()
-        print("sphere made")
+        add_semi_sphere(new_object_name)
+
         # Hide the SVG object
         o = C.scene.objects[ new_object_name ]
         o.hide_viewport = True
 
         # Download the file as STL
-        print("ready for download")
-        file_name = sys.argv[4].split(".", 1)[0] + ".stl" 
+        file_name = sys.argv[4][2:-4] + ".stl" 
         download_path = pathlib.Path.cwd() / file_name 
         bpy.ops.wm.stl_export(filepath=str(download_path))
     else:
