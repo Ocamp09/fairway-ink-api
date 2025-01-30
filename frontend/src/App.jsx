@@ -8,7 +8,7 @@ function App() {
   return (
     <>
       <h1>Golf Maker site</h1>
-      <FileUpload></FileUpload>
+      {/* <FileUpload></FileUpload> */}
     </>
   );
 }

@@ -1,10 +1,12 @@
 import React, { useState } from "react";
 import axios from "axios";
+import STLViewer from "./STLViewer";
 
 const FileUpload = () => {
   const [file, setFile] = useState(null);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  //const [stlUrl, setStlUrl] = useState(null); // State to store the STL file URL
 
   // Allowed file types and maximum file size (5MB)
   const allowedTypes = ["image/png", "image/jpeg", "image/jpg"];
@@ -42,7 +44,6 @@ const FileUpload = () => {
 
     setIsLoading(true);
 
-    // Create a FormData object to send the file
     const formData = new FormData();
     formData.append("file", file);
 
@@ -58,12 +59,10 @@ const FileUpload = () => {
         }
       );
 
-      // Handle the response (e.g., download the G-code file)
       if (response.data.success) {
         alert("File processed successfully!");
-        // Optionally, provide a download link for the G-code file
-        const downloadUrl = response.data.downloadUrl;
-        window.location.href = downloadUrl;
+        // Set the STL file URL for rendering
+        // setStlUrl(response.data.stlUrl);
       } else {
         setError("Error processing file. Please try again.");
       }
@@ -85,10 +84,12 @@ const FileUpload = () => {
           accept=".png,.jpg,.jpeg"
         />
         <button type="submit" disabled={isLoading}>
-          {isLoading ? "Processing..." : "Upload and Generate G-code"}
+          {isLoading ? "Processing..." : "Upload and Generate STL"}
         </button>
       </form>
       {error && <p style={{ color: "red" }}>{error}</p>}
+      Render the STL file if available
+      {/* {stlUrl && <STLViewer stlUrl={stlUrl} />} */}
     </div>
   );
 };
