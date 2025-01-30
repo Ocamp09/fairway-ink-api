@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, send_file
+from flask import Flask, request, jsonify, send_file, send_from_directory
 from flask_cors import CORS  # Import CORS
 import os
 import subprocess
@@ -21,6 +21,10 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 def allowed_file(filename):
     """Check if the file has an allowed extension."""
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
+
+@app.route("/output/<filename>")
+def output_file(filename):
+    return send_from_directory("output", filename)
 
 @app.route("/upload", methods=["POST"])
 def upload_file():
@@ -61,15 +65,14 @@ def upload_file():
             text=True
         )
 
-        print(result)
-
         # Check if the script ran successfully
         if result.returncode != 0:
             return jsonify({"success": False, "error": result.stderr + "SCRIPT FAILED"}), 501
 
-        # Return the STL file to render
+        # Return the STL file URL
         stl_name = filename.split(".")[0] + ".stl"
-        return send_file("./output/" + stl_name, as_attachment=True)
+        stl_url = f"http://localhost:5000/output/{stl_name}"
+        return jsonify({"success": True, "stlUrl": stl_url})
 
     except Exception as e:
         return jsonify({"success": False, "error": str(e) + "UNKOWN ERROR"}), 502

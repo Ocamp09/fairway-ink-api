@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from "react";
+import React, { useEffect } from "react";
 import { Canvas, useLoader, useThree } from "@react-three/fiber";
 import { STLLoader } from "three/examples/jsm/loaders/STLLoader";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
@@ -6,9 +6,11 @@ import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 const STLModel = ({ url }) => {
   const stl = useLoader(STLLoader, url);
   return (
-    <mesh>
+    <mesh rotation={[0, 0, Math.PI]}>
+      {" "}
+      {/* Rotate 180 degrees around the Z-axis */}
       <primitive object={stl} attach="geometry" />
-      <meshStandardMaterial color="gray" />
+      <meshStandardMaterial color="lightgray" />
     </mesh>
   );
 };

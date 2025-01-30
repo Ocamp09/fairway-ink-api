@@ -41,7 +41,7 @@ def image_to_svg(image_path, output_svg_path, max_size_mm=20):
 def run_blender(svg_path):
     # local path to Blender executable
     blender_path = r"C:\Program Files\Blender Foundation\Blender 4.3\blender.exe"
-
+    print("SVG PATH: ", svg_path)
     blender_command = [
         blender_path,
         "--background",
@@ -84,7 +84,7 @@ def slice_stl(stl_path, gcode_path):
 
 
 def main(image_path):
-    filename = image_path.strip("./uploads/").split(".")[0]
+    filename = image_path.split("/")[2].split(".")[0]
     svg_path = "./output/" + filename + ".svg"
     stl_path = "./output/" + filename + ".stl"
     gcode_path = "./output/gcode/" + filename + ".gcode"

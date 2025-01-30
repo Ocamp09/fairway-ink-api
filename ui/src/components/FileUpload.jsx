@@ -90,7 +90,7 @@ const FileUpload = () => {
         </button>
       </form>
       {error && <p style={{ color: "red" }}>{error}</p>}
-      Render the STL file if available
+      {/* Render the STL file if available */}
       {stlUrl && <STLViewer stlUrl={stlUrl} />}
     </div>
   );
