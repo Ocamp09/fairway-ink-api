@@ -3,8 +3,11 @@ from PIL import Image
 import tempfile
 import os
 import subprocess
+import sys
 
-def image_to_svg(image_path="./osu_logo.jpg", output_svg_path="./test.svg", max_size_mm=20):
+
+# convert a image to SVG
+def image_to_svg(image_path, output_svg_path, max_size_mm=20):
     image = Image.open(image_path)
 
     # Convert mm to pixels (assuming 300 dpi, adjust if needed)
@@ -27,6 +30,7 @@ def image_to_svg(image_path="./osu_logo.jpg", output_svg_path="./test.svg", max_
         temp_image_path = temp_file.name
         image.save(temp_image_path)
 
+    # create a bitmap and convert to SVG
     svg_data = trace(temp_image_path, blackAndWhite=True)
     with open(output_svg_path, "w") as svg_file:
         svg_file.write(svg_data)
@@ -34,6 +38,7 @@ def image_to_svg(image_path="./osu_logo.jpg", output_svg_path="./test.svg", max_
     os.remove(temp_image_path)
 
 
+# run blender_v1.py to generate the STL
 def run_blender(svg_path):
     blender_path = r"C:\Program Files\Blender Foundation\Blender 4.3\blender.exe"
 
@@ -47,10 +52,53 @@ def run_blender(svg_path):
 
     subprocess.run(blender_command)
 
-image_path = "osu_logo.jpg"
-filename = image_path.split(".")[0]
-output_path = "./" + filename + ".svg"
-svg_path = filename + ".svg"
 
+# use PrusaSlicer command line to create GCODE
+import subprocess
+
+def slice_stl(stl_path, gcode_path):
+    # Path to PrusaSlicer executable
+    slicer_path = r"C:\Program Files\Prusa3D\PrusaSlicer\prusa-slicer.exe"
+
+    # Path to the config file
+    config_file = "./config.ini"
+
+    # Command to run PrusaSlicer
+    slice_command = [
+        slicer_path,
+        "--load", config_file,
+        "--slice",
+        "--export-gcode",
+        "--output",
+        gcode_path,
+        stl_path  # Use the provided STL file path
+    ]
+
+    # Run the command
+    try:
+        subprocess.run(slice_command, check=True)
+        print("Slicing completed successfully.")
+    except subprocess.CalledProcessError as e:
+        print(f"Error during slicing: {e}")
+    except FileNotFoundError:
+        print("PrusaSlicer executable not found. Please check the path.")
+
+
+# default image for testing purposes
+image_path = "osu_logo.jpg"
+# if there is a command line image use that
+if len(sys.argv) == 2:
+    image_path = sys.argv[1]
+
+filename = image_path.split(".")[0]
+svg_path = "./output/" + filename + ".svg"
+stl_path = "./output/" + filename + ".stl"
+gcode_path = "./output/gcode/" + filename + ".gcode"
+
+# svg_path = filename + ".svg"
+# stl_path = filename + ".stl"
+
+# run scripts
 image_to_svg(image_path, svg_path)
-run_blender(output_path)
+run_blender(svg_path)
+slice_stl(stl_path, gcode_path)
