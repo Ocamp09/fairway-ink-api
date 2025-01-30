@@ -7,7 +7,9 @@ const FileUpload = () => {
   const [file, setFile] = useState(null);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [stlUrl, setStlUrl] = useState(null);
+  const [stlUrl, setStlUrl] = useState(
+    "http://localhost:5000/output/stl/default.stl"
+  );
   const [imageUrl, setImageUrl] = useState(null);
   const [imageSize, setImageSize] = useState(42.67); // Default size matches golf ball diameter
 
@@ -89,9 +91,8 @@ const FileUpload = () => {
       </form>
       {error && <p style={{ color: "red" }}>{error}</p>}
       {/* Display the golf ball surface and image size input */}
-      {imageUrl && (
-        <GolfBallSurface imageUrl={imageUrl} onSizeChange={handleSizeChange} />
-      )}
+      <GolfBallSurface imageUrl={imageUrl} onSizeChange={handleSizeChange} />
+
       {/* Render the STL file if available */}
       {stlUrl && <STLViewer stlUrl={stlUrl} />}
     </div>
