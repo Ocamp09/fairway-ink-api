@@ -1,39 +1,41 @@
 import React, { useState } from "react";
 import axios from "axios";
 import STLViewer from "./STLViewer";
+import GolfBallSurface from "./GolfBallSurface";
 
 const FileUpload = () => {
   const [file, setFile] = useState(null);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [stlUrl, setStlUrl] = useState(null); // State to store the STL file URL
+  const [stlUrl, setStlUrl] = useState(null);
+  const [imageUrl, setImageUrl] = useState(null);
+  const [imageSize, setImageSize] = useState(42.67); // Default size matches golf ball diameter
 
-  // Allowed file types and maximum file size (5MB)
   const allowedTypes = ["image/png", "image/jpeg", "image/jpg"];
   const maxFileSize = 5 * 1024 * 1024; // 5MB
 
-  // Handle file input change
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
 
-    // Validate file type
     if (!allowedTypes.includes(selectedFile.type)) {
       setError("Invalid file type. Please upload a PNG, JPEG, or JPG file.");
       return;
     }
 
-    // Validate file size
     if (selectedFile.size > maxFileSize) {
       setError("File size is too large. Maximum size is 5MB.");
       return;
     }
 
-    // Clear errors and set the file
     setError("");
     setFile(selectedFile);
+    setImageUrl(URL.createObjectURL(selectedFile));
   };
 
-  // Handle form submission
+  const handleSizeChange = (size) => {
+    setImageSize(size); // Update the image size state
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -46,9 +48,9 @@ const FileUpload = () => {
 
     const formData = new FormData();
     formData.append("file", file);
+    formData.append("size", imageSize); // Send the image size to the backend
 
     try {
-      // Send the file to the backend
       const response = await axios.post(
         "http://localhost:5000/upload",
         formData,
@@ -59,11 +61,7 @@ const FileUpload = () => {
         }
       );
 
-      console.log(response);
-
       if (response.data.success) {
-        alert("File processed successfully!");
-        // Set the STL file URL for rendering
         setStlUrl(response.data.stlUrl);
       } else {
         setError("Error processing file. Please try again.");
@@ -90,6 +88,10 @@ const FileUpload = () => {
         </button>
       </form>
       {error && <p style={{ color: "red" }}>{error}</p>}
+      {/* Display the golf ball surface and image size input */}
+      {imageUrl && (
+        <GolfBallSurface imageUrl={imageUrl} onSizeChange={handleSizeChange} />
+      )}
       {/* Render the STL file if available */}
       {stlUrl && <STLViewer stlUrl={stlUrl} />}
     </div>

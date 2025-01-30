@@ -5,7 +5,7 @@ import tempfile
 import os
 import subprocess
 
-def image_to_svg(image_path, output_svg_path, max_size_mm=20):
+def image_to_svg(image_path, output_svg_path, max_size_mm=15):
     image = Image.open(image_path)
 
     # Convert mm to pixels (assuming 300 dpi, adjust if needed)

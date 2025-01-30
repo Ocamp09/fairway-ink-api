@@ -33,7 +33,8 @@ def upload_file():
         return jsonify({"success": False, "error": "No file uploaded"}), 400
 
     file = request.files["file"]
-
+    size = float(request.form.get("size", 42.67)) 
+    
     # Validate file type
     if not allowed_file(file.filename):
         return jsonify({"success": False, "error": "Invalid file type"}), 400
