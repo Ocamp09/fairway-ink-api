@@ -3,6 +3,7 @@ from typing import List
 import sys
 
 
+# remove the initial cube that comes in blender projects
 def remove_cube():
     if "Cube" in bpy.data.objects:
         # Get the cube object
@@ -133,6 +134,7 @@ def main():
             bpy.ops.object.convert(target='MESH')
             cut_object = joined_curve
             
+        # create the object to be exported as STL
         add_semi_sphere(cut_object)
 
         # Hide the SVG object

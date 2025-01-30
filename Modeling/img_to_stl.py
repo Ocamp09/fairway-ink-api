@@ -5,6 +5,8 @@ import os
 import subprocess
 import sys
 
+
+# convert a image to SVG
 def image_to_svg(image_path, output_svg_path, max_size_mm=20):
     image = Image.open(image_path)
 
@@ -28,6 +30,7 @@ def image_to_svg(image_path, output_svg_path, max_size_mm=20):
         temp_image_path = temp_file.name
         image.save(temp_image_path)
 
+    # create a bitmap and convert to SVG
     svg_data = trace(temp_image_path, blackAndWhite=True)
     with open(output_svg_path, "w") as svg_file:
         svg_file.write(svg_data)
@@ -35,6 +38,7 @@ def image_to_svg(image_path, output_svg_path, max_size_mm=20):
     os.remove(temp_image_path)
 
 
+# run blender_v1.py to generate the STL
 def run_blender(svg_path):
     blender_path = r"C:\Program Files\Blender Foundation\Blender 4.3\blender.exe"
 
@@ -49,6 +53,7 @@ def run_blender(svg_path):
     subprocess.run(blender_command)
 
 
+# use PrusaSlicer command line to create GCODE
 def slice_stl(stl_path):
     slicer_path = r"C:\Program Files\Prusa3D\PrusaSlicer\prusa-slicer.exe"
     config_file = "./config.ini"
@@ -62,8 +67,10 @@ def slice_stl(stl_path):
     ]
     subprocess.run(slice_command)
 
-image_path = "osu_logo.jpg"
 
+# default image for testing purposes
+image_path = "osu_logo.jpg"
+# if there is a command line image use that
 if len(sys.argv) == 2:
     image_path = sys.argv[1]
 
@@ -74,6 +81,7 @@ stl_path = "./output" + filename + ".stl"
 # svg_path = filename + ".svg"
 # stl_path = filename + ".stl"
 
+# run scripts
 image_to_svg(image_path, svg_path)
 run_blender(svg_path)
 #slice_stl(stl_path)
