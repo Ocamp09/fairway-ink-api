@@ -22,9 +22,9 @@ def allowed_file(filename):
     """Check if the file has an allowed extension."""
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
 
-@app.route("/output/<filename>")
+@app.route("/output/stl/<filename>")
 def output_file(filename):
-    return send_from_directory("output", filename)
+    return send_from_directory("output/stl", filename)
 
 @app.route("/upload", methods=["POST"])
 def upload_file():
@@ -34,7 +34,7 @@ def upload_file():
 
     file = request.files["file"]
     size = float(request.form.get("size", 42.67)) 
-    
+
     # Validate file type
     if not allowed_file(file.filename):
         return jsonify({"success": False, "error": "Invalid file type"}), 400
@@ -72,7 +72,7 @@ def upload_file():
 
         # Return the STL file URL
         stl_name = filename.split(".")[0] + ".stl"
-        stl_url = f"http://localhost:5000/output/{stl_name}"
+        stl_url = f"http://localhost:5000/output/stl/{stl_name}"
         return jsonify({"success": True, "stlUrl": stl_url})
 
     except Exception as e:

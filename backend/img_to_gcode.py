@@ -85,8 +85,8 @@ def slice_stl(stl_path, gcode_path):
 
 def main(image_path):
     filename = image_path.split("/")[2].split(".")[0]
-    svg_path = "./output/" + filename + ".svg"
-    stl_path = "./output/" + filename + ".stl"
+    svg_path = "./output/svg" + filename + ".svg"
+    stl_path = "./output/stl" + filename + ".stl"
     gcode_path = "./output/gcode/" + filename + ".gcode"
     try:
         # Step 1: Convert image to SVG
