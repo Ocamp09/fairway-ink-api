@@ -47,7 +47,7 @@ def run_blender(svg_path):
 
     subprocess.run(blender_command)
 
-image_path = "miami_logo.jpg"
+image_path = "osu_logo.jpg"
 filename = image_path.split(".")[0]
 output_path = "./" + filename + ".svg"
 svg_path = filename + ".svg"
