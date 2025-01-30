@@ -3,8 +3,9 @@ from PIL import Image
 import tempfile
 import os
 import subprocess
+import sys
 
-def image_to_svg(image_path="./osu_logo.jpg", output_svg_path="./test.svg", max_size_mm=20):
+def image_to_svg(image_path, output_svg_path, max_size_mm=20):
     image = Image.open(image_path)
 
     # Convert mm to pixels (assuming 300 dpi, adjust if needed)
@@ -47,10 +48,32 @@ def run_blender(svg_path):
 
     subprocess.run(blender_command)
 
+
+def slice_stl(stl_path):
+    slicer_path = r"C:\Program Files\Prusa3D\PrusaSlicer\prusa-slicer.exe"
+    config_file = "./config.ini"
+    slice_command = [
+        slicer_path,
+        "--load",
+        config_file,
+        "--slice",
+        "--export-gcode",
+        "miami_logo.stl"
+    ]
+    subprocess.run(slice_command)
+
 image_path = "osu_logo.jpg"
+
+if len(sys.argv) == 2:
+    image_path = sys.argv[1]
+
 filename = image_path.split(".")[0]
-output_path = "./" + filename + ".svg"
-svg_path = filename + ".svg"
+svg_path = "./output/" + filename + ".svg"
+stl_path = "./output" + filename + ".stl"
+
+# svg_path = filename + ".svg"
+# stl_path = filename + ".stl"
 
 image_to_svg(image_path, svg_path)
-run_blender(output_path)
+run_blender(svg_path)
+#slice_stl(stl_path)
