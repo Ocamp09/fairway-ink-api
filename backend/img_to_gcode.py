@@ -41,10 +41,11 @@ def image_to_svg(image_path, output_svg_path, max_size_mm=15):
 # takes the SVG and generates a model based off of it
 def run_blender(svg_path):
     # local path to Blender executable, separate path for mac
-    blender_path = r"/Applications/Blender Foundation\Blender 4.3\blender.exe"
+    blender_path = r"C:\Program Files\Blender Foundation\Blender 4.3\blender.exe"
     if platform.system() == "Darwin":
         blender_path = r"/Applications/Blender.app/Contents/MacOS/blender"
    
+    print(blender_path)
     blender_command = [
         blender_path,
         "--background",
@@ -100,14 +101,13 @@ def main(image_path):
         # Step 1: Convert image to SVG
         # svg_path = os.path.join(os.path.dirname(image_path), "output.svg")
         image_to_svg(image_path, svg_path)
-
+        print("image converted")
         # Step 3: Generate STL from G-code
         run_blender(svg_path)
-
+        print("STL created")
         # Step 2: Generate G-code
         # stl_path = os.path.join(os.path.dirname(image_path), "output.stl")
         slice_stl(stl_path, gcode_path)
-
         print("G-code generated successfully.")
     except Exception as e:
         print(f"Error: {e}")
