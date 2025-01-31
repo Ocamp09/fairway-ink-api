@@ -1,5 +1,4 @@
 import bpy, os, pathlib
-from typing import List
 import sys
 
 
