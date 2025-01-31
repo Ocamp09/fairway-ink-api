@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import axios from "axios";
 import STLViewer from "./STLViewer";
 import GolfBallSurface from "./GolfBallSurface";
+import "./FileUpload.css"; // Import the CSS file
 
 const FileUpload = () => {
   const [file, setFile] = useState(null);
@@ -77,24 +78,33 @@ const FileUpload = () => {
   };
 
   return (
-    <div>
-      <h1>Upload an Image</h1>
+    <div className="file-upload-container">
+      <h3>Upload an Image</h3>
       <form onSubmit={handleSubmit}>
         <input
           type="file"
           onChange={handleFileChange}
           accept=".png,.jpg,.jpeg"
         />
-        <button type="submit" disabled={isLoading}>
+        <button type="submit" className="submit-button" disabled={isLoading}>
           {isLoading ? "Processing..." : "Upload and Generate STL"}
         </button>
       </form>
-      {error && <p style={{ color: "red" }}>{error}</p>}
-      {/* Display the golf ball surface and image size input */}
-      <GolfBallSurface imageUrl={imageUrl} onSizeChange={handleSizeChange} />
+      {error && <p className="error-message">{error}</p>}
+      <div className="displays">
+        {/* Display the golf ball surface and image size input */}
+        <div className="golf-ball-surface">
+          <GolfBallSurface
+            imageUrl={imageUrl}
+            onSizeChange={handleSizeChange}
+          />
+        </div>
 
-      {/* Render the STL file if available */}
-      {stlUrl && <STLViewer stlUrl={stlUrl} />}
+        {/* Render the STL file if available */}
+        <div className="stl-viewer">
+          {stlUrl && <STLViewer stlUrl={stlUrl} />}
+        </div>
+      </div>
     </div>
   );
 };

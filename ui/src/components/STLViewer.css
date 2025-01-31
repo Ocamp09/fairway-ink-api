@@ -1,0 +1,12 @@
+.reset {
+  position: "absolute";
+  top: "10px";
+  left: "10px";
+  z-index: 1;
+  padding: "5px 10px";
+  background-color: "#007bff";
+  color: "white";
+  border: "none";
+  border-radius: "5px";
+  cursor: "pointer";
+}
