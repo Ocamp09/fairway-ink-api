@@ -144,7 +144,7 @@ def main():
         out_file = sys.argv[4][2:-4] + ".stl" 
         #out_file = "miami_logo_manual.stl"
         download_path = dir_path / out_file 
-        bpy.ops.wm.stl_export(filepath=str(download_path))
+        bpy.ops.wm.stl_export(filepath=str(download_path).replace("svg", "stl"))
     else:
         print("path not found")
         

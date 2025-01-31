@@ -4,6 +4,7 @@ from PIL import Image
 import tempfile
 import os
 import subprocess
+import platform
 
 def image_to_svg(image_path, output_svg_path, max_size_mm=15):
     image = Image.open(image_path)
@@ -39,9 +40,11 @@ def image_to_svg(image_path, output_svg_path, max_size_mm=15):
 
 # takes the SVG and generates a model based off of it
 def run_blender(svg_path):
-    # local path to Blender executable
-    blender_path = r"C:\Program Files\Blender Foundation\Blender 4.3\blender.exe"
-    print("SVG PATH: ", svg_path)
+    # local path to Blender executable, separate path for mac
+    blender_path = r"/Applications/Blender Foundation\Blender 4.3\blender.exe"
+    if platform.system() == "Darwin":
+        blender_path = r"/Applications/Blender.app/Contents/MacOS/blender"
+   
     blender_command = [
         blender_path,
         "--background",
@@ -58,6 +61,10 @@ def run_blender(svg_path):
 def slice_stl(stl_path, gcode_path):
     # local path to PrusaSlicer executable
     slicer_path = r"C:\Program Files\Prusa3D\PrusaSlicer\prusa-slicer.exe"
+
+    # path for mac
+    if platform.system() == "Darwin":
+        slicer_path = r"/Applications/Original Prusa Drivers/PrusaSlicer.app/Contents/MacOS/PrusaSlicer"
 
     # path to the printer config file
     config_file = "./config.ini"
@@ -85,9 +92,10 @@ def slice_stl(stl_path, gcode_path):
 
 def main(image_path):
     filename = image_path.split("/")[2].split(".")[0]
-    svg_path = "./output/svg" + filename + ".svg"
-    stl_path = "./output/stl" + filename + ".stl"
+    svg_path = "./output/svg/" + filename + ".svg"
+    stl_path = "./output/stl/" + filename + ".stl"
     gcode_path = "./output/gcode/" + filename + ".gcode"
+    
     try:
         # Step 1: Convert image to SVG
         # svg_path = os.path.join(os.path.dirname(image_path), "output.svg")
