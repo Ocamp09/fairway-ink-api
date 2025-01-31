@@ -78,11 +78,6 @@ def upload_file():
         svg_name = filename.split(".")[0] + ".svg"
         svg_url = f"http://localhost:5000/output/svg/{svg_name}"
         return jsonify({"success": True, "svgUrl": svg_url})
-        # Return the STL file URL
-        # stl_name = filename.split(".")[0] + ".stl"
-        # stl_url = f"http://localhost:5000/output/stl/{stl_name}"
-        # return jsonify({"success": True, "stlUrl": stl_url})
-
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 502
 
