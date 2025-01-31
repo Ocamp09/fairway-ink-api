@@ -14,7 +14,12 @@ const FileUpload = () => {
   const [imageUrl, setImageUrl] = useState(null);
   const [imageSize, setImageSize] = useState(15); // Default size matches golf ball diameter
 
-  const allowedTypes = ["image/png", "image/jpeg", "image/jpg"];
+  const allowedTypes = [
+    "image/png",
+    "image/jpeg",
+    "image/jpg",
+    "image/svg+xml",
+  ];
   const maxFileSize = 5 * 1024 * 1024; // 5MB
 
   const handleFileChange = (e) => {
@@ -52,7 +57,7 @@ const FileUpload = () => {
     const formData = new FormData();
     formData.append("file", file);
     formData.append("size", imageSize);
-
+    setStlUrl("http://localhost:5000/output/stl/default.stl");
     try {
       const response = await axios.post(
         "http://localhost:5000/upload",
@@ -84,7 +89,7 @@ const FileUpload = () => {
         <input
           type="file"
           onChange={handleFileChange}
-          accept=".png,.jpg,.jpeg"
+          accept=".png,.jpg,.jpeg,.svg"
         />
         <button type="submit" className="submit-button" disabled={isLoading}>
           {isLoading ? "Processing..." : "Upload and Generate STL"}

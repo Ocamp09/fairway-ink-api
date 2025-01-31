@@ -93,6 +93,8 @@ def slice_stl(stl_path, gcode_path):
 
 def main(image_path, image_size):
     filename = image_path.split("/")[2].split(".")[0]
+    extension =  image_path.split("/")[2].split(".")[1]
+    print(extension)
     svg_path = "./output/svg/" + filename + ".svg"
     stl_path = "./output/stl/" + filename + ".stl"
     gcode_path = "./output/gcode/" + filename + ".gcode"
@@ -100,7 +102,10 @@ def main(image_path, image_size):
     try:
         # Step 1: Convert image to SVG
         # svg_path = os.path.join(os.path.dirname(image_path), "output.svg")
-        image_to_svg(image_path, svg_path, image_size)
+        if extension != "svg":
+            image_to_svg(image_path, svg_path, image_size)
+        # else:
+        #     image_to_svg(image_path, svg_path, image_size)
         print("image converted")
         # Step 3: Generate STL from G-code
         run_blender(svg_path)

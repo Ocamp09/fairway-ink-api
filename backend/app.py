@@ -11,7 +11,7 @@ CORS(app)
 
 # Configuration
 UPLOAD_FOLDER = "uploads"
-ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg"}
+ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "svg"}
 MAX_FILE_SIZE = 5 * 1024 * 1024  # 5MB
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
