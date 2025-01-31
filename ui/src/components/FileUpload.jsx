@@ -11,8 +11,9 @@ const FileUpload = () => {
   const [stlUrl, setStlUrl] = useState(
     "http://localhost:5000/output/stl/default.stl"
   );
+
   const [imageUrl, setImageUrl] = useState(null);
-  const [imageSize, setImageSize] = useState(15); // Default size matches golf ball diameter
+  const [imageScale, setimageScale] = useState(15); // Default size matches golf ball diameter
 
   const allowedTypes = [
     "image/png",
@@ -22,7 +23,7 @@ const FileUpload = () => {
   ];
   const maxFileSize = 5 * 1024 * 1024; // 5MB
 
-  const handleFileChange = (e) => {
+  const handleFileChange = async (e) => {
     const selectedFile = e.target.files[0];
 
     if (!allowedTypes.includes(selectedFile.type)) {
@@ -35,32 +36,57 @@ const FileUpload = () => {
       return;
     }
 
+    const formData = new FormData();
+    formData.append("file", selectedFile);
+
+    try {
+      const response = await axios.post(
+        "http://localhost:5000/upload",
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      if (response.data.success) {
+        setImageUrl(response.data.svgUrl);
+      } else {
+        setError("Error processing file. Please try again.");
+      }
+    } catch (err) {
+      setError("An error occurred while uploading the file.");
+      console.error(err);
+    } finally {
+      setIsLoading(false);
+    }
+
     setError("");
-    setFile(selectedFile);
-    setImageUrl(URL.createObjectURL(selectedFile));
+    // setFile(selectedFile);
+    // setImageUrl(URL.createObjectURL(selectedFile));
   };
 
   const handleSizeChange = (size) => {
-    setImageSize(size); // Update the image size state
+    setimageScale(size); // Update the image size state
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!file) {
+    if (!imageUrl) {
       setError("Please select a file to upload.");
       return;
     }
 
     setIsLoading(true);
-
     const formData = new FormData();
-    formData.append("file", file);
-    formData.append("size", imageSize);
+    formData.append("filename", imageUrl.split("/")[5]);
+    formData.append("scale", imageScale);
     setStlUrl("http://localhost:5000/output/stl/default.stl");
     try {
       const response = await axios.post(
-        "http://localhost:5000/upload",
+        "http://localhost:5000/generate",
         formData,
         {
           headers: {

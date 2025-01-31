@@ -22,9 +22,15 @@ def allowed_file(filename):
     """Check if the file has an allowed extension."""
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
 
+
 @app.route("/output/stl/<filename>")
-def output_file(filename):
+def output_stl(filename):
     return send_from_directory("output/stl", filename)
+
+
+@app.route("/output/svg/<filename>")
+def output_svg(filename):
+    return send_from_directory("output/svg", filename)
 
 @app.route("/upload", methods=["POST"])
 def upload_file():
@@ -33,10 +39,6 @@ def upload_file():
         return jsonify({"success": False, "error": "No file uploaded"}), 400
 
     file = request.files["file"]
-
-    size = 15
-    if "size" in request.form:
-        size = float(request.form.get("size", 42.67)) 
 
     # Validate file type
     if not allowed_file(file.filename):
@@ -53,7 +55,7 @@ def upload_file():
     file.save(file_path)
 
     dir_path = pathlib.Path.cwd()
-    script_path = dir_path / "img_to_gcode.py"
+    script_path = dir_path / "img_to_svg.py"
 
     try:
         # convert file to gcode with script
@@ -64,7 +66,44 @@ def upload_file():
                 sys.executable, 
                 str(script_path), 
                 run_path,
-                str(size)
+            ],
+            capture_output=True,
+            text=True
+        )
+
+        # Check if the script ran successfully
+        if result.returncode != 0:
+            return jsonify({"success": False, "error": result.stderr + "SCRIPT FAILED"}), 501
+
+        svg_name = filename.split(".")[0] + ".svg"
+        svg_url = f"http://localhost:5000/output/svg/{svg_name}"
+        return jsonify({"success": True, "svgUrl": svg_url})
+        # Return the STL file URL
+        # stl_name = filename.split(".")[0] + ".stl"
+        # stl_url = f"http://localhost:5000/output/stl/{stl_name}"
+        # return jsonify({"success": True, "stlUrl": stl_url})
+
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 502
+
+
+@app.route("/generate", methods=["POST"])
+def generate_gcode():
+    filename = request.form.get("filename")  
+    scale = request.form.get("scale", 1)  
+
+    dir_path = pathlib.Path.cwd()
+    script_path = dir_path / "svg_to_stl.py"
+    try:
+        # convert file to gcode with script
+        run_path = "./output/svg/" + filename
+        print(run_path)
+        result = subprocess.run(
+            [
+                sys.executable, 
+                str(script_path), 
+                run_path,
+                scale
             ],
             capture_output=True,
             text=True
