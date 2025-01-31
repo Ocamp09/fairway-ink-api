@@ -12,7 +12,7 @@ const FileUpload = () => {
     "http://localhost:5000/output/stl/default.stl"
   );
   const [imageUrl, setImageUrl] = useState(null);
-  const [imageSize, setImageSize] = useState(42.67); // Default size matches golf ball diameter
+  const [imageSize, setImageSize] = useState(15); // Default size matches golf ball diameter
 
   const allowedTypes = ["image/png", "image/jpeg", "image/jpg"];
   const maxFileSize = 5 * 1024 * 1024; // 5MB
@@ -51,7 +51,7 @@ const FileUpload = () => {
 
     const formData = new FormData();
     formData.append("file", file);
-    formData.append("size", imageSize); // Send the image size to the backend
+    formData.append("size", imageSize);
 
     try {
       const response = await axios.post(

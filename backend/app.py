@@ -33,7 +33,10 @@ def upload_file():
         return jsonify({"success": False, "error": "No file uploaded"}), 400
 
     file = request.files["file"]
-    size = float(request.form.get("size", 42.67)) 
+
+    size = 15
+    if "size" in request.form:
+        size = float(request.form.get("size", 42.67)) 
 
     # Validate file type
     if not allowed_file(file.filename):
@@ -61,6 +64,7 @@ def upload_file():
                 sys.executable, 
                 str(script_path), 
                 run_path,
+                str(size)
             ],
             capture_output=True,
             text=True
@@ -76,7 +80,7 @@ def upload_file():
         return jsonify({"success": True, "stlUrl": stl_url})
 
     except Exception as e:
-        return jsonify({"success": False, "error": str(e) + "UNKOWN ERROR"}), 502
+        return jsonify({"success": False, "error": str(e)}), 502
 
 if __name__ == "__main__":
     app.run(debug=True)

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 
 const GolfBallSurface = ({ imageUrl, onSizeChange }) => {
-  const [size, setSize] = useState(15); // Default size matches golf ball diameter
+  const [size, setSize] = useState(15);
 
   const handleSizeChange = (e) => {
     const newSize = parseFloat(e.target.value);
