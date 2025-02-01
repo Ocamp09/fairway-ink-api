@@ -7,6 +7,11 @@ import os
 def image_to_svg(image_path, output_svg_path):
     image = Image.open(image_path)
 
+    width, height = image.size
+
+    bbox = image.getbbox()
+
+    image = image.crop(bbox)
     # Convert mm to pixels (assuming 300 dpi, adjust if needed)
     dpi = 300  # Adjust DPI as needed
     size = 15
