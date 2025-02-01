@@ -3,6 +3,7 @@ import axios from "axios";
 import STLViewer from "./STLViewer";
 import GolfBallSurface from "./GolfBallSurface";
 import "./FileUpload.css";
+import ImageEditor from "./ImageEditor"; // Import the ImageEditor
 
 const FileUpload = () => {
   const [file, setFile] = useState(null);
@@ -23,7 +24,25 @@ const FileUpload = () => {
   ];
   const maxFileSize = 5 * 1024 * 1024; // 5MB
 
-  const handleFileChange = async (e) => {
+  const handleFileChange = (e) => {
+    const selectedFile = e.target.files[0];
+
+    if (!allowedTypes.includes(selectedFile.type)) {
+      setError("Invalid file type. Please upload a PNG, JPEG, or JPG file.");
+      return;
+    }
+
+    if (selectedFile.size > maxFileSize) {
+      setError("File size is too large. Maximum size is 5MB.");
+      return;
+    }
+
+    setError("");
+    setFile(selectedFile);
+    setImageUrl(URL.createObjectURL(selectedFile));
+  };
+
+  const handleSVGGenerate = async (e) => {
     const selectedFile = e.target.files[0];
 
     if (!allowedTypes.includes(selectedFile.type)) {

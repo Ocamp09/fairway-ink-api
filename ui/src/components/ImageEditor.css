@@ -1,0 +1,10 @@
+.golf-template {
+  width: 500px;
+  height: 500px;
+  border-radius: 50%;
+  border: 2px solid black;
+  position: relative;
+  margin: 0 auto;
+  overflow: hidden;
+  background-color: #ffffff;
+}

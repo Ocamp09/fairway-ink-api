@@ -1,8 +1,10 @@
 import "../components/GolfBallSurface.css";
 import React, { useState } from "react";
+import ImageEditor from "./ImageEditor";
 
 const GolfBallSurface = ({ imageUrl, onSizeChange }) => {
   const [scale, setScale] = useState(1); // Default scale is 1 (15mm)
+  const [svgUrl, setSvgUrl] = useState(null);
 
   const handleScaleChange = (e) => {
     const newScale = parseFloat(e.target.value);
@@ -15,11 +17,14 @@ const GolfBallSurface = ({ imageUrl, onSizeChange }) => {
 
   return (
     <div className="image-body">
-      <h3>Golf Ball Template</h3>
+      <h3>Image Editor</h3>
+      <ImageEditor imageUrl={imageUrl} setSvgUrl={setSvgUrl}></ImageEditor>
+
+      <h3>Marker Preview</h3>
       <div className="golf-template">
-        {imageUrl && (
+        {svgUrl && (
           <img
-            src={imageUrl}
+            src={svgUrl}
             alt="Uploaded"
             className="upload-img"
             style={{
