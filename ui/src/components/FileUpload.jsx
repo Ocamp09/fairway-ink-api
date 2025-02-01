@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import axios from "axios";
 import STLViewer from "./STLViewer";
 import GolfBallSurface from "./GolfBallSurface";
-import "./FileUpload.css"; // Import the CSS file
+import "./FileUpload.css";
 
 const FileUpload = () => {
   const [file, setFile] = useState(null);
@@ -13,7 +13,7 @@ const FileUpload = () => {
   );
 
   const [imageUrl, setImageUrl] = useState(null);
-  const [imageScale, setimageScale] = useState(15); // Default size matches golf ball diameter
+  const [imageScale, setimageScale] = useState(15);
 
   const allowedTypes = [
     "image/png",
@@ -117,9 +117,9 @@ const FileUpload = () => {
           onChange={handleFileChange}
           accept=".png,.jpg,.jpeg,.svg"
         />
-        <button type="submit" className="submit-button" disabled={isLoading}>
+        {/* <button type="submit" className="submit-button" disabled={isLoading}>
           {isLoading ? "Processing..." : "Upload and Generate STL"}
-        </button>
+        </button> */}
       </form>
       {error && <p className="error-message">{error}</p>}
       <div className="displays">
@@ -132,9 +132,9 @@ const FileUpload = () => {
         </div>
 
         {/* Render the STL file if available */}
-        <div className="stl-viewer">
+        {/* <div className="stl-viewer">
           {stlUrl && <STLViewer stlUrl={stlUrl} />}
-        </div>
+        </div> */}
       </div>
     </div>
   );
