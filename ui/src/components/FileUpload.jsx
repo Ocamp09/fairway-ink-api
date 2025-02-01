@@ -10,7 +10,7 @@ const FileUpload = () => {
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [stlUrl, setStlUrl] = useState(
-    "http://localhost:5000/output/stl/default.stl"
+    "http://localhost:5001/output/stl/default.stl"
   );
 
   const [imageUrl, setImageUrl] = useState(null);
@@ -60,7 +60,7 @@ const FileUpload = () => {
 
     try {
       const response = await axios.post(
-        "http://localhost:5000/upload",
+        "http://localhost:5001/upload",
         formData,
         {
           headers: {
@@ -102,10 +102,10 @@ const FileUpload = () => {
     const formData = new FormData();
     formData.append("filename", imageUrl.split("/")[5]);
     formData.append("scale", imageScale);
-    setStlUrl("http://localhost:5000/output/stl/default.stl");
+    setStlUrl("http://localhost:5001/output/stl/default.stl");
     try {
       const response = await axios.post(
-        "http://localhost:5000/generate",
+        "http://localhost:5001/generate",
         formData,
         {
           headers: {

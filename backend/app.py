@@ -76,7 +76,7 @@ def upload_file():
             return jsonify({"success": False, "error": result.stderr + "SCRIPT FAILED"}), 501
 
         svg_name = filename.split(".")[0] + ".svg"
-        svg_url = f"http://localhost:5000/output/svg/{svg_name}"
+        svg_url = f"http://localhost:5001/output/svg/{svg_name}"
         return jsonify({"success": True, "svgUrl": svg_url})
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 502
@@ -110,11 +110,11 @@ def generate_gcode():
 
         # Return the STL file URL
         stl_name = filename.split(".")[0] + ".stl"
-        stl_url = f"http://localhost:5000/output/stl/{stl_name}"
+        stl_url = f"http://localhost:5001/output/stl/{stl_name}"
         return jsonify({"success": True, "stlUrl": stl_url})
 
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 502
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=True, port=5001)

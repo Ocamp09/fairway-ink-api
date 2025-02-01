@@ -97,7 +97,7 @@ function ImageEditor({ imageUrl, setSvgUrl }) {
 
     try {
       const response = await axios.post(
-        "http://localhost:5000/upload", // Your backend endpoint
+        "http://localhost:5001/upload", // Your backend endpoint
         formData,
         {
           headers: {
