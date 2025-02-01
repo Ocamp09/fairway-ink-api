@@ -17,9 +17,19 @@ function ImageEditor({ imageUrl, setSvgUrl }) {
     img.src = imageUrl;
 
     img.onload = () => {
-      // Clear the canvas and redraw everything
+      // Clear the canvas
       context.clearRect(0, 0, canvas.width, canvas.height);
-      context.drawImage(img, 0, 0, img.width * 0.5, img.height * 0.5);
+
+      // Calculate the position to center the image
+      const scale = 0.5; // Scale the image to 50% of its original size
+      const scaledWidth = img.width * scale;
+      const scaledHeight = img.height * scale;
+
+      const x = (canvas.width - scaledWidth) / 2; // Center horizontally
+      const y = (canvas.height - scaledHeight) / 2; // Center vertically
+
+      // Draw the image centered on the canvas
+      context.drawImage(img, x, y, scaledWidth, scaledHeight);
 
       // Redraw all freehand paths
       paths.forEach((path) => {
