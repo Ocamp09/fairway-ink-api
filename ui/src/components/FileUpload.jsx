@@ -42,50 +42,6 @@ const FileUpload = () => {
     setImageUrl(URL.createObjectURL(selectedFile));
   };
 
-  const handleSVGGenerate = async (e) => {
-    const selectedFile = e.target.files[0];
-
-    if (!allowedTypes.includes(selectedFile.type)) {
-      setError("Invalid file type. Please upload a PNG, JPEG, or JPG file.");
-      return;
-    }
-
-    if (selectedFile.size > maxFileSize) {
-      setError("File size is too large. Maximum size is 5MB.");
-      return;
-    }
-
-    const formData = new FormData();
-    formData.append("file", selectedFile);
-
-    try {
-      const response = await axios.post(
-        "http://localhost:5001/upload",
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
-
-      if (response.data.success) {
-        setImageUrl(response.data.svgUrl);
-      } else {
-        setError("Error processing file. Please try again.");
-      }
-    } catch (err) {
-      setError("An error occurred while uploading the file.");
-      console.error(err);
-    } finally {
-      setIsLoading(false);
-    }
-
-    setError("");
-    // setFile(selectedFile);
-    // setImageUrl(URL.createObjectURL(selectedFile));
-  };
-
   const handleSizeChange = (size) => {
     setimageScale(size); // Update the image size state
   };
@@ -130,31 +86,25 @@ const FileUpload = () => {
   return (
     <div className="file-upload-container">
       <h3>Upload an Image</h3>
-      <form onSubmit={handleSubmit}>
-        <input
-          type="file"
-          onChange={handleFileChange}
-          accept=".png,.jpg,.jpeg,.svg"
-        />
-        {/* <button type="submit" className="submit-button" disabled={isLoading}>
-          {isLoading ? "Processing..." : "Upload and Generate STL"}
-        </button> */}
-      </form>
-      {error && <p className="error-message">{error}</p>}
-      <div className="displays">
-        {/* Display the golf ball surface and image size input */}
-        <div className="golf-ball-surface">
-          <GolfBallSurface
-            imageUrl={imageUrl}
-            onSizeChange={handleSizeChange}
-          />
-        </div>
-
-        {/* Render the STL file if available */}
-        {/* <div className="stl-viewer">
-          {stlUrl && <STLViewer stlUrl={stlUrl} />}
-        </div> */}
+      <input
+        type="file"
+        onChange={handleFileChange}
+        accept=".png,.jpg,.jpeg,.svg"
+      />
+      {/* Display the golf ball surface and image size input */}
+      <div className="golf-ball-surface">
+        <GolfBallSurface imageUrl={imageUrl} onSizeChange={handleSizeChange} />
       </div>
+      {/* <form onSubmit={handleSubmit}>
+        <button type="submit" className="submit-button" disabled={isLoading}>
+          {isLoading ? "Processing..." : "Upload and Generate STL"}
+        </button>
+        {error && <p className="error-message">{error}</p>}
+      </form> */}
+      {/* Render the STL file if available */}
+      {/* <div className="stl-viewer">
+        {stlUrl && <STLViewer stlUrl={stlUrl} />}
+      </div> */}
     </div>
   );
 };

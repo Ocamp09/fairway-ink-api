@@ -15,14 +15,6 @@
   margin-bottom: 20px;
 }
 
-/* Container for 2D and 3D displays */
-.displays {
-  display: flex;
-  justify-content: center;
-  gap: 20px; /* Space between the two displays */
-  margin-bottom: 20px;
-}
-
 /* Style for the 2D Golf Ball Surface */
 .golf-ball-surface {
   width: 45%;
