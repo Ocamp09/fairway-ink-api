@@ -1,51 +1,90 @@
 import "../components/GolfBallDisplay.css";
 import { useState } from "react";
 import ImageEditor from "./ImageEditor";
+import ImageScaler from "./ImageScaler";
+import STLViewer from "./STLViewer";
+import axios from "axios";
 
-const GolfBallDisplay = ({ imageUrl, svgUrl, setSvgUrl, onSizeChange }) => {
+const GolfBallDisplay = ({ imageUrl }) => {
   const [scale, setScale] = useState(1);
+  const [svgUrl, setSvgUrl] = useState(null);
+  const [stlUrl, setStlUrl] = useState(
+    "http://localhost:5001/output/stl/default.stl"
+  );
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-  const handleScaleChange = (e) => {
-    const newScale = parseFloat(e.target.value);
-    setScale(newScale);
-    onSizeChange(newScale);
+  const canvasSizePx = 200 * scale;
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!svgUrl) {
+      setError("Please select a file to upload.");
+      return;
+    }
+
+    setIsLoading(true);
+    const formData = new FormData();
+    formData.append("filename", svgUrl.split("/")[5]);
+    formData.append("scale", scale);
+    console.log("Gen Filename: ", svgUrl.split("/")[5]);
+    setStlUrl("http://localhost:5001/output/stl/default.stl");
+
+    try {
+      const response = await axios.post(
+        "http://localhost:5001/generate",
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      if (response.data.success) {
+        setStlUrl(response.data.stlUrl);
+      } else {
+        setError("Error processing file. Please try again.");
+      }
+    } catch (err) {
+      setError("An error occurred while uploading the file.");
+      console.error(err);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  // Calculate the size of the image in pixels based on the scale
-  const imageSizePx = (scale * 7 * 300) / 25.4;
-
   return (
-    <div className="image-body">
-      <h3>Image Editor</h3>
-      <ImageEditor imageUrl={imageUrl} setSvgUrl={setSvgUrl}></ImageEditor>
-
-      <h3>Marker Preview</h3>
-      <div className="golf-template">
-        {svgUrl && (
-          <img
-            src={svgUrl}
-            alt="Uploaded"
-            className="upload-img"
-            style={{
-              width: `${imageSizePx}px`, // Set width based on scale
-            }}
-          />
-        )}
-      </div>
+    <div>
       <div className="image-body">
-        <label htmlFor="scale">Image Scale: </label>
-        <input
-          type="range"
-          id="scale"
-          min="0.1" // Minimum scale (10% of original size)
-          max="2" // Maximum scale (200% of original size)
-          step="0.05" // Granularity of the slider
-          value={scale}
-          onChange={handleScaleChange}
-          className="slider"
-        />
-        <div className="slider-text">
-          Scale: {scale.toFixed(1)} ({(scale * 15).toFixed(1)}mm)
+        <h3>Image Editor</h3>
+        <ImageEditor imageUrl={imageUrl} setSvgUrl={setSvgUrl}></ImageEditor>
+
+        <h3>Marker Preview</h3>
+        <div className="golf-template">
+          {svgUrl && (
+            <img
+              src={svgUrl}
+              alt="Uploaded"
+              className="upload-img"
+              style={{
+                width: `${canvasSizePx}px`, // Set width based on scale
+              }}
+            />
+          )}
+        </div>
+        <ImageScaler scale={scale} setScale={setScale}></ImageScaler>
+      </div>
+      <div className="stl-viewer">
+        <form onSubmit={handleSubmit}>
+          <button type="submit" className="submit-button" disabled={isLoading}>
+            {isLoading ? "Processing..." : "Upload and Generate STL"}
+          </button>
+          {error && <p className="error-message">{error}</p>}
+        </form>
+        <div className="stl-viewer">
+          {stlUrl && <STLViewer stlUrl={stlUrl} />}
         </div>
       </div>
     </div>
