@@ -14,8 +14,9 @@ const GolfBallDisplay = ({ imageUrl }) => {
   );
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [stlKey, setStlKey] = useState(0); // Add a key state
 
-  const canvasSizePx = 200 * scale;
+  const canvasSizePx = 400 * scale;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -30,7 +31,7 @@ const GolfBallDisplay = ({ imageUrl }) => {
     formData.append(
       "svg",
       new Blob([svgData], { type: "image/svg+xml" }),
-      "golfball.svg"
+      "golfball" + stlKey + ".svg"
     );
     formData.append("scale", scale);
     setStlUrl("http://localhost:5001/output/stl/default.stl");
@@ -48,7 +49,8 @@ const GolfBallDisplay = ({ imageUrl }) => {
 
       if (response.data.success) {
         console.log(response.data);
-        //setStlUrl(response.data.stlUrl);
+        setStlUrl(response.data.stlUrl);
+        setStlKey((prevKey) => prevKey + 1);
       } else {
         setError("Error processing file. Please try again.");
       }
@@ -93,7 +95,7 @@ const GolfBallDisplay = ({ imageUrl }) => {
           {error && <p className="error-message">{error}</p>}
         </form>
         <div className="stl-viewer">
-          {stlUrl && <STLViewer stlUrl={stlUrl} />}
+          {stlUrl && <STLViewer key={stlKey} stlUrl={stlUrl} />}
         </div>
       </div>
     </div>
