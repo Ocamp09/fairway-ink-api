@@ -19,13 +19,13 @@ const GolfBallDisplay = ({ imageUrl }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     if (!svgData) {
-      //setError("Please select a file to upload.");
+      setError("Please select a file to upload.");
       return;
     }
 
-    //setIsLoading(true);
+    setIsLoading(true);
+
     const formData = new FormData();
     formData.append(
       "svg",
@@ -33,7 +33,6 @@ const GolfBallDisplay = ({ imageUrl }) => {
       "golfball.svg"
     );
     formData.append("scale", scale);
-    console.log("Gen Filename: ", svgUrl.split("/")[5]);
     setStlUrl("http://localhost:5001/output/stl/default.stl");
 
     try {
@@ -48,7 +47,8 @@ const GolfBallDisplay = ({ imageUrl }) => {
       );
 
       if (response.data.success) {
-        setStlUrl(response.data.stlUrl);
+        console.log(response.data);
+        //setStlUrl(response.data.stlUrl);
       } else {
         setError("Error processing file. Please try again.");
       }
