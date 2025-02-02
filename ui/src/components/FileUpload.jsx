@@ -1,20 +1,8 @@
-import React, { useState } from "react";
-import axios from "axios";
-import STLViewer from "./STLViewer";
-import GolfBallSurface from "./GolfBallSurface";
+import { useState } from "react";
 import "./FileUpload.css";
-import ImageEditor from "./ImageEditor"; // Import the ImageEditor
 
-const FileUpload = () => {
-  const [file, setFile] = useState(null);
+const FileUpload = ({ setImageUrl }) => {
   const [error, setError] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [stlUrl, setStlUrl] = useState(
-    "http://localhost:5001/output/stl/default.stl"
-  );
-
-  const [imageUrl, setImageUrl] = useState(null);
-  const [imageScale, setimageScale] = useState(15);
 
   const allowedTypes = [
     "image/png",
@@ -38,49 +26,7 @@ const FileUpload = () => {
     }
 
     setError("");
-    setFile(selectedFile);
     setImageUrl(URL.createObjectURL(selectedFile));
-  };
-
-  const handleSizeChange = (size) => {
-    setimageScale(size); // Update the image size state
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    if (!imageUrl) {
-      setError("Please select a file to upload.");
-      return;
-    }
-
-    setIsLoading(true);
-    const formData = new FormData();
-    formData.append("filename", imageUrl.split("/")[5]);
-    formData.append("scale", imageScale);
-    setStlUrl("http://localhost:5001/output/stl/default.stl");
-    try {
-      const response = await axios.post(
-        "http://localhost:5001/generate",
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
-
-      if (response.data.success) {
-        setStlUrl(response.data.stlUrl);
-      } else {
-        setError("Error processing file. Please try again.");
-      }
-    } catch (err) {
-      setError("An error occurred while uploading the file.");
-      console.error(err);
-    } finally {
-      setIsLoading(false);
-    }
   };
 
   return (
@@ -91,20 +37,7 @@ const FileUpload = () => {
         onChange={handleFileChange}
         accept=".png,.jpg,.jpeg,.svg"
       />
-      {/* Display the golf ball surface and image size input */}
-      <div className="golf-ball-surface">
-        <GolfBallSurface imageUrl={imageUrl} onSizeChange={handleSizeChange} />
-      </div>
-      {/* <form onSubmit={handleSubmit}>
-        <button type="submit" className="submit-button" disabled={isLoading}>
-          {isLoading ? "Processing..." : "Upload and Generate STL"}
-        </button>
-        {error && <p className="error-message">{error}</p>}
-      </form> */}
-      {/* Render the STL file if available */}
-      {/* <div className="stl-viewer">
-        {stlUrl && <STLViewer stlUrl={stlUrl} />}
-      </div> */}
+      {error && <p className="error-message">{error}</p>}
     </div>
   );
 };

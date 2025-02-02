@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import axios from "axios";
 
 function ImageEditor({ imageUrl, setSvgUrl }) {
@@ -6,13 +6,12 @@ function ImageEditor({ imageUrl, setSvgUrl }) {
   const [isDrawing, setIsDrawing] = useState(false);
   const [color, setColor] = useState("#000000");
   const [lineWidth, setLineWidth] = useState(5);
-  const [paths, setPaths] = useState([]); // Store all freehand paths
+  const [paths, setPaths] = useState([]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
     const context = canvas.getContext("2d");
 
-    // Load the image
     const img = new Image();
     img.src = imageUrl;
 
@@ -21,12 +20,12 @@ function ImageEditor({ imageUrl, setSvgUrl }) {
       context.clearRect(0, 0, canvas.width, canvas.height);
 
       // Calculate the position to center the image
-      const scale = 0.5; // Scale the image to 50% of its original size
+      const scale = 0.5;
       const scaledWidth = img.width * scale;
       const scaledHeight = img.height * scale;
 
-      const x = (canvas.width - scaledWidth) / 2; // Center horizontally
-      const y = (canvas.height - scaledHeight) / 2; // Center vertically
+      const x = (canvas.width - scaledWidth) / 2;
+      const y = (canvas.height - scaledHeight) / 2;
 
       // Draw the image centered on the canvas
       context.drawImage(img, x, y, scaledWidth, scaledHeight);
@@ -82,7 +81,8 @@ function ImageEditor({ imageUrl, setSvgUrl }) {
     setIsDrawing(false);
   };
 
-  const handleSave = async () => {
+  //
+  const handleSvg = async () => {
     const canvas = canvasRef.current;
     const dataURL = canvas.toDataURL("image/png");
 
@@ -141,8 +141,8 @@ function ImageEditor({ imageUrl, setSvgUrl }) {
     <div>
       <canvas
         ref={canvasRef}
-        width={500} // Set width and height explicitly!
-        height={500} // Set width and height explicitly!
+        width={500}
+        height={500}
         className="golf-template"
       />
       <div>
@@ -164,7 +164,7 @@ function ImageEditor({ imageUrl, setSvgUrl }) {
           onChange={(e) => setLineWidth(Number(e.target.value))}
         />
       </div>
-      <button onClick={handleSave}>Save Image</button> {/* Save button */}
+      <button onClick={handleSvg}>Preview</button>
     </div>
   );
 }

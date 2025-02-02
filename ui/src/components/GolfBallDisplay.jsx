@@ -1,19 +1,18 @@
-import "../components/GolfBallSurface.css";
-import React, { useState } from "react";
+import "../components/GolfBallDisplay.css";
+import { useState } from "react";
 import ImageEditor from "./ImageEditor";
 
-const GolfBallSurface = ({ imageUrl, onSizeChange }) => {
-  const [scale, setScale] = useState(1); // Default scale is 1 (15mm)
-  const [svgUrl, setSvgUrl] = useState(null);
+const GolfBallDisplay = ({ imageUrl, svgUrl, setSvgUrl, onSizeChange }) => {
+  const [scale, setScale] = useState(1);
 
   const handleScaleChange = (e) => {
     const newScale = parseFloat(e.target.value);
     setScale(newScale);
-    onSizeChange(newScale); // Notify parent component of the new scale
+    onSizeChange(newScale);
   };
 
   // Calculate the size of the image in pixels based on the scale
-  const imageSizePx = (scale * 7 * 300) / 25.4; // Convert mm to pixels (300 DPI)
+  const imageSizePx = (scale * 7 * 300) / 25.4;
 
   return (
     <div className="image-body">
@@ -53,4 +52,4 @@ const GolfBallSurface = ({ imageUrl, onSizeChange }) => {
   );
 };
 
-export default GolfBallSurface;
+export default GolfBallDisplay;
