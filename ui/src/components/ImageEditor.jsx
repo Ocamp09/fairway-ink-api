@@ -191,12 +191,7 @@ function ImageEditor({ imageUrl, setSvgUrl }) {
         />
       </div>
       <div className="canvas-container">
-        <canvas
-          ref={canvasRef}
-          width={500}
-          height={500}
-          className="golf-template"
-        />
+        <canvas ref={canvasRef} width={500} height={500} className="canvas" />
       </div>
       <button onClick={handleSvg}>Preview</button>
     </div>

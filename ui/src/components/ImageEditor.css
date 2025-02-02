@@ -44,10 +44,10 @@
   color: black;
 }
 
-.golf-template {
+.canvas {
   width: 500px;
   height: 500px;
-  border-radius: 50%;
+  border-radius: 10%;
   border: 2px solid black;
   position: relative;
   margin: 0 auto;
