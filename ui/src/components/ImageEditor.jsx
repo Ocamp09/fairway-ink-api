@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import axios from "axios";
+import "./ImageEditor.css";
 
 function ImageEditor({ imageUrl, setSvgUrl }) {
   const canvasRef = useRef(null);
@@ -81,7 +82,6 @@ function ImageEditor({ imageUrl, setSvgUrl }) {
     setIsDrawing(false);
   };
 
-  //
   const handleSvg = async () => {
     const canvas = canvasRef.current;
     const dataURL = canvas.toDataURL("image/png");
@@ -91,9 +91,6 @@ function ImageEditor({ imageUrl, setSvgUrl }) {
 
     const formData = new FormData();
     formData.append("file", blob, "canvas_image.png"); // Add filename
-
-    //setIsLoading(true); // Set loading to true
-    //setError(""); // Clear any previous errors
 
     try {
       const response = await axios.post(
@@ -110,15 +107,22 @@ function ImageEditor({ imageUrl, setSvgUrl }) {
         console.log("Image uploaded successfully:", response.data);
         setSvgUrl(response.data.svgUrl);
       } else {
-        //setError("Error uploading image. Please try again.");
         console.error("Upload error:", response.data);
       }
     } catch (err) {
-      //setError("An error occurred while uploading the image.");
       console.error("Upload error:", err);
-    } finally {
-      //setIsLoading(false); // Set loading to false
     }
+  };
+
+  const handleUndo = () => {
+    setPaths((prevPaths) => prevPaths.slice(0, -1)); // Remove the last path
+  };
+
+  const handleFill = () => {
+    const canvas = canvasRef.current;
+    const context = canvas.getContext("2d");
+    context.fillStyle = color;
+    context.fillRect(0, 0, canvas.width, canvas.height);
   };
 
   useEffect(() => {
@@ -138,23 +142,21 @@ function ImageEditor({ imageUrl, setSvgUrl }) {
   }, [isDrawing, paths]);
 
   return (
-    <div>
-      <canvas
-        ref={canvasRef}
-        width={500}
-        height={500}
-        className="golf-template"
-      />
-      <div>
-        <label htmlFor="colorPicker">Color:</label>
+    <div className="editor">
+      <div className="toolbar">
+        <button onClick={handleUndo}>Undo</button>
+        {/* <label className="toolbar-text" htmlFor="colorPicker">
+          Color:
+        </label>
         <input
           type="color"
           id="colorPicker"
           value={color}
           onChange={(e) => setColor(e.target.value)}
-        />
-
-        <label htmlFor="lineWidth">Line Width:</label>
+        /> */}
+        <label className="toolbar-text" htmlFor="lineWidth">
+          Line Width:
+        </label>
         <input
           type="number"
           id="lineWidth"
@@ -162,6 +164,14 @@ function ImageEditor({ imageUrl, setSvgUrl }) {
           max={20}
           value={lineWidth}
           onChange={(e) => setLineWidth(Number(e.target.value))}
+        />
+      </div>
+      <div className="canvas-container">
+        <canvas
+          ref={canvasRef}
+          width={500}
+          height={500}
+          className="golf-template"
         />
       </div>
       <button onClick={handleSvg}>Preview</button>
