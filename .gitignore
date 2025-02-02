@@ -4,3 +4,4 @@
 *.jpg
 *.gcode
 !default.stl
+.DS_Store

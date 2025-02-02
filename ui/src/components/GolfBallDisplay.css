@@ -1,0 +1,35 @@
+.golf-template {
+  width: 500px;
+  height: 500px;
+  border-radius: 50%;
+  border: 2px solid black;
+  position: relative;
+  margin: 0 auto;
+  overflow: hidden;
+  background-color: #ffffff;
+}
+
+.image-body {
+  margin-top: 10px;
+  width: 200px;
+  margin: 0 auto;
+}
+
+.upload-img {
+  height: auto;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  max-width: 100%;
+  max-height: 100%;
+}
+
+.slider {
+  width: 100%;
+}
+
+.slider-text {
+  margin-top: 5px;
+  font-size: 0.9em;
+}
