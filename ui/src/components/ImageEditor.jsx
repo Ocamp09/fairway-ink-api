@@ -1,6 +1,7 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import axios from "axios";
 import "./ImageEditor.css";
+import Toolbar from "./Toolbar";
 
 function ImageEditor({ imageUrl, setSvgUrl, setSvgData }) {
   const canvasRef = useRef(null);
@@ -9,20 +10,34 @@ function ImageEditor({ imageUrl, setSvgUrl, setSvgData }) {
   const [lineWidth, setLineWidth] = useState(5);
   const [paths, setPaths] = useState([]);
 
-  // Function to redraw the canvas
-  const redrawCanvas = () => {
-    const canvas = canvasRef.current;
-    const context = canvas.getContext("2d");
+  // Function to redraw all paths
+  const redrawPaths = useCallback(
+    (context) => {
+      context.restore();
+      paths.forEach((path) => {
+        context.beginPath();
+        context.moveTo(path.points[0].x, path.points[0].y);
+        path.points.forEach((point) => {
+          context.lineTo(point.x, point.y);
+        });
+        context.strokeStyle = path.color;
+        context.lineWidth = path.width;
+        context.stroke();
+      });
+    },
+    [paths]
+  );
 
-    // Clear the canvas
-    context.clearRect(0, 0, canvas.width, canvas.height);
-
-    // Draw the image if it exists
+  // Redraw the canvas whenever paths or imageUrl changes
+  useEffect(() => {
     if (imageUrl) {
       const img = new Image();
       img.src = imageUrl;
 
       img.onload = () => {
+        const canvas = canvasRef.current;
+        const context = canvas.getContext("2d");
+
         // Calculate the position to center the image
         const scale = 0.5;
         const scaledWidth = img.width * scale;
@@ -32,41 +47,20 @@ function ImageEditor({ imageUrl, setSvgUrl, setSvgData }) {
         const y = (canvas.height - scaledHeight) / 2;
 
         // Draw the image centered on the canvas
+        context.clearRect(0, 0, canvas.width, canvas.height);
         context.drawImage(img, x, y, scaledWidth, scaledHeight);
-
-        // Redraw all freehand paths
-        redrawPaths(context);
+        context.save();
+        setPaths([]);
       };
-    } else {
-      // If no image, just redraw the paths
-      redrawPaths(context);
     }
-  };
-
-  // Function to redraw all paths
-  const redrawPaths = (context) => {
-    paths.forEach((path) => {
-      context.beginPath();
-      context.moveTo(path.points[0].x, path.points[0].y);
-      path.points.forEach((point) => {
-        context.lineTo(point.x, point.y);
-      });
-      context.strokeStyle = path.color;
-      context.lineWidth = path.width;
-      context.stroke();
-    });
-  };
-
-  // Redraw the canvas whenever paths or imageUrl changes
-  useEffect(() => {
-    redrawCanvas();
   }, [imageUrl]);
 
   useEffect(() => {
+    console.log("paths updated");
     const canvas = canvasRef.current;
     const context = canvas.getContext("2d");
     redrawPaths(context);
-  }, [paths]);
+  }, [paths, redrawPaths]);
 
   const handleMouseDown = (e) => {
     setIsDrawing(true);
@@ -152,21 +146,9 @@ function ImageEditor({ imageUrl, setSvgUrl, setSvgData }) {
     }
   };
 
-  const handleUndo = () => {
-    setPaths((prevPaths) => prevPaths.slice(0, -1)); // Remove the last path
-  };
-
-  const handleFill = () => {
-    const canvas = canvasRef.current;
-    const context = canvas.getContext("2d");
-    context.fillStyle = color;
-    context.fillRect(0, 0, canvas.width, canvas.height);
-  };
-
   useEffect(() => {
     const canvas = canvasRef.current;
 
-    // Add event listeners
     canvas.addEventListener("mousedown", handleMouseDown);
     canvas.addEventListener("mousemove", handleMouseMove);
     canvas.addEventListener("mouseup", handleMouseUp);
@@ -177,24 +159,15 @@ function ImageEditor({ imageUrl, setSvgUrl, setSvgData }) {
       canvas.removeEventListener("mousemove", handleMouseMove);
       canvas.removeEventListener("mouseup", handleMouseUp);
     };
-  }, [isDrawing, paths]);
+  });
 
   return (
     <div className="editor">
-      <div className="toolbar">
-        <button onClick={handleUndo}>Undo</button>
-        <label className="toolbar-text" htmlFor="lineWidth">
-          Line Width:
-        </label>
-        <input
-          type="number"
-          id="lineWidth"
-          min={1}
-          max={20}
-          value={lineWidth}
-          onChange={(e) => setLineWidth(Number(e.target.value))}
-        />
-      </div>
+      <Toolbar
+        setPaths={setPaths}
+        lineWidth={lineWidth}
+        setLineWidth={setLineWidth}
+      ></Toolbar>
       <div className="canvas-container">
         <canvas ref={canvasRef} width={500} height={500} className="canvas" />
       </div>
