@@ -1,32 +1,12 @@
 import React, { useState } from "react";
 
-const ImageScaler = ({ imageUrl }) => {
-  const [scale, setScale] = useState(1);
-
+const ImageScaler = ({ scale, setScale }) => {
   const handleScaleChange = (e) => {
     setScale(parseFloat(e.target.value));
   };
 
   return (
     <div style={{ margin: "20px 0" }}>
-      <h3>Uploaded Image</h3>
-      <div
-        style={{
-          width: "100%",
-          overflow: "hidden",
-          textAlign: "center",
-        }}
-      >
-        <img
-          src={imageUrl}
-          alt="Uploaded"
-          style={{
-            width: `${scale * 100}%`,
-            height: "auto",
-            transition: "width 0.3s ease",
-          }}
-        />
-      </div>
       <div style={{ marginTop: "10px" }}>
         <label htmlFor="scale">Scale: </label>
         <input
