@@ -4,7 +4,7 @@ from PIL import Image
 import tempfile
 import os
 
-def image_to_svg(image_path, output_svg_path):
+def image_to_svg(image_path):
     image = Image.open(image_path)
 
     width, height = image.size
@@ -35,11 +35,12 @@ def image_to_svg(image_path, output_svg_path):
 
     # create a bitmap and convert to SVG
     svg_data = trace(temp_image_path, blackAndWhite=True)
-    with open(output_svg_path, "w") as svg_file:
-        svg_file.write(svg_data)
+    return svg_data
+    # with open(output_svg_path, "w") as svg_file:
+    #     svg_file.write(svg_data)
 
-    os.remove(temp_image_path)
-    pass
+    # os.remove(temp_image_path)
+    # pass
 
 def main(image_path):
     filename = image_path.split("/")[2].split(".")[0]

@@ -5,6 +5,9 @@ import subprocess
 from werkzeug.utils import secure_filename
 import pathlib
 import sys
+import img_to_svg
+import platform
+
 
 app = Flask(__name__)
 CORS(app)
@@ -57,64 +60,44 @@ def upload_file():
     dir_path = pathlib.Path.cwd()
     script_path = dir_path / "img_to_svg.py"
 
-    try:
-        # convert file to gcode with script
-        run_path = "./uploads/" + filename
-        print(run_path)
-        result = subprocess.run(
-            [
-                sys.executable, 
-                str(script_path), 
-                run_path,
-            ],
-            capture_output=True,
-            text=True
-        )
-
-        # Check if the script ran successfully
-        if result.returncode != 0:
-            return jsonify({"success": False, "error": result.stderr + "SCRIPT FAILED"}), 501
-
-        svg_name = filename.split(".")[0] + ".svg"
-        svg_url = f"http://localhost:5001/output/svg/{svg_name}"
-        return jsonify({"success": True, "svgUrl": svg_url})
-    except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 502
+    svg_data = img_to_svg.image_to_svg(file)
+    return jsonify({"success": True, "svgData": svg_data})
 
 
 @app.route("/generate", methods=["POST"])
 def generate_gcode():
-    filename = request.form.get("filename")  
     scale = request.form.get("scale", 1)  
 
-    dir_path = pathlib.Path.cwd()
-    script_path = dir_path / "svg_to_stl.py"
+    if 'svg' not in request.files:
+        return jsonify({"success": False, "error": "No SVG file provided"}), 400
+
+    svg_file = request.files['svg']
+    filename = secure_filename(svg_file.filename)
+    output_svg_path = os.path.join("./output/svg", filename)
     try:
-        # convert file to gcode with script
-        run_path = "./output/svg/" + filename
-        print(run_path)
-        result = subprocess.run(
-            [
-                sys.executable, 
-                str(script_path), 
-                run_path,
-                scale
-            ],
-            capture_output=True,
-            text=True
-        )
+        svg_file.save(output_svg_path)
 
-        # Check if the script ran successfully
-        if result.returncode != 0:
-            return jsonify({"success": False, "error": result.stderr + "SCRIPT FAILED"}), 501
+        blender_path = r"C:\Program Files\Blender Foundation\Blender 4.3\blender.exe"
+        if platform.system() == "Darwin":
+            blender_path = r"/Applications/Blender.app/Contents/MacOS/blender"
 
-        # Return the STL file URL
-        stl_name = filename.split(".")[0] + ".stl"
+        blender_command = [
+            blender_path,
+            "--background",
+            "--python",
+            "./blender_v1.py",
+            output_svg_path,
+            str(scale)
+        ]
+
+        subprocess.run(blender_command, capture_output=True, text=True)
+        os.remove("./output/svg/" + filename)
+        stl_name = filename.split(".")[0] + ".stl"  
         stl_url = f"http://localhost:5001/output/stl/{stl_name}"
         return jsonify({"success": True, "stlUrl": stl_url})
-
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 502
+    
 
 if __name__ == "__main__":
     app.run(debug=True, port=5001)

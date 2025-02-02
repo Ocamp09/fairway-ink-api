@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import "./ImageEditor.css";
 
-function ImageEditor({ imageUrl, setSvgUrl }) {
+function ImageEditor({ imageUrl, setSvgUrl, setSvgData }) {
   const canvasRef = useRef(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const [color, setColor] = useState("#000000");
@@ -138,7 +138,12 @@ function ImageEditor({ imageUrl, setSvgUrl }) {
 
       if (response.data.success) {
         console.log("Image uploaded successfully:", response.data);
-        setSvgUrl(response.data.svgUrl);
+        const blob = new Blob([response.data.svgData], {
+          type: "image/svg+xml",
+        });
+        const url = URL.createObjectURL(blob);
+        setSvgData(response.data.svgData);
+        setSvgUrl(url);
       } else {
         console.error("Upload error:", response.data);
       }

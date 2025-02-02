@@ -8,6 +8,7 @@ import axios from "axios";
 const GolfBallDisplay = ({ imageUrl }) => {
   const [scale, setScale] = useState(1);
   const [svgUrl, setSvgUrl] = useState(null);
+  const [svgData, setSvgData] = useState(null);
   const [stlUrl, setStlUrl] = useState(
     "http://localhost:5001/output/stl/default.stl"
   );
@@ -19,14 +20,18 @@ const GolfBallDisplay = ({ imageUrl }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!svgUrl) {
-      setError("Please select a file to upload.");
+    if (!svgData) {
+      //setError("Please select a file to upload.");
       return;
     }
 
-    setIsLoading(true);
+    //setIsLoading(true);
     const formData = new FormData();
-    formData.append("filename", svgUrl.split("/")[5]);
+    formData.append(
+      "svg",
+      new Blob([svgData], { type: "image/svg+xml" }),
+      "golfball.svg"
+    );
     formData.append("scale", scale);
     console.log("Gen Filename: ", svgUrl.split("/")[5]);
     setStlUrl("http://localhost:5001/output/stl/default.stl");
@@ -59,7 +64,11 @@ const GolfBallDisplay = ({ imageUrl }) => {
     <div>
       <div className="image-body">
         <h3>Image Editor</h3>
-        <ImageEditor imageUrl={imageUrl} setSvgUrl={setSvgUrl}></ImageEditor>
+        <ImageEditor
+          imageUrl={imageUrl}
+          setSvgUrl={setSvgUrl}
+          setSvgData={setSvgData}
+        ></ImageEditor>
 
         <h3>Marker Preview</h3>
         <div className="golf-template">
