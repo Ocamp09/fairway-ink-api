@@ -9,41 +9,64 @@ function ImageEditor({ imageUrl, setSvgUrl }) {
   const [lineWidth, setLineWidth] = useState(5);
   const [paths, setPaths] = useState([]);
 
-  useEffect(() => {
+  // Function to redraw the canvas
+  const redrawCanvas = () => {
     const canvas = canvasRef.current;
     const context = canvas.getContext("2d");
 
-    const img = new Image();
-    img.src = imageUrl;
+    // Clear the canvas
+    context.clearRect(0, 0, canvas.width, canvas.height);
 
-    img.onload = () => {
-      // Clear the canvas
-      context.clearRect(0, 0, canvas.width, canvas.height);
+    // Draw the image if it exists
+    if (imageUrl) {
+      const img = new Image();
+      img.src = imageUrl;
 
-      // Calculate the position to center the image
-      const scale = 0.5;
-      const scaledWidth = img.width * scale;
-      const scaledHeight = img.height * scale;
+      img.onload = () => {
+        // Calculate the position to center the image
+        const scale = 0.5;
+        const scaledWidth = img.width * scale;
+        const scaledHeight = img.height * scale;
 
-      const x = (canvas.width - scaledWidth) / 2;
-      const y = (canvas.height - scaledHeight) / 2;
+        const x = (canvas.width - scaledWidth) / 2;
+        const y = (canvas.height - scaledHeight) / 2;
 
-      // Draw the image centered on the canvas
-      context.drawImage(img, x, y, scaledWidth, scaledHeight);
+        // Draw the image centered on the canvas
+        context.drawImage(img, x, y, scaledWidth, scaledHeight);
 
-      // Redraw all freehand paths
-      paths.forEach((path) => {
-        context.beginPath();
-        context.moveTo(path.points[0].x, path.points[0].y);
-        path.points.forEach((point) => {
-          context.lineTo(point.x, point.y);
-        });
-        context.strokeStyle = path.color;
-        context.lineWidth = path.width;
-        context.stroke();
+        // Redraw all freehand paths
+        redrawPaths(context);
+      };
+    } else {
+      // If no image, just redraw the paths
+      redrawPaths(context);
+    }
+  };
+
+  // Function to redraw all paths
+  const redrawPaths = (context) => {
+    paths.forEach((path) => {
+      context.beginPath();
+      context.moveTo(path.points[0].x, path.points[0].y);
+      path.points.forEach((point) => {
+        context.lineTo(point.x, point.y);
       });
-    };
-  }, [imageUrl, paths]);
+      context.strokeStyle = path.color;
+      context.lineWidth = path.width;
+      context.stroke();
+    });
+  };
+
+  // Redraw the canvas whenever paths or imageUrl changes
+  useEffect(() => {
+    redrawCanvas();
+  }, [imageUrl]);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    const context = canvas.getContext("2d");
+    redrawPaths(context);
+  }, [paths]);
 
   const handleMouseDown = (e) => {
     setIsDrawing(true);
@@ -83,9 +106,19 @@ function ImageEditor({ imageUrl, setSvgUrl }) {
   };
 
   const handleSvg = async () => {
+    setSvgUrl(null);
     const canvas = canvasRef.current;
-    const dataURL = canvas.toDataURL("image/png");
 
+    const canvasBackground = document.createElement("canvas");
+    canvasBackground.width = canvas.width;
+    canvasBackground.height = canvas.height;
+
+    const ctx = canvasBackground.getContext("2d");
+    ctx.fillStyle = "white";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(canvas, 0, 0);
+
+    const dataURL = canvasBackground.toDataURL("image/png");
     // Convert data URL to Blob
     const blob = await fetch(dataURL).then((r) => r.blob());
 
@@ -145,15 +178,6 @@ function ImageEditor({ imageUrl, setSvgUrl }) {
     <div className="editor">
       <div className="toolbar">
         <button onClick={handleUndo}>Undo</button>
-        {/* <label className="toolbar-text" htmlFor="colorPicker">
-          Color:
-        </label>
-        <input
-          type="color"
-          id="colorPicker"
-          value={color}
-          onChange={(e) => setColor(e.target.value)}
-        /> */}
         <label className="toolbar-text" htmlFor="lineWidth">
           Line Width:
         </label>
