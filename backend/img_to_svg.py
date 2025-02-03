@@ -9,7 +9,7 @@ from enum import Enum
 class PrintType(Enum):
     SOLID = 1
 
-def fill_svg(svg_data, svg_path):
+def fill_svg(svg_data):
     try:
         root = ET.fromstring(svg_data)
         paths = root.findall('.//{http://www.w3.org/2000/svg}path')
@@ -33,9 +33,9 @@ def fill_svg(svg_data, svg_path):
                     truncated_d = d_value[:z_index]  # Keep 'Z'
                     outermost_path.set('d', truncated_d)
         
-        new_svg_data = ET.tostring(root, encoding='unicode', method='xml')
-        with open(svg_path, "w") as svg_file:
-            svg_file.write(new_svg_data)
+        new_svg_data = ET.tostring(root, encoding='unicode', method='xml').replace("ns0:", "").replace(":ns0", "")
+        # with open(svg_path, "w") as svg_file:
+        #     svg_file.write(new_svg_data)
         return new_svg_data
 
     except ET.ParseError as e:
@@ -43,7 +43,7 @@ def fill_svg(svg_data, svg_path):
     except Exception as e:
         print(f"Error processing SVG: {e}")
 
-def image_to_svg(image_path, svg_path="./output/svg/test.svg", method=PrintType.SOLID):
+def image_to_svg(image_path, method=PrintType.SOLID):
     image = Image.open(image_path)
 
     width, height = image.size
@@ -80,9 +80,8 @@ def image_to_svg(image_path, svg_path="./output/svg/test.svg", method=PrintType.
 
     print(method)
     if method == PrintType.SOLID:
-        print("SOLID")
-        svg_data = fill_svg(svg_data, svg_path)
-    print(svg_data)
+        svg_data = fill_svg(svg_data)
+
     return svg_data
 
 def main(image_path):
@@ -93,7 +92,7 @@ def main(image_path):
     try:
         # Step 1: Convert image to SVG
         if extension != "svg":
-            image_to_svg(image_path, svg_path=svg_path)
+            image_to_svg(image_path)
       
     except Exception as e:
         print(f"Error: {e}")
