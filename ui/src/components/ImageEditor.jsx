@@ -6,35 +6,40 @@ import Toolbar from "./Toolbar";
 function ImageEditor({ imageUrl, setSvgUrl, setSvgData }) {
   const canvasRef = useRef(null);
   const [isDrawing, setIsDrawing] = useState(false);
-  const [color, setColor] = useState("#000000");
+  // const [color, setColor] = useState("#000000");
+  const color = "#00000";
   const [lineWidth, setLineWidth] = useState(5);
   const [paths, setPaths] = useState([]);
+  const [reloadPaths, setReloadPaths] = useState(false);
 
   // Function to redraw all paths
-  const redrawPaths = useCallback(
+  const drawPaths = useCallback(
     (context) => {
-      context.restore();
-      paths.forEach((path) => {
-        context.beginPath();
-        context.moveTo(path.points[0].x, path.points[0].y);
-        path.points.forEach((point) => {
-          context.lineTo(point.x, point.y);
+      console.log("Abouta draw paths");
+
+      if (paths.length !== 0) {
+        paths.forEach((path) => {
+          context.beginPath();
+          context.moveTo(path.points[0].x, path.points[0].y);
+          path.points.forEach((point) => {
+            context.lineTo(point.x, point.y);
+          });
+          context.strokeStyle = path.color;
+          context.lineWidth = path.width;
+          context.stroke();
         });
-        context.strokeStyle = path.color;
-        context.lineWidth = path.width;
-        context.stroke();
-      });
+      }
     },
     [paths]
   );
 
-  // Redraw the canvas whenever paths or imageUrl changes
-  useEffect(() => {
+  const drawImage = useCallback(() => {
     if (imageUrl) {
       const img = new Image();
       img.src = imageUrl;
 
       img.onload = () => {
+        console.log("bouta draw an image");
         const canvas = canvasRef.current;
         const context = canvas.getContext("2d");
 
@@ -49,18 +54,31 @@ function ImageEditor({ imageUrl, setSvgUrl, setSvgData }) {
         // Draw the image centered on the canvas
         context.clearRect(0, 0, canvas.width, canvas.height);
         context.drawImage(img, x, y, scaledWidth, scaledHeight);
-        context.save();
-        setPaths([]);
       };
     }
   }, [imageUrl]);
 
+  // Redraw the canvas whenever paths or imageUrl changes
   useEffect(() => {
-    console.log("paths updated");
+    drawImage();
+  }, [imageUrl, drawImage]);
+
+  useEffect(() => {
+    console.log("redraw", paths);
     const canvas = canvasRef.current;
     const context = canvas.getContext("2d");
-    redrawPaths(context);
-  }, [paths, redrawPaths]);
+    context.clearRect(0, 0, canvas.width, canvas.height);
+
+    drawImage();
+    drawPaths(context);
+    setReloadPaths(false);
+  }, [reloadPaths]);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    const context = canvas.getContext("2d");
+    drawPaths(context);
+  }, [paths, drawPaths]);
 
   const handleMouseDown = (e) => {
     setIsDrawing(true);
@@ -167,6 +185,7 @@ function ImageEditor({ imageUrl, setSvgUrl, setSvgData }) {
         setPaths={setPaths}
         lineWidth={lineWidth}
         setLineWidth={setLineWidth}
+        setReloadPaths={setReloadPaths}
       ></Toolbar>
       <div className="canvas-container">
         <canvas ref={canvasRef} width={500} height={500} className="canvas" />

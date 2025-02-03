@@ -1,11 +1,12 @@
-const Toolbar = ({ setPaths, lineWidth, setLineWidth }) => {
+const Toolbar = ({ setPaths, lineWidth, setLineWidth, setReloadPaths }) => {
   const handleUndo = () => {
-    console.log("undo");
     setPaths((prevPaths) => prevPaths.slice(0, -1)); // Remove the last path
+    setReloadPaths(true);
   };
 
   const handleClear = () => {
     setPaths([]); // Clear all paths
+    setReloadPaths(true);
   };
 
   //   const handleFill = () => {
