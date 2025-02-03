@@ -52,6 +52,9 @@ def upload_file():
         return jsonify({"success": False, "error": "File size exceeds 5MB"}), 400
     file.seek(0)  # Reset file pointer after reading
 
+    method = request.form.get("method", img_to_svg.PrintType.SOLID)  
+
+
     # Save the file securely
     filename = secure_filename(file.filename)
     file_path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
@@ -60,7 +63,7 @@ def upload_file():
     dir_path = pathlib.Path.cwd()
     script_path = dir_path / "img_to_svg.py"
 
-    svg_data = img_to_svg.image_to_svg(file)
+    svg_data = img_to_svg.image_to_svg(file, method=method)
     return jsonify({"success": True, "svgData": svg_data})
 
 

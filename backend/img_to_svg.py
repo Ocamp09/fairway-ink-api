@@ -21,7 +21,6 @@ def fill_svg(svg_data, svg_path):
             if outermost_path.get('fill') is None:
                 outermost_path.set('fill', 'black') 
 
-            print(outermost_path)
             # Remove all other paths (optional, if you only want the outline)
             for path in paths[1:]:
               root.remove(path)
@@ -33,8 +32,8 @@ def fill_svg(svg_data, svg_path):
                 if z_index != -1:
                     truncated_d = d_value[:z_index]  # Keep 'Z'
                     outermost_path.set('d', truncated_d)
+        
         new_svg_data = ET.tostring(root, encoding='unicode', method='xml')
-        print(new_svg_data)
         with open(svg_path, "w") as svg_file:
             svg_file.write(new_svg_data)
         return new_svg_data
@@ -44,7 +43,7 @@ def fill_svg(svg_data, svg_path):
     except Exception as e:
         print(f"Error processing SVG: {e}")
 
-def image_to_svg(image_path, method=PrintType.SOLID, svg_path="./output/svg/test.svg"):
+def image_to_svg(image_path, svg_path="./output/svg/test.svg", method=PrintType.SOLID):
     image = Image.open(image_path)
 
     width, height = image.size
@@ -79,8 +78,11 @@ def image_to_svg(image_path, method=PrintType.SOLID, svg_path="./output/svg/test
     # with open(svg_path, "w") as svg_file:
     #     svg_file.write(svg_data)
 
+    print(method)
     if method == PrintType.SOLID:
+        print("SOLID")
         svg_data = fill_svg(svg_data, svg_path)
+    print(svg_data)
     return svg_data
 
 def main(image_path):
@@ -91,7 +93,7 @@ def main(image_path):
     try:
         # Step 1: Convert image to SVG
         if extension != "svg":
-            image_to_svg(image_path, svg_path)
+            image_to_svg(image_path, svg_path=svg_path)
       
     except Exception as e:
         print(f"Error: {e}")
