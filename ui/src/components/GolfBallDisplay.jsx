@@ -94,9 +94,7 @@ const GolfBallDisplay = ({ imageUrl }) => {
           </button>
           {error && <p className="error-message">{error}</p>}
         </form>
-        <div className="stl-viewer">
-          {stlUrl && <STLViewer key={stlKey} stlUrl={stlUrl} />}
-        </div>
+        {stlUrl && <STLViewer key={stlKey} stlUrl={stlUrl} />}
       </div>
     </div>
   );
