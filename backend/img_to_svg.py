@@ -12,10 +12,9 @@ def image_to_svg(image_path):
     bbox = image.getbbox()
 
     image = image.crop(bbox)
-    # Convert mm to pixels (assuming 300 dpi, adjust if needed)
-    dpi = 300  # Adjust DPI as needed
-    size = 15
-    max_size_px = int(size * dpi / 25.4)  # 25.4 mm per inch
+ 
+    # default size for the SVGs to be saved
+    max_size_px = 125
 
     # Resize the image while maintaining aspect ratio
     width, height = image.size

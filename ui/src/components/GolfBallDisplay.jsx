@@ -16,7 +16,8 @@ const GolfBallDisplay = ({ imageUrl }) => {
   const [error, setError] = useState(null);
   const [stlKey, setStlKey] = useState(0); // Add a key state
 
-  const canvasSizePx = 400 * scale;
+  // get svg width and height, scale down to size I want to display, then factor that scale into the query sent
+  const canvasSizePx = 125 * scale;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
