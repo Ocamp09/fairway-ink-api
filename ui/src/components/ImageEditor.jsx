@@ -44,8 +44,14 @@ function ImageEditor({ imageUrl, setSvgUrl, setSvgData }) {
         const context = canvas.getContext("2d");
 
         // Calculate the position to center the image
-        const scale = 0.5;
+        const width = img.width;
+        const height = img.height;
+        const set_dimension = 425;
+        let scale =
+          width > height ? set_dimension / width : set_dimension / height;
+
         const scaledWidth = img.width * scale;
+        console.log(scaledWidth);
         const scaledHeight = img.height * scale;
 
         const x = (canvas.width - scaledWidth) / 2;
