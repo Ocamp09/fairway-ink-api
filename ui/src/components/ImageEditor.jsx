@@ -187,7 +187,7 @@ function ImageEditor({ imageUrl, setSvgUrl, setSvgData }) {
         setLineWidth={setLineWidth}
         setReloadPaths={setReloadPaths}
       ></Toolbar>
-      <div className="canvas-container">
+      <div>
         <canvas ref={canvasRef} width={500} height={500} className="canvas" />
       </div>
       <button onClick={handleSvg}>Preview</button>

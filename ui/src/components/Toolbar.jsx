@@ -1,3 +1,5 @@
+import "./Toolbar.css";
+
 const Toolbar = ({ setPaths, lineWidth, setLineWidth, setReloadPaths }) => {
   const handleUndo = () => {
     setPaths((prevPaths) => prevPaths.slice(0, -1)); // Remove the last path
