@@ -11,6 +11,7 @@ function ImageEditor({ imageUrl, setSvgUrl, setSvgData }) {
   const [lineWidth, setLineWidth] = useState(5);
   const [paths, setPaths] = useState([]);
   const [reloadPaths, setReloadPaths] = useState(false);
+  const [canvasScale, setCanvasScale] = useState(1);
 
   // Function to redraw all paths
   const drawPaths = useCallback(
@@ -46,12 +47,13 @@ function ImageEditor({ imageUrl, setSvgUrl, setSvgData }) {
         // Calculate the position to center the image
         const width = img.width;
         const height = img.height;
-        const set_dimension = 425;
+        const set_dimension = 425; // default dimension
+
+        // calculate the scale based on the longer size
         let scale =
           width > height ? set_dimension / width : set_dimension / height;
 
         const scaledWidth = img.width * scale;
-        console.log(scaledWidth);
         const scaledHeight = img.height * scale;
 
         const x = (canvas.width - scaledWidth) / 2;
@@ -70,15 +72,16 @@ function ImageEditor({ imageUrl, setSvgUrl, setSvgData }) {
   }, [imageUrl, drawImage]);
 
   useEffect(() => {
-    console.log("redraw", paths);
     const canvas = canvasRef.current;
     const context = canvas.getContext("2d");
+
     context.clearRect(0, 0, canvas.width, canvas.height);
+    context.scale(canvasScale, canvasScale);
 
     drawImage();
     drawPaths(context);
     setReloadPaths(false);
-  }, [reloadPaths]);
+  }, [reloadPaths, canvasScale, lineWidth]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -192,6 +195,8 @@ function ImageEditor({ imageUrl, setSvgUrl, setSvgData }) {
         lineWidth={lineWidth}
         setLineWidth={setLineWidth}
         setReloadPaths={setReloadPaths}
+        scale={canvasScale}
+        setScale={setCanvasScale}
       ></Toolbar>
       <div>
         <canvas ref={canvasRef} width={500} height={500} className="canvas" />
