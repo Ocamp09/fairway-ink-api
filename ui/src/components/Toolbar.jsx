@@ -38,9 +38,9 @@ const Toolbar = ({
   return (
     <>
       <div className="toolbar">
-        <button onClick={handleZoomIn}>Zoom In</button>
+        {/* <button onClick={handleZoomIn}>Zoom In</button>
         <button onClick={handleZoomOut}>Zoom Out</button>
-        <button onClick={handleUndo}>Undo</button>
+        <button onClick={handleUndo}>Undo</button> */}
         <button onClick={handleClear}>Clear</button>
         <label className="toolbar-text" htmlFor="lineWidth">
           Line Width:
@@ -48,7 +48,7 @@ const Toolbar = ({
         <input
           type="number"
           id="lineWidth"
-          min={1}
+          min={5}
           max={20}
           value={lineWidth}
           onChange={(e) => setLineWidth(Number(e.target.value))}
