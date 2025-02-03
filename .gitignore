@@ -6,3 +6,4 @@
 !default.stl
 .DS_Store
 *.pyc
+!/ui/public/*.svg
