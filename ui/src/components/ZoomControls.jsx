@@ -1,11 +1,10 @@
 import React from "react";
+import "./ZoomControls.css";
 
 const ZoomControls = ({ onZoomIn, onZoomOut }) => {
   return (
-    <div
-      style={{ position: "absolute", top: "10px", right: "10px", zIndex: 1 }}
-    >
-      <button onClick={onZoomIn} style={{ marginRight: "5px" }}>
+    <div className="zoom-body">
+      <button onClick={onZoomIn} className="zoom-button">
         Zoom In
       </button>
       <button onClick={onZoomOut}>Zoom Out</button>

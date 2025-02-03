@@ -10,7 +10,7 @@
 }
 
 /* Style the error message */
-.error-message {
+.file-error-message {
   color: red;
   margin-bottom: 20px;
 }

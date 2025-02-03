@@ -86,6 +86,18 @@ const GolfBallDisplay = ({ imageUrl }) => {
             />
           )}
         </div>
+        <div className="golf-real-size">
+          {svgUrl && (
+            <img
+              src={svgUrl}
+              alt="Uploaded"
+              className="upload-img"
+              style={{
+                width: `${(canvasSizePx * 173) / 500}px`, // Set width based on scale
+              }}
+            />
+          )}
+        </div>
         <ImageScaler scale={scale} setScale={setScale}></ImageScaler>
       </div>
       <div className="stl-viewer">

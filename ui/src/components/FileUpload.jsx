@@ -37,7 +37,7 @@ const FileUpload = ({ setImageUrl }) => {
         onChange={handleFileChange}
         accept=".png,.jpg,.jpeg,.svg"
       />
-      {error && <p className="error-message">{error}</p>}
+      {error && <p className="file-error-message">{error}</p>}
     </div>
   );
 };
