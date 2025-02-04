@@ -15,7 +15,6 @@ function ImageEditor({
 }) {
   const canvasRef = useRef(null);
   const [isDrawing, setIsDrawing] = useState(false);
-  // const [color, setColor] = useState("#000000");
   const color = "#00000";
   const [lineWidth, setLineWidth] = useState(5);
   const [reloadPaths, setReloadPaths] = useState(false);
@@ -155,21 +154,20 @@ function ImageEditor({
     const blob = await fetch(dataURL).then((r) => r.blob());
 
     const formData = new FormData();
-    formData.append("file", blob, "fairway_ink_drawing.png"); // Add filename
+    formData.append("file", blob, "fairway_ink_drawing.png");
 
     try {
       const response = await axios.post(
-        "http://localhost:5001/upload", // Your backend endpoint
+        "http://localhost:5001/upload",
         formData,
         {
           headers: {
-            "Content-Type": "multipart/form-data", // Important!
+            "Content-Type": "multipart/form-data",
           },
         }
       );
 
       if (response.data.success) {
-        console.log("Image uploaded successfully:", response.data);
         const blob = new Blob([response.data.svgData], {
           type: "image/svg+xml",
         });
@@ -210,6 +208,53 @@ function ImageEditor({
     link.click();
   };
 
+  // handle file drag and drop
+  useEffect(() => {
+    const canvas = canvasRef.current;
+
+    const handleDragEnter = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+    };
+
+    const handleDragOver = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+    };
+
+    const handleDragLeave = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+    };
+
+    const handleDrop = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      const files = e.dataTransfer.files;
+      if (files.length > 0) {
+        const file = files[0];
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          setImageUrl(event.target.result);
+        };
+        reader.readAsDataURL(file);
+      }
+    };
+
+    canvas.addEventListener("dragenter", handleDragEnter);
+    canvas.addEventListener("dragover", handleDragOver);
+    canvas.addEventListener("dragleave", handleDragLeave);
+    canvas.addEventListener("drop", handleDrop);
+
+    return () => {
+      canvas.removeEventListener("dragenter", handleDragEnter);
+      canvas.removeEventListener("dragover", handleDragOver);
+      canvas.removeEventListener("dragleave", handleDragLeave);
+      canvas.removeEventListener("drop", handleDrop);
+    };
+  }, []);
+
   useEffect(() => {
     const canvas = canvasRef.current;
 
@@ -227,6 +272,10 @@ function ImageEditor({
 
   return (
     <div>
+      <p>
+        Upload an image (button or drag and drop), or draw with your mouse to
+        get started
+      </p>
       <div className="editor">
         <Toolbar
           setPaths={setPaths}
