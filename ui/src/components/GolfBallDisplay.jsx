@@ -11,9 +11,7 @@ const GolfBallDisplay = () => {
   const [scale, setScale] = useState(1);
   const [svgUrl, setSvgUrl] = useState(null);
   const [svgData, setSvgData] = useState(null);
-  const [stlUrl, setStlUrl] = useState(
-    "http://localhost:5001/output/stl/default.stl"
-  );
+  const [stlUrl, setStlUrl] = useState("default.stl");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [stlKey, setStlKey] = useState(0);
