@@ -24,7 +24,7 @@ const Header = () => {
             <button className="nav-item">Browse Designs</button> */}
           </div>
           <div className="header-icons">
-            <button className="icon-button">Login</button>
+            {/* <button className="icon-button">Login</button> */}
             <div>
               <button className="icon-button">
                 <IoIosCart size={24} /> ({getItemCount()})
