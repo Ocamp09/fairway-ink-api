@@ -1,15 +1,21 @@
 .tab-menu {
   display: flex;
+  padding-bottom: 1rem;
 }
 
-.tab-item {
+.tab-menu h3 {
   display: flex;
   align-items: center;
   margin-right: 1rem;
 }
 
-.tab-text:hover {
+.tab-menu h3:hover {
   color: blue;
+}
+
+.tab-menu div.active {
+  color: blue;
+  border-bottom: 2px solid blue;
 }
 
 .tab-number {
