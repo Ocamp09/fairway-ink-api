@@ -18,8 +18,8 @@ const Header = () => {
             <span className="home-name">Fairway Ink</span>
           </div>
           <div className="header-nav">
-            <button className="nav-item">Start Designing</button>
-            <button className="nav-item">Browse Designs</button>
+            {/* <button className="nav-item">Start Designing</button>
+            <button className="nav-item">Browse Designs</button> */}
           </div>
           <div className="header-icons">
             <button className="icon-button">Login</button>
