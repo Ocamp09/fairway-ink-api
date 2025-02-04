@@ -10,33 +10,7 @@
 }
 
 /* Style the error message */
-.error-message {
+.file-error-message {
   color: red;
   margin-bottom: 20px;
-}
-
-/* Style for the 2D Golf Ball Surface */
-.golf-ball-surface {
-  width: 45%;
-}
-
-/* Style for the 3D STL Viewer */
-.stl-viewer {
-  width: 45%;
-}
-
-/* Style the submit button */
-.submit-button {
-  padding: 10px 20px;
-  background-color: #007bff;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  margin-top: 20px;
-}
-
-.submit-button:disabled {
-  background-color: #cccccc;
-  cursor: not-allowed;
 }

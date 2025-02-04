@@ -1,13 +1,9 @@
 import sys
-from svgtrace import trace
-from PIL import Image
-import tempfile
-import os
 import subprocess
 import platform
 
 # takes the SVG and generates a model based off of it
-def run_blender(svg_path):
+def run_blender(svg_path, scale):
     # local path to Blender executable, separate path for mac
     blender_path = r"C:\Program Files\Blender Foundation\Blender 4.3\blender.exe"
     if platform.system() == "Darwin":
@@ -19,7 +15,8 @@ def run_blender(svg_path):
         "--background",
         "--python",
         "./blender_v1.py",
-        svg_path
+        svg_path,
+        str(scale)
     ]
 
     subprocess.run(blender_command)
@@ -30,9 +27,8 @@ def main(image_path, scale):
     filename = image_path.split("/")[3].split(".")[0]
     svg_path = "./output/svg/" + filename + ".svg"
 
-    
     try:
-        run_blender(svg_path)
+        run_blender(svg_path, scale)
         print("STL created")
     except Exception as e:
         print(f"Error: {e}")
@@ -45,5 +41,5 @@ if __name__ == "__main__":
         sys.exit(1)
 
     image_path = sys.argv[1]
-    image_size = float(sys.argv[2])
-    main(image_path, image_size)
+    image_scale = float(sys.argv[2])
+    main(image_path, image_scale)

@@ -1,4 +1,4 @@
-import bpy, os, pathlib
+import bpy, pathlib
 import sys
 
 
@@ -72,8 +72,9 @@ def main():
 
     # for use in scripting
     in_file = sys.argv[4]
+    scale = float(sys.argv[5])
+
     dir_path = pathlib.Path.cwd()
-    
     image_path = dir_path / in_file
 
     if image_path.exists(): 
@@ -96,13 +97,8 @@ def main():
             o = C.scene.objects[ new_object_name ]
             o.select_set(True)
             C.view_layer.objects.active = o
-            
-            # Move SVG to origin and scale up
-            bpy.ops.object.origin_set(type='GEOMETRY_ORIGIN', center='MEDIAN')
-            bpy.ops.transform.resize(value=(-300, -300, -300), orient_type='GLOBAL', orient_matrix=((1, 0, 0), (0, 1, 0), (0, 0, 1)), orient_matrix_type='GLOBAL', mirror=False, use_proportional_edit=False, proportional_edit_falloff='SMOOTH', proportional_size=1, use_proportional_connected=False, use_proportional_projected=False, snap=False, snap_elements={'INCREMENT'}, use_snap_project=False, snap_target='CLOSEST', use_snap_self=True, use_snap_edit=True, use_snap_nonedit=True, use_snap_selectable=False)
-            bpy.context.object.data.extrude = 12.5
-            bpy.ops.object.convert(target='MESH')
-            
+
+            # specify object name to cut with
             cut_object = new_object_name
             
         else:
@@ -121,18 +117,20 @@ def main():
             bpy.ops.object.mode_set(mode='OBJECT')
             bpy.ops.object.join()
             
-            # get name of joined curve
+            # get name of joined curve and set the cut object
             names_post_join = set([ o.name for o in C.scene.objects ])
             joined_curve = names_post_join.difference(names_pre_import).pop()
-            
+            cut_object = joined_curve  
+
             # convert back to curves for extrusion
             bpy.ops.object.convert(target='CURVE')
-            bpy.ops.object.origin_set(type='GEOMETRY_ORIGIN', center='MEDIAN')
-            bpy.ops.transform.resize(value=(-300, -300, -300), orient_type='GLOBAL', orient_matrix=((1, 0, 0), (0, 1, 0), (0, 0, 1)), orient_matrix_type='GLOBAL', mirror=False, use_proportional_edit=False, proportional_edit_falloff='SMOOTH', proportional_size=1, use_proportional_connected=False, use_proportional_projected=False, snap=False, snap_elements={'INCREMENT'}, use_snap_project=False, snap_target='CLOSEST', use_snap_self=True, use_snap_edit=True, use_snap_nonedit=True, use_snap_selectable=False)
-            bpy.context.object.data.extrude = 12.5
-            bpy.ops.object.convert(target='MESH')
-            cut_object = joined_curve
-            
+
+        # center and scale curves up before extruding
+        bpy.ops.object.origin_set(type='GEOMETRY_ORIGIN', center='MEDIAN')
+        bpy.ops.transform.resize(value=(-300 * scale, -300 * scale, -300 * scale), orient_type='GLOBAL', orient_matrix=((1, 0, 0), (0, 1, 0), (0, 0, 1)), orient_matrix_type='GLOBAL', mirror=False, use_proportional_edit=False, proportional_edit_falloff='SMOOTH', proportional_size=1, use_proportional_connected=False, use_proportional_projected=False, snap=False, snap_elements={'INCREMENT'}, use_snap_project=False, snap_target='CLOSEST', use_snap_self=True, use_snap_edit=True, use_snap_nonedit=True, use_snap_selectable=False)
+        bpy.context.object.data.extrude = 15
+        bpy.ops.object.convert(target='MESH')
+
         # create the object to be exported as STL
         add_semi_sphere(cut_object)
 

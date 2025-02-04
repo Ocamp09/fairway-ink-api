@@ -1,30 +1,58 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import axios from "axios";
 import "./ImageEditor.css";
+import Toolbar from "./Toolbar";
 
-function ImageEditor({ imageUrl, setSvgUrl }) {
+function ImageEditor({ imageUrl, setSvgUrl, setSvgData }) {
   const canvasRef = useRef(null);
   const [isDrawing, setIsDrawing] = useState(false);
-  const [color, setColor] = useState("#000000");
+  // const [color, setColor] = useState("#000000");
+  const color = "#00000";
   const [lineWidth, setLineWidth] = useState(5);
   const [paths, setPaths] = useState([]);
+  const [reloadPaths, setReloadPaths] = useState(false);
+  const [canvasScale, setCanvasScale] = useState(1);
 
-  // Function to redraw the canvas
-  const redrawCanvas = () => {
-    const canvas = canvasRef.current;
-    const context = canvas.getContext("2d");
+  // Function to redraw all paths
+  const drawPaths = useCallback(
+    (context) => {
+      console.log("Abouta draw paths");
 
-    // Clear the canvas
-    context.clearRect(0, 0, canvas.width, canvas.height);
+      if (paths.length !== 0) {
+        paths.forEach((path) => {
+          context.beginPath();
+          context.moveTo(path.points[0].x, path.points[0].y);
+          path.points.forEach((point) => {
+            context.lineTo(point.x, point.y);
+          });
+          context.strokeStyle = path.color;
+          context.lineWidth = path.width;
+          context.stroke();
+        });
+      }
+    },
+    [paths]
+  );
 
-    // Draw the image if it exists
+  const drawImage = useCallback(() => {
     if (imageUrl) {
       const img = new Image();
       img.src = imageUrl;
 
       img.onload = () => {
+        console.log("bouta draw an image");
+        const canvas = canvasRef.current;
+        const context = canvas.getContext("2d");
+
         // Calculate the position to center the image
-        const scale = 0.5;
+        const width = img.width;
+        const height = img.height;
+        const set_dimension = 425; // default dimension
+
+        // calculate the scale based on the longer size
+        let scale =
+          width > height ? set_dimension / width : set_dimension / height;
+
         const scaledWidth = img.width * scale;
         const scaledHeight = img.height * scale;
 
@@ -32,41 +60,34 @@ function ImageEditor({ imageUrl, setSvgUrl }) {
         const y = (canvas.height - scaledHeight) / 2;
 
         // Draw the image centered on the canvas
+        context.clearRect(0, 0, canvas.width, canvas.height);
         context.drawImage(img, x, y, scaledWidth, scaledHeight);
-
-        // Redraw all freehand paths
-        redrawPaths(context);
       };
-    } else {
-      // If no image, just redraw the paths
-      redrawPaths(context);
     }
-  };
-
-  // Function to redraw all paths
-  const redrawPaths = (context) => {
-    paths.forEach((path) => {
-      context.beginPath();
-      context.moveTo(path.points[0].x, path.points[0].y);
-      path.points.forEach((point) => {
-        context.lineTo(point.x, point.y);
-      });
-      context.strokeStyle = path.color;
-      context.lineWidth = path.width;
-      context.stroke();
-    });
-  };
+  }, [imageUrl]);
 
   // Redraw the canvas whenever paths or imageUrl changes
   useEffect(() => {
-    redrawCanvas();
-  }, [imageUrl]);
+    drawImage();
+  }, [imageUrl, drawImage]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
     const context = canvas.getContext("2d");
-    redrawPaths(context);
-  }, [paths]);
+
+    context.clearRect(0, 0, canvas.width, canvas.height);
+    context.scale(canvasScale, canvasScale);
+
+    drawImage();
+    drawPaths(context);
+    setReloadPaths(false);
+  }, [reloadPaths, canvasScale, lineWidth]);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    const context = canvas.getContext("2d");
+    drawPaths(context);
+  }, [paths, drawPaths]);
 
   const handleMouseDown = (e) => {
     setIsDrawing(true);
@@ -138,7 +159,12 @@ function ImageEditor({ imageUrl, setSvgUrl }) {
 
       if (response.data.success) {
         console.log("Image uploaded successfully:", response.data);
-        setSvgUrl(response.data.svgUrl);
+        const blob = new Blob([response.data.svgData], {
+          type: "image/svg+xml",
+        });
+        const url = URL.createObjectURL(blob);
+        setSvgData(response.data.svgData);
+        setSvgUrl(url);
       } else {
         console.error("Upload error:", response.data);
       }
@@ -147,21 +173,9 @@ function ImageEditor({ imageUrl, setSvgUrl }) {
     }
   };
 
-  const handleUndo = () => {
-    setPaths((prevPaths) => prevPaths.slice(0, -1)); // Remove the last path
-  };
-
-  const handleFill = () => {
-    const canvas = canvasRef.current;
-    const context = canvas.getContext("2d");
-    context.fillStyle = color;
-    context.fillRect(0, 0, canvas.width, canvas.height);
-  };
-
   useEffect(() => {
     const canvas = canvasRef.current;
 
-    // Add event listeners
     canvas.addEventListener("mousedown", handleMouseDown);
     canvas.addEventListener("mousemove", handleMouseMove);
     canvas.addEventListener("mouseup", handleMouseUp);
@@ -172,31 +186,20 @@ function ImageEditor({ imageUrl, setSvgUrl }) {
       canvas.removeEventListener("mousemove", handleMouseMove);
       canvas.removeEventListener("mouseup", handleMouseUp);
     };
-  }, [isDrawing, paths]);
+  });
 
   return (
     <div className="editor">
-      <div className="toolbar">
-        <button onClick={handleUndo}>Undo</button>
-        <label className="toolbar-text" htmlFor="lineWidth">
-          Line Width:
-        </label>
-        <input
-          type="number"
-          id="lineWidth"
-          min={1}
-          max={20}
-          value={lineWidth}
-          onChange={(e) => setLineWidth(Number(e.target.value))}
-        />
-      </div>
-      <div className="canvas-container">
-        <canvas
-          ref={canvasRef}
-          width={500}
-          height={500}
-          className="golf-template"
-        />
+      <Toolbar
+        setPaths={setPaths}
+        lineWidth={lineWidth}
+        setLineWidth={setLineWidth}
+        setReloadPaths={setReloadPaths}
+        scale={canvasScale}
+        setScale={setCanvasScale}
+      ></Toolbar>
+      <div>
+        <canvas ref={canvasRef} width={500} height={500} className="canvas" />
       </div>
       <button onClick={handleSvg}>Preview</button>
     </div>

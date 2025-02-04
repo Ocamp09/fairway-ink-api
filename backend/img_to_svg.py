@@ -3,8 +3,47 @@ from svgtrace import trace
 from PIL import Image
 import tempfile
 import os
+import xml.etree.ElementTree as ET    
+from enum import Enum
 
-def image_to_svg(image_path, output_svg_path):
+class PrintType(Enum):
+    SOLID = 1
+
+def fill_svg(svg_data):
+    try:
+        root = ET.fromstring(svg_data)
+        paths = root.findall('.//{http://www.w3.org/2000/svg}path')
+
+        if paths:
+            outermost_path = paths[0] # Assume the first path is the outermost.  This may need more sophisticated logic.
+
+            # Check if the path has a fill attribute, if not add one. If it does, don't change it.
+            if outermost_path.get('fill') is None:
+                outermost_path.set('fill', 'black') 
+
+            # Remove all other paths (optional, if you only want the outline)
+            for path in paths[1:]:
+              root.remove(path)
+
+            d_value = outermost_path.get('d')
+            if d_value:
+                # Find the index of 'Z' (or 'z') and truncate the string
+                z_index = d_value.upper().find('Z')  # Case-insensitive search
+                if z_index != -1:
+                    truncated_d = d_value[:z_index]  # Keep 'Z'
+                    outermost_path.set('d', truncated_d)
+        
+        new_svg_data = ET.tostring(root, encoding='unicode', method='xml').replace("ns0:", "").replace(":ns0", "")
+        # with open(svg_path, "w") as svg_file:
+        #     svg_file.write(new_svg_data)
+        return new_svg_data
+
+    except ET.ParseError as e:
+        print(f"Error parsing SVG: {e}")
+    except Exception as e:
+        print(f"Error processing SVG: {e}")
+
+def image_to_svg(image_path, method=PrintType.SOLID):
     image = Image.open(image_path)
 
     width, height = image.size
@@ -12,10 +51,9 @@ def image_to_svg(image_path, output_svg_path):
     bbox = image.getbbox()
 
     image = image.crop(bbox)
-    # Convert mm to pixels (assuming 300 dpi, adjust if needed)
-    dpi = 300  # Adjust DPI as needed
-    size = 15
-    max_size_px = int(size * dpi / 25.4)  # 25.4 mm per inch
+ 
+    # default size for the SVGs to be saved
+    max_size_px = 125
 
     # Resize the image while maintaining aspect ratio
     width, height = image.size
@@ -35,11 +73,16 @@ def image_to_svg(image_path, output_svg_path):
 
     # create a bitmap and convert to SVG
     svg_data = trace(temp_image_path, blackAndWhite=True)
-    with open(output_svg_path, "w") as svg_file:
-        svg_file.write(svg_data)
-
     os.remove(temp_image_path)
-    pass
+
+    # with open(svg_path, "w") as svg_file:
+    #     svg_file.write(svg_data)
+
+    print(method)
+    if method == PrintType.SOLID:
+        svg_data = fill_svg(svg_data)
+
+    return svg_data
 
 def main(image_path):
     filename = image_path.split("/")[2].split(".")[0]
@@ -49,7 +92,7 @@ def main(image_path):
     try:
         # Step 1: Convert image to SVG
         if extension != "svg":
-            image_to_svg(image_path, svg_path)
+            image_to_svg(image_path)
       
     except Exception as e:
         print(f"Error: {e}")

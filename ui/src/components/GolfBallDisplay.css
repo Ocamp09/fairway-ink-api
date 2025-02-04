@@ -9,6 +9,17 @@
   background-color: #ffffff;
 }
 
+.golf-real-size {
+  width: 173px;
+  height: 173px;
+  border-radius: 50%;
+  border: 2px solid black;
+  position: relative;
+  margin: 0 auto;
+  overflow: hidden;
+  background-color: #ffffff;
+}
+
 .image-body {
   margin-top: 10px;
   width: 200px;
@@ -32,4 +43,24 @@
 .slider-text {
   margin-top: 5px;
   font-size: 0.9em;
+}
+
+.stl-viewer {
+  width: 100%;
+}
+
+/* Style the submit button */
+.submit-button {
+  padding: 10px 20px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-top: 20px;
+}
+
+.submit-button:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
 }

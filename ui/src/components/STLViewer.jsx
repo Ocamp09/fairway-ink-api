@@ -3,6 +3,7 @@ import { Canvas, useLoader, useThree } from "@react-three/fiber";
 import { STLLoader } from "three/examples/jsm/loaders/STLLoader";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import ZoomControls from "./ZoomControls";
+import "./STLViewer.css";
 
 const STLModel = ({ url }) => {
   const stl = useLoader(STLLoader, url);
@@ -62,10 +63,10 @@ const STLViewer = ({ stlUrl }) => {
   };
 
   return (
-    <div style={{ position: "relative" }}>
+    <div className="stl-body">
       <Canvas
         camera={{ position: [0, 0, 100], fov: 50 }}
-        style={{ width: "100%", height: "500px", background: "#f0f0f0" }}
+        className="stl-canvas"
       >
         {/* Add lighting */}
         <ambientLight intensity={0.5} />
@@ -79,22 +80,7 @@ const STLViewer = ({ stlUrl }) => {
         <CameraController cameraRef={cameraRef} resetKey={resetKey} />
       </Canvas>
       <ZoomControls onZoomIn={handleZoomIn} onZoomOut={handleZoomOut} />
-      {/* Add reset button */}
-      <button
-        onClick={handleReset}
-        style={{
-          position: "absolute",
-          top: "10px",
-          left: "10px",
-          zIndex: 1,
-          padding: "5px 10px",
-          backgroundColor: "#007bff",
-          color: "white",
-          border: "none",
-          borderRadius: "5px",
-          cursor: "pointer",
-        }}
-      >
+      <button onClick={handleReset} className="reset">
         Reset View
       </button>
     </div>

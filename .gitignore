@@ -5,3 +5,7 @@
 *.gcode
 !default.stl
 .DS_Store
+*.pyc
+!/ui/public/*.svg
+!/ui/public/*.jpg
+!/ui/public/*.png
