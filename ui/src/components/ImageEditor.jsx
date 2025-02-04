@@ -21,6 +21,7 @@ function ImageEditor({
   const [reloadPaths, setReloadPaths] = useState(false);
   const [canvasScale, setCanvasScale] = useState(1);
   const [imageUrl, setImageUrl] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   // Function to redraw all paths
   const drawPaths = useCallback(
@@ -136,6 +137,7 @@ function ImageEditor({
   };
 
   const handleSvg = async () => {
+    setIsLoading(true);
     setSvgUrl(null);
     const canvas = canvasRef.current;
 
@@ -171,6 +173,7 @@ function ImageEditor({
         const blob = new Blob([response.data.svgData], {
           type: "image/svg+xml",
         });
+        setIsLoading(false);
         const url = URL.createObjectURL(blob);
         setSvgData(response.data.svgData);
         setSvgUrl(url);
@@ -178,9 +181,11 @@ function ImageEditor({
         setShowDesign(false);
       } else {
         console.error("Upload error:", response.data);
+        setIsLoading(false);
       }
     } catch (err) {
       console.error("Upload error:", err);
+      setIsLoading(false);
     }
   };
 
@@ -221,28 +226,35 @@ function ImageEditor({
   });
 
   return (
-    <div className="editor">
-      <Toolbar
-        setPaths={setPaths}
-        lineWidth={lineWidth}
-        setLineWidth={setLineWidth}
-        setReloadPaths={setReloadPaths}
-        scale={canvasScale}
-        setScale={setCanvasScale}
-        setImageUrl={setImageUrl}
-      ></Toolbar>
-      <div>
-        <canvas ref={canvasRef} width={500} height={500} className="canvas" />
+    <div>
+      <div className="editor">
+        <Toolbar
+          setPaths={setPaths}
+          lineWidth={lineWidth}
+          setLineWidth={setLineWidth}
+          setReloadPaths={setReloadPaths}
+          scale={canvasScale}
+          setScale={setCanvasScale}
+          setImageUrl={setImageUrl}
+        ></Toolbar>
+        <div>
+          <canvas ref={canvasRef} width={500} height={500} className="canvas" />
+        </div>
+        <div className="right-panel">
+          <FileUpload imageUrl={imageUrl} setImageUrl={setImageUrl} />
+          <button className="right-button" onClick={saveCanvas}>
+            Save Image
+          </button>
+        </div>
       </div>
-      <div className="right-panel">
-        <FileUpload imageUrl={imageUrl} setImageUrl={setImageUrl} />
-        <button className="right-button" onClick={handleSvg}>
-          Preview
-        </button>
-        <button className="right-button" onClick={saveCanvas}>
-          Save Image
-        </button>
-      </div>
+      <button
+        className="submit-button"
+        onClick={handleSvg}
+        disabled={isLoading}
+      >
+        {!isLoading && "Convert Drawing"}
+        {isLoading && "Processing"}
+      </button>
     </div>
   );
 }

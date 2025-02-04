@@ -24,4 +24,21 @@
   margin-top: 5px;
   width: 100%;
   border-radius: 5px;
+  background-color: #007bff;
+}
+
+.submit-button {
+  padding: 10px 20px;
+  width: auto;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-top: 20px;
+}
+
+.submit-button:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
 }
