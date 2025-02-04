@@ -66,6 +66,7 @@ function ImageEditor({ setSvgUrl, setSvgData, setShowDesign, setShowScale }) {
         context.drawImage(img, x, y, scaledWidth, scaledHeight);
       };
     }
+    setReloadPaths(false);
   }, [imageUrl]);
 
   // Redraw the canvas whenever paths or imageUrl changes
@@ -222,6 +223,7 @@ function ImageEditor({ setSvgUrl, setSvgData, setShowDesign, setShowScale }) {
         setReloadPaths={setReloadPaths}
         scale={canvasScale}
         setScale={setCanvasScale}
+        setImageUrl={setImageUrl}
       ></Toolbar>
       <div>
         <canvas ref={canvasRef} width={500} height={500} className="canvas" />

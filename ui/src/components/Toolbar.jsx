@@ -7,6 +7,7 @@ const Toolbar = ({
   setReloadPaths,
   setScale,
   scale,
+  setImageUrl,
 }) => {
   const scaleMultiplier = 0.8;
 
@@ -20,6 +21,11 @@ const Toolbar = ({
 
   const handleUndo = () => {
     setPaths((prevPaths) => prevPaths.slice(0, -1)); // Remove the last path
+    setReloadPaths(true);
+  };
+
+  const handleRemoveImage = () => {
+    setImageUrl(null);
     setReloadPaths(true);
   };
 
@@ -41,6 +47,7 @@ const Toolbar = ({
         {/* <button onClick={handleZoomIn}>Zoom In</button>
         <button onClick={handleZoomOut}>Zoom Out</button>
         <button onClick={handleUndo}>Undo</button> */}
+        <button onClick={handleRemoveImage}>Delete image</button>
         <button onClick={handleClear}>Clear</button>
         <label className="toolbar-text" htmlFor="lineWidth">
           Line Width:
