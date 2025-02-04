@@ -15,13 +15,10 @@ const TabMenu = ({
 }) => {
   return (
     <div className="tab-menu">
-      <div
-        className="tab-item"
-        style={{ color: showDesign ? "blue" : "inherit" }}
-      >
+      <div className={showDesign ? "active" : ""}>
         <h3
-          className="tab-text"
           onClick={() => {
+            console.log("click");
             setShowDesign(true);
             setShowScale(false);
             setShowPreview(false);
@@ -31,12 +28,8 @@ const TabMenu = ({
           Design
         </h3>
       </div>
-      <div
-        className="tab-item"
-        style={{ color: showScale ? "blue" : "inherit" }}
-      >
+      <div className={showScale ? "active" : ""}>
         <h3
-          className="tab-text"
           onClick={() => {
             setShowDesign(false);
             setShowScale(true);
@@ -47,10 +40,7 @@ const TabMenu = ({
           Scale
         </h3>
       </div>
-      <div
-        className="tab-item"
-        style={{ color: showPreview ? "blue" : "inherit" }}
-      >
+      <div className={showPreview ? "active" : ""}>
         <h3
           className="tab-text"
           onClick={() => {
