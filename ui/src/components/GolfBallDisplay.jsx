@@ -5,6 +5,7 @@ import ImageScaler from "./ImageScaler";
 import STLViewer from "./STLViewer";
 import axios from "axios";
 import TabMenu from "./TabMenu";
+import { useCart } from "./CartContext";
 
 const GolfBallDisplay = () => {
   const [scale, setScale] = useState(1);
@@ -20,6 +21,8 @@ const GolfBallDisplay = () => {
   const [showScale, setShowScale] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [paths, setPaths] = useState([]);
+
+  const { addToCart } = useCart();
 
   // get svg width and height, scale down to size I want to display, then factor that scale into the query sent
   const canvasSizePx = 125 * scale;
@@ -97,6 +100,7 @@ const GolfBallDisplay = () => {
 
         {showScale && (
           <div>
+            <p>Scale the image to the desired size</p>
             <div className="ball-displays">
               <div className="golf-template">
                 {svgUrl && (
@@ -142,7 +146,17 @@ const GolfBallDisplay = () => {
       </div>
       {showPreview && (
         <div className="stl-viewer">
+          <p>3-d Render Preview</p>
           {stlUrl && <STLViewer key={stlKey} stlUrl={stlUrl} />}
+          <button
+            onClick={() => {
+              addToCart(stlUrl);
+            }}
+            className="submit-button"
+            disabled={isLoading}
+          >
+            Add to Cart
+          </button>
         </div>
       )}
     </div>

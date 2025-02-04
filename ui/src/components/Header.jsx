@@ -1,8 +1,10 @@
 import "./Header.css";
 // import { LuSun } from "react-icons/lu";
 import { IoIosCart } from "react-icons/io";
+import { useCart } from "./CartContext";
 
 const Header = () => {
+  const { getItemCount } = useCart();
   return (
     <>
       <div className="header">
@@ -23,9 +25,11 @@ const Header = () => {
           </div>
           <div className="header-icons">
             <button className="icon-button">Login</button>
-            <button className="icon-button">
-              <IoIosCart size={24} />
-            </button>
+            <div>
+              <button className="icon-button">
+                <IoIosCart size={24} /> ({getItemCount()})
+              </button>
+            </div>
             {/* <LuSun size={32} color="yellow" fill="#242424" /> */}
           </div>
         </div>
