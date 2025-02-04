@@ -4,13 +4,20 @@ import "./ImageEditor.css";
 import Toolbar from "./Toolbar";
 import FileUpload from "./FileUpload";
 
-function ImageEditor({ setSvgUrl, setSvgData, setShowDesign, setShowScale }) {
+function ImageEditor({
+  setSvgUrl,
+  setSvgData,
+  setShowDesign,
+  setShowScale,
+  showDesign,
+  paths,
+  setPaths,
+}) {
   const canvasRef = useRef(null);
   const [isDrawing, setIsDrawing] = useState(false);
   // const [color, setColor] = useState("#000000");
   const color = "#00000";
   const [lineWidth, setLineWidth] = useState(5);
-  const [paths, setPaths] = useState([]);
   const [reloadPaths, setReloadPaths] = useState(false);
   const [canvasScale, setCanvasScale] = useState(1);
   const [imageUrl, setImageUrl] = useState(null);
@@ -18,8 +25,6 @@ function ImageEditor({ setSvgUrl, setSvgData, setShowDesign, setShowScale }) {
   // Function to redraw all paths
   const drawPaths = useCallback(
     (context) => {
-      console.log("Abouta draw paths");
-
       if (paths.length !== 0) {
         paths.forEach((path) => {
           context.beginPath();
@@ -42,7 +47,6 @@ function ImageEditor({ setSvgUrl, setSvgData, setShowDesign, setShowScale }) {
       img.src = imageUrl;
 
       img.onload = () => {
-        console.log("bouta draw an image");
         const canvas = canvasRef.current;
         const context = canvas.getContext("2d");
 
@@ -84,7 +88,9 @@ function ImageEditor({ setSvgUrl, setSvgData, setShowDesign, setShowScale }) {
     drawImage();
     drawPaths(context);
     setReloadPaths(false);
-  }, [reloadPaths, canvasScale, lineWidth]);
+    console.log(paths);
+    console.log("here");
+  }, [reloadPaths, canvasScale, lineWidth, showDesign]);
 
   useEffect(() => {
     const canvas = canvasRef.current;

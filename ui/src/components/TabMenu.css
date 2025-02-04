@@ -1,0 +1,17 @@
+.tab-menu {
+  display: flex;
+}
+
+.tab-item {
+  display: flex;
+  align-items: center;
+  margin-right: 1rem;
+}
+
+.tab-text:hover {
+  color: blue;
+}
+
+.tab-number {
+  margin-right: 0.25rem;
+}

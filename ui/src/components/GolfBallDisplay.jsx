@@ -1,9 +1,10 @@
 import "../components/GolfBallDisplay.css";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import ImageEditor from "./ImageEditor";
 import ImageScaler from "./ImageScaler";
 import STLViewer from "./STLViewer";
 import axios from "axios";
+import TabMenu from "./TabMenu";
 
 const GolfBallDisplay = () => {
   const [scale, setScale] = useState(1);
@@ -18,6 +19,7 @@ const GolfBallDisplay = () => {
   const [showDesign, setShowDesign] = useState(true);
   const [showScale, setShowScale] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
+  const [paths, setPaths] = useState([]);
 
   // get svg width and height, scale down to size I want to display, then factor that scale into the query sent
   const canvasSizePx = 125 * scale;
@@ -70,46 +72,59 @@ const GolfBallDisplay = () => {
 
   return (
     <div className="golf-ball-display">
+      <TabMenu
+        showDesign={showDesign}
+        setShowDesign={setShowDesign}
+        showScale={showScale}
+        setShowScale={setShowScale}
+        showPreview={showPreview}
+        setShowPreview={setShowPreview}
+      />
       <div className="image-body">
         {showDesign && (
           <div>
-            <h3 className="display-name">Design</h3>
             <ImageEditor
               setSvgUrl={setSvgUrl}
               setSvgData={setSvgData}
               setShowDesign={setShowDesign}
               setShowScale={setShowScale}
+              showDesign={showDesign}
+              paths={paths}
+              setPaths={setPaths}
             ></ImageEditor>{" "}
           </div>
         )}
 
         {showScale && (
           <div>
-            <h3>Scale</h3>
-            <div className="golf-template">
-              {svgUrl && (
-                <img
-                  src={svgUrl}
-                  alt="Uploaded"
-                  className="upload-img"
-                  style={{
-                    width: `${canvasSizePx}px`, // Set width based on scale
-                  }}
-                />
-              )}
-            </div>
-
-            <div className="golf-real-size">
-              {svgUrl && (
-                <img
-                  src={svgUrl}
-                  alt="Uploaded"
-                  className="upload-img"
-                  style={{
-                    width: `${(canvasSizePx * 173) / 500}px`, // Set width based on scale
-                  }}
-                />
-              )}
+            <div className="ball-displays">
+              <div className="golf-template">
+                {svgUrl && (
+                  <img
+                    src={svgUrl}
+                    alt="Uploaded"
+                    className="upload-img"
+                    style={{
+                      width: `${canvasSizePx}px`, // Set width based on scale
+                    }}
+                  />
+                )}
+              </div>
+              <div>
+                <p>Life Size</p>
+                <div className="golf-real-size">
+                  {svgUrl && (
+                    <img
+                      src={svgUrl}
+                      alt="Uploaded"
+                      className="upload-img"
+                      style={{
+                        width: `${(canvasSizePx * 173) / 500}px`, // Set width based on scale
+                      }}
+                    />
+                  )}
+                </div>
+              </div>
             </div>
             <ImageScaler scale={scale} setScale={setScale}></ImageScaler>
             <form onSubmit={handleSubmit}>
