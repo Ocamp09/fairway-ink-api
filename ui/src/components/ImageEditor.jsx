@@ -2,8 +2,9 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import axios from "axios";
 import "./ImageEditor.css";
 import Toolbar from "./Toolbar";
+import FileUpload from "./FileUpload";
 
-function ImageEditor({ imageUrl, setSvgUrl, setSvgData }) {
+function ImageEditor({ setSvgUrl, setSvgData, setShowDesign, setShowScale }) {
   const canvasRef = useRef(null);
   const [isDrawing, setIsDrawing] = useState(false);
   // const [color, setColor] = useState("#000000");
@@ -12,6 +13,7 @@ function ImageEditor({ imageUrl, setSvgUrl, setSvgData }) {
   const [paths, setPaths] = useState([]);
   const [reloadPaths, setReloadPaths] = useState(false);
   const [canvasScale, setCanvasScale] = useState(1);
+  const [imageUrl, setImageUrl] = useState(null);
 
   // Function to redraw all paths
   const drawPaths = useCallback(
@@ -144,7 +146,7 @@ function ImageEditor({ imageUrl, setSvgUrl, setSvgData }) {
     const blob = await fetch(dataURL).then((r) => r.blob());
 
     const formData = new FormData();
-    formData.append("file", blob, "canvas_image.png"); // Add filename
+    formData.append("file", blob, "fairway_ink_drawing.png"); // Add filename
 
     try {
       const response = await axios.post(
@@ -165,12 +167,35 @@ function ImageEditor({ imageUrl, setSvgUrl, setSvgData }) {
         const url = URL.createObjectURL(blob);
         setSvgData(response.data.svgData);
         setSvgUrl(url);
+        setShowScale(true);
+        setShowDesign(false);
       } else {
         console.error("Upload error:", response.data);
       }
     } catch (err) {
       console.error("Upload error:", err);
     }
+  };
+
+  const saveCanvas = () => {
+    const canvas = canvasRef.current;
+
+    const canvasBackground = document.createElement("canvas");
+    canvasBackground.width = canvas.width;
+    canvasBackground.height = canvas.height;
+
+    const ctx = canvasBackground.getContext("2d");
+    ctx.fillStyle = "white";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(canvas, 0, 0);
+
+    const dataUrl = canvasBackground.toDataURL("image/png");
+
+    const link = document.createElement("a");
+    link.href = dataUrl;
+    link.setAttribute("download", "fairway-ink-canvas.jpg");
+    document.body.appendChild(link);
+    link.click();
   };
 
   useEffect(() => {
@@ -201,7 +226,15 @@ function ImageEditor({ imageUrl, setSvgUrl, setSvgData }) {
       <div>
         <canvas ref={canvasRef} width={500} height={500} className="canvas" />
       </div>
-      <button onClick={handleSvg}>Preview</button>
+      <div className="right-panel">
+        <FileUpload imageUrl={imageUrl} setImageUrl={setImageUrl} />
+        <button className="right-button" onClick={handleSvg}>
+          Preview
+        </button>
+        <button className="right-button" onClick={saveCanvas}>
+          Save Image
+        </button>
+      </div>
     </div>
   );
 }

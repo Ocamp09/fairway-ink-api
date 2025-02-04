@@ -1,8 +1,10 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import "./FileUpload.css";
+import "./ImageEditor.css";
 
 const FileUpload = ({ setImageUrl }) => {
   const [error, setError] = useState("");
+  const fileInputRef = useRef(null); // Use a ref to access the file input
 
   const allowedTypes = [
     "image/png",
@@ -29,14 +31,22 @@ const FileUpload = ({ setImageUrl }) => {
     setImageUrl(URL.createObjectURL(selectedFile));
   };
 
+  const handleUploadClick = () => {
+    fileInputRef.current.click(); // Trigger the file input click
+  };
+
   return (
     <div className="file-upload-container">
-      <h3>Upload an Image</h3>
       <input
         type="file"
         onChange={handleFileChange}
         accept=".png,.jpg,.jpeg,.svg"
+        ref={fileInputRef}
+        hidden
       />
+      <button className="right-button" onClick={handleUploadClick}>
+        Upload
+      </button>
       {error && <p className="file-error-message">{error}</p>}
     </div>
   );

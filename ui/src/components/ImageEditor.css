@@ -14,3 +14,14 @@
   overflow: hidden;
   background-color: #ffffff;
 }
+
+.right-panel {
+  display: flex;
+  flex-direction: column;
+}
+
+.right-button {
+  margin-top: 5px;
+  width: 100%;
+  border-radius: 5px;
+}
