@@ -9,3 +9,4 @@
 !/ui/public/*.svg
 !/ui/public/*.jpg
 !/ui/public/*.png
+venv/
