@@ -6,6 +6,7 @@ import STLViewer from "./STLViewer";
 import axios from "axios";
 import TabMenu from "./TabMenu";
 import { useCart } from "./CartContext";
+import QuantityDropdown from "./QuantityDropdown";
 
 const GolfBallDisplay = () => {
   const [scale, setScale] = useState(1);
@@ -19,6 +20,7 @@ const GolfBallDisplay = () => {
   const [showScale, setShowScale] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [paths, setPaths] = useState([]);
+  const [quantity, setQuantity] = useState(1);
 
   const { addToCart } = useCart();
 
@@ -55,7 +57,6 @@ const GolfBallDisplay = () => {
       );
 
       if (response.data.success) {
-        console.log(response.data);
         setStlUrl(response.data.stlUrl);
         setStlKey((prevKey) => prevKey + 1);
         setShowPreview(true);
@@ -69,6 +70,11 @@ const GolfBallDisplay = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleAddToCart = (event) => {
+    event.preventDefault();
+    addToCart(stlUrl, quantity);
   };
 
   return (
@@ -146,15 +152,20 @@ const GolfBallDisplay = () => {
         <div className="stl-viewer">
           <p>3-d Render Preview</p>
           {stlUrl && <STLViewer key={stlKey} stlUrl={stlUrl} />}
-          <button
-            onClick={() => {
-              addToCart(stlUrl);
-            }}
-            className="submit-button"
-            disabled={isLoading}
-          >
-            Add to Cart
-          </button>
+          <div>
+            <QuantityDropdown
+              setQuantity={setQuantity}
+              quantity={quantity}
+              maxQuantity={15}
+            />
+            <button
+              onClick={handleAddToCart}
+              className="submit-button"
+              disabled={isLoading}
+            >
+              Add to Cart
+            </button>
+          </div>
         </div>
       )}
     </div>
