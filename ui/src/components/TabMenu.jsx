@@ -18,7 +18,6 @@ const TabMenu = ({
       <div className={showDesign ? "active" : ""}>
         <h3
           onClick={() => {
-            console.log("click");
             setShowDesign(true);
             setShowScale(false);
             setShowPreview(false);
