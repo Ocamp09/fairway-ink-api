@@ -34,7 +34,7 @@ const Header = ({ cartPopup, setCartPopup }) => {
                   setCartPopup(!cartPopup);
                 }}
               >
-                <IoIosCart size={24} /> ({getItemCount()})
+                <IoIosCart size={28} /> ({getItemCount()})
               </button>
             </div>
             {/* <LuSun size={32} color="yellow" fill="#242424" /> */}
