@@ -10,6 +10,7 @@ const Toolbar = ({
   scale,
   setImageUrl,
   imageUrl,
+  canvasRef,
 }) => {
   const scaleMultiplier = 0.8;
 

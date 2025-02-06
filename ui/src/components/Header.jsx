@@ -1,7 +1,7 @@
 import "./Header.css";
 // import { LuSun } from "react-icons/lu";
 import { IoIosCart } from "react-icons/io";
-import { useCart } from "./CartContext";
+import { useCart } from "./Cart/CartContext";
 import { useState } from "react";
 
 const Header = ({ cartPopup, setCartPopup }) => {

@@ -263,6 +263,7 @@ function ImageEditor({
           setScale={setCanvasScale}
           setImageUrl={setImageUrl}
           imageUrl={imageUrl}
+          canvasRef={canvasRef}
         ></Toolbar>
         <div>
           <canvas ref={canvasRef} width={500} height={500} className="canvas" />

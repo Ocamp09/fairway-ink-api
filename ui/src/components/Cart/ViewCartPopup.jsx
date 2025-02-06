@@ -1,6 +1,6 @@
 import React from "react";
 import { useCart } from "./CartContext";
-import STLViewer from "./STLViewer";
+import STLViewer from "../3D-View/STLViewer";
 import "./ViewCartPopup.css";
 
 const ViewCartPopup = ({ isOpen, setIsOpen }) => {

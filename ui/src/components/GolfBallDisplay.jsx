@@ -1,11 +1,11 @@
 import "../components/GolfBallDisplay.css";
-import { useEffect, useState } from "react";
-import ImageEditor from "./ImageEditor";
+import { useState } from "react";
+import ImageEditor from "./Image_Drawing/ImageEditor";
 import ImageScaler from "./ImageScaler";
-import STLViewer from "./STLViewer";
+import STLViewer from "./3D-View/STLViewer";
 import axios from "axios";
 import TabMenu from "./TabMenu";
-import { useCart } from "./CartContext";
+import { useCart } from "./Cart/CartContext";
 import QuantityDropdown from "./QuantityDropdown";
 
 const GolfBallDisplay = () => {
