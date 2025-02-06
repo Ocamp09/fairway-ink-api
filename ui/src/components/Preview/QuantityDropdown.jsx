@@ -1,23 +1,36 @@
 import React, { useState } from "react";
+import "./QuantityDropdown.css";
 
-function QuantityDropdown({ setQuantity, quantity, maxQuantity = 15 }) {
+function QuantityDropdown({
+  setQuantity,
+  quantity,
+  maxQuantity = 15,
+  labelText = "Quantity: ",
+  step = 1,
+}) {
   const handleQuantityChange = (event) => {
     setQuantity(parseInt(event.target.value, 10));
   };
 
   return (
-    <div>
-      <label htmlFor="quantitySelect">Quantity:</label>
+    <div className="dropdown">
+      <label htmlFor="quantitySelect">{labelText}</label>
       <select
         id="quantitySelect"
         value={quantity}
         onChange={handleQuantityChange}
       >
-        {Array.from({ length: maxQuantity }, (_, i) => (
-          <option key={i + 1} value={i + 1}>
-            {i + 1}
-          </option>
-        ))}
+        {(() => {
+          const options = [];
+          for (let i = 1; i <= maxQuantity; i += step) {
+            options.push(
+              <option key={i} value={i}>
+                {i}
+              </option>
+            );
+          }
+          return options;
+        })()}
       </select>
     </div>
   );

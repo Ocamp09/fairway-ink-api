@@ -1,0 +1,24 @@
+.dropdown {
+  display: flex;
+  align-items: center;
+  border: 1px solid #777;
+  border-radius: 4px;
+  margin-bottom: 10px;
+  padding: 0 5px 5px;
+  width: 125px;
+  background-color: #adb5bd;
+}
+
+.dropdown label {
+  font-size: 12px;
+  text-transform: uppercase;
+  color: black;
+  padding: 2px 8px 0;
+}
+
+select {
+  background-color: #adb5bd;
+  border: 0px;
+  width: 100%;
+  color: black;
+}

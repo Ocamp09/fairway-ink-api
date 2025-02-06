@@ -1,4 +1,5 @@
 import "./Toolbar.css";
+import QuantityDropdown from "../Preview/QuantityDropdown";
 import FileUpload from "./FileUpload";
 
 const Toolbar = ({
@@ -75,16 +76,12 @@ const Toolbar = ({
         <button onClick={saveCanvas}>Save Drawing</button>
         <button onClick={handleRemoveImage}>Remove image</button>
         <button onClick={handleClear}>Clear</button>
-        <label className="toolbar-text" htmlFor="lineWidth">
-          Line Width:
-        </label>
-        <input
-          type="number"
-          id="lineWidth"
-          min={5}
-          max={20}
-          value={lineWidth}
-          onChange={(e) => setLineWidth(Number(e.target.value))}
+        <QuantityDropdown
+          maxQuantity={20}
+          labelText="Line Width: "
+          step={2}
+          quantity={lineWidth}
+          setQuantity={setLineWidth}
         />
       </div>
     </>
