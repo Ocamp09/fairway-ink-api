@@ -2,9 +2,11 @@ import "./Header.css";
 // import { LuSun } from "react-icons/lu";
 import { IoIosCart } from "react-icons/io";
 import { useCart } from "./CartContext";
+import { useState } from "react";
 
-const Header = () => {
+const Header = ({ cartPopup, setCartPopup }) => {
   const { getItemCount } = useCart();
+
   return (
     <>
       <div className="header">
@@ -26,7 +28,12 @@ const Header = () => {
           <div className="header-icons">
             {/* <button className="icon-button">Login</button> */}
             <div>
-              <button className="icon-button">
+              <button
+                className="icon-button"
+                onClick={() => {
+                  setCartPopup(!cartPopup);
+                }}
+              >
                 <IoIosCart size={24} /> ({getItemCount()})
               </button>
             </div>
