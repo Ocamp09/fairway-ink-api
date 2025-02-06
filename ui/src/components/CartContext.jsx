@@ -3,7 +3,18 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 const CartContext = createContext();
 
 export const CartProvider = ({ children }) => {
-  const [cartItems, setCartItems] = useState([]);
+  const [cartItems, setCartItems] = useState([
+    {
+      id: "golfball0",
+      stl: "http://localhost:5001/output/stl/golfball0.stl",
+      quantity: 2,
+    },
+    {
+      id: "golfball1",
+      stl: "http://localhost:5001/output/stl/golfball1.stl",
+      quantity: 1,
+    },
+  ]);
 
   useEffect(() => {
     const storedCart = localStorage.getItem("cart");
@@ -30,6 +41,7 @@ export const CartProvider = ({ children }) => {
       setCartItems([...cartItems, { ...item, quantity: Number(quantity) }]);
     }
   };
+
   const removeFromCart = (itemId) => {
     setCartItems(cartItems.filter((item) => item.id !== itemId));
   };
