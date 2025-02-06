@@ -1,4 +1,5 @@
 import "./Toolbar.css";
+import FileUpload from "./FileUpload";
 
 const Toolbar = ({
   setPaths,
@@ -8,6 +9,7 @@ const Toolbar = ({
   setScale,
   scale,
   setImageUrl,
+  imageUrl,
 }) => {
   const scaleMultiplier = 0.8;
 
@@ -34,6 +36,27 @@ const Toolbar = ({
     setReloadPaths(true);
   };
 
+  const saveCanvas = () => {
+    const canvas = canvasRef.current;
+
+    const canvasBackground = document.createElement("canvas");
+    canvasBackground.width = canvas.width;
+    canvasBackground.height = canvas.height;
+
+    const ctx = canvasBackground.getContext("2d");
+    ctx.fillStyle = "white";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(canvas, 0, 0);
+
+    const dataUrl = canvasBackground.toDataURL("image/png");
+
+    const link = document.createElement("a");
+    link.href = dataUrl;
+    link.setAttribute("download", "fairway-ink-canvas.jpg");
+    document.body.appendChild(link);
+    link.click();
+  };
+
   //   const handleFill = () => {
   //     const canvas = canvasRef.current;
   //     const context = canvas.getContext("2d");
@@ -47,7 +70,9 @@ const Toolbar = ({
         {/* <button onClick={handleZoomIn}>Zoom In</button>
         <button onClick={handleZoomOut}>Zoom Out</button>
         <button onClick={handleUndo}>Undo</button> */}
-        <button onClick={handleRemoveImage}>Delete image</button>
+        <FileUpload imageUrl={imageUrl} setImageUrl={setImageUrl} />
+        <button onClick={saveCanvas}>Save Drawing</button>
+        <button onClick={handleRemoveImage}>Remove image</button>
         <button onClick={handleClear}>Clear</button>
         <label className="toolbar-text" htmlFor="lineWidth">
           Line Width:

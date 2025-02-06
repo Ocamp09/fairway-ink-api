@@ -88,8 +88,6 @@ function ImageEditor({
     drawImage();
     drawPaths(context);
     setReloadPaths(false);
-    console.log(paths);
-    console.log("here");
   }, [reloadPaths, canvasScale, lineWidth, showDesign]);
 
   useEffect(() => {
@@ -187,27 +185,6 @@ function ImageEditor({
     }
   };
 
-  const saveCanvas = () => {
-    const canvas = canvasRef.current;
-
-    const canvasBackground = document.createElement("canvas");
-    canvasBackground.width = canvas.width;
-    canvasBackground.height = canvas.height;
-
-    const ctx = canvasBackground.getContext("2d");
-    ctx.fillStyle = "white";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.drawImage(canvas, 0, 0);
-
-    const dataUrl = canvasBackground.toDataURL("image/png");
-
-    const link = document.createElement("a");
-    link.href = dataUrl;
-    link.setAttribute("download", "fairway-ink-canvas.jpg");
-    document.body.appendChild(link);
-    link.click();
-  };
-
   // handle file drag and drop
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -285,15 +262,10 @@ function ImageEditor({
           scale={canvasScale}
           setScale={setCanvasScale}
           setImageUrl={setImageUrl}
+          imageUrl={imageUrl}
         ></Toolbar>
         <div>
           <canvas ref={canvasRef} width={500} height={500} className="canvas" />
-        </div>
-        <div className="right-panel">
-          <FileUpload imageUrl={imageUrl} setImageUrl={setImageUrl} />
-          <button className="right-button" onClick={saveCanvas}>
-            Save Image
-          </button>
         </div>
       </div>
       <button
