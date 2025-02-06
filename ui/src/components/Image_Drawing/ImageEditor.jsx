@@ -2,7 +2,6 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import axios from "axios";
 import "./ImageEditor.css";
 import Toolbar from "./Toolbar";
-import FileUpload from "./FileUpload";
 
 function ImageEditor({
   setSvgUrl,

@@ -42,3 +42,9 @@
   background-color: #cccccc;
   cursor: not-allowed;
 }
+
+@media screen and (max-width: 700px) {
+  .editor {
+    flex-direction: column;
+  }
+}
