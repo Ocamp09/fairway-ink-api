@@ -1,4 +1,5 @@
 import { useState, useRef } from "react";
+import { FaImage } from "react-icons/fa6";
 import "./FileUpload.css";
 import "./ImageEditor.css";
 
@@ -44,8 +45,8 @@ const FileUpload = ({ setImageUrl }) => {
         ref={fileInputRef}
         hidden
       />
-      <button className="right-button" onClick={handleUploadClick}>
-        Upload
+      <button onClick={handleUploadClick}>
+        <FaImage size={28} />
       </button>
       {error && <p className="file-error-message">{error}</p>}
     </div>

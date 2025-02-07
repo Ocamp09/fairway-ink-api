@@ -17,27 +17,55 @@
   .toolbar {
     flex-direction: row;
     flex-wrap: wrap;
-    width: 95%;
+    width: auto;
   }
 }
 
 .toolbar button {
-  padding: 8px 12px;
+  padding: 8px 8px;
   background-color: #007bff;
   color: white;
   border: none;
   border-radius: 4px;
   cursor: pointer;
   transition: background-color 0.3s;
+  height: 100%;
+}
+
+.toolbar select {
+  padding: 8px 8px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  height: 100%;
+}
+
+.toolbar .dropdown {
+  background-color: #007bff;
+  margin-bottom: 0;
+  border: 0;
+  width: auto;
+  justify-content: center;
+}
+
+.toolbar select:hover {
+  background-color: #0056b3;
+}
+
+.toolbar option {
+  background-color: lightgray;
+  color: black;
+}
+
+.toolbar label {
+  margin-top: 5px;
 }
 
 .toolbar button:hover {
   background-color: #0056b3;
-}
-
-.toolbar label {
-  font-weight: bold;
-  margin-top: 10px;
 }
 
 .toolbar input[type="color"],

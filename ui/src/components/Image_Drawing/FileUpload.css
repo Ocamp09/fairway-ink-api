@@ -1,13 +1,7 @@
-/* Center the entire content */
-/* .file-upload-container {
-  text-align: center;
-  padding: 20px;
-} */
-
-/* Style the file input */
-/* .file-upload-container input[type="file"] {
-  margin-bottom: 20px;
-} */
+.file-upload-container button {
+  width: 100%;
+  height: auto;
+}
 
 /* Style the error message */
 .file-error-message {
