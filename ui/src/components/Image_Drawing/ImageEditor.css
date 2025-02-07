@@ -17,26 +17,14 @@
   position: relative;
   margin: 0 auto;
   overflow: hidden;
-  background-color: #ffffff;
-}
-
-.right-panel {
-  display: flex;
-  flex-direction: column;
-}
-
-.right-button {
-  margin-top: 5px;
-  width: 100%;
-  border-radius: 5px;
-  background-color: #007bff;
+  background-color: var(--background);
 }
 
 .submit-button {
   padding: 10px 20px;
   width: auto;
-  background-color: #007bff;
-  color: white;
+  background-color: var(--tool-button);
+  color: var(--icon);
   border: none;
   border-radius: 5px;
   cursor: pointer;
@@ -44,7 +32,7 @@
 }
 
 .submit-button:disabled {
-  background-color: #cccccc;
+  background-color: var(--submit-disabled);
   cursor: not-allowed;
 }
 

@@ -6,6 +6,6 @@
 }
 
 .zoom-body button {
-  background-color: #f0f0f0;
+  background-color: var(--tone);
   border-radius: 10px;
 }

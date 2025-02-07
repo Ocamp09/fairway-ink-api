@@ -13,7 +13,7 @@
   position: relative;
   margin: 0 auto;
   overflow: hidden;
-  background-color: #ffffff;
+  background-color: var(--background);
 }
 
 .upload-img {
@@ -34,14 +34,14 @@
   position: relative;
   margin: 0 auto;
   overflow: hidden;
-  background-color: #ffffff;
+  background-color: var(--golf-ball);
 }
 
 /* Style the submit button */
 .submit-button {
   padding: 10px 20px;
-  background-color: #007bff;
-  color: white;
+  background-color: var(--submit);
+  color: var(--icon);
   border: none;
   border-radius: 5px;
   cursor: pointer;
@@ -49,7 +49,7 @@
 }
 
 .submit-button:disabled {
-  background-color: #cccccc;
+  background-color: var(--submit-disabled);
   cursor: not-allowed;
 }
 

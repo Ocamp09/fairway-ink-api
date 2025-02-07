@@ -1,5 +1,5 @@
 .toolbar-text {
-  color: black;
+  color: var(--text);
 }
 
 .toolbar {
@@ -7,7 +7,7 @@
   flex-direction: column;
   gap: 10px;
   padding: 10px;
-  background-color: #f0f0f0;
+  background-color: var(--tone);
   border-radius: 5px;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
   width: 100%;
@@ -23,8 +23,7 @@
 
 .toolbar button {
   padding: 8px 8px;
-  background-color: #007bff;
-  color: white;
+  background-color: var(--tool-button);
   border: none;
   border-radius: 4px;
   cursor: pointer;
@@ -34,7 +33,7 @@
 
 .toolbar select {
   padding: 8px 8px;
-  background-color: #007bff;
+  background-color: var(--tool-button);
   color: white;
   border: none;
   border-radius: 4px;
@@ -44,7 +43,7 @@
 }
 
 .toolbar .dropdown {
-  background-color: #007bff;
+  background-color: var(--tool-button);
   margin-bottom: 0;
   border: 0;
   width: auto;
@@ -52,12 +51,12 @@
 }
 
 .toolbar select:hover {
-  background-color: #0056b3;
+  background-color: var(--tool-button-hover);
 }
 
 .toolbar option {
-  background-color: lightgray;
-  color: black;
+  background-color: var(--tone);
+  color: var(--text);
 }
 
 .toolbar label {
@@ -65,12 +64,5 @@
 }
 
 .toolbar button:hover {
-  background-color: #0056b3;
-}
-
-.toolbar input[type="color"],
-.toolbar input[type="number"] {
-  padding: 5px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
+  background-color: var(--tool-button-hover);
 }

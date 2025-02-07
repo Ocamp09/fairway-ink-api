@@ -14,7 +14,7 @@ function ImageEditor({
 }) {
   const canvasRef = useRef(null);
   const [isDrawing, setIsDrawing] = useState(false);
-  const color = "#00000";
+  const lineColor = "#00000";
   const [lineWidth, setLineWidth] = useState(5);
   const [reloadPaths, setReloadPaths] = useState(false);
   const [canvasScale, setCanvasScale] = useState(1);
@@ -31,7 +31,7 @@ function ImageEditor({
           path.points.forEach((point) => {
             context.lineTo(point.x, point.y);
           });
-          context.strokeStyle = path.color;
+          context.strokeStyle = path.lineColor;
           context.lineWidth = path.width;
           context.stroke();
         });
@@ -108,7 +108,7 @@ function ImageEditor({
     // Add a new path to the paths array
     setPaths((prevPaths) => [
       ...prevPaths,
-      { points: [{ x: startX, y: startY }], color, width: lineWidth },
+      { points: [{ x: startX, y: startY }], lineColor, width: lineWidth },
     ]);
   };
 

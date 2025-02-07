@@ -1,31 +1,19 @@
 .header {
-  margin-top: 0;
   margin-left: auto;
   margin-right: auto;
-  /* padding: 1rem 1rem 0rem 1rem; */
-  width: 98vw;
   max-width: 1280px;
-  backdrop-filter: blur(10px);
 }
 
 .header-items {
   display: flex;
   align-items: center;
-  flex-direction: row;
 }
 
 .header-start {
   width: 50%;
-  padding-left: 0;
   display: flex;
   align-items: center;
 }
-
-/* .header-start img {
-  width: 60px;
-  height: auto;
-  padding-left: 1rem;
-} */
 
 .header-nav {
   display: flex;
@@ -51,27 +39,17 @@
 }
 
 .nav-item {
-  background-color: var(--dark-background-blur);
   border: none;
   margin-left: 0.5rem;
-  color: black;
-}
-
-.nav-item:focus {
-  outline: none;
-  color: blue;
-}
-
-.nav-item:hover {
-  border: 1px solid var(--text-primary);
+  color: var(--text);
 }
 
 .icon-button {
-  background-color: var(--dark-background);
+  background-color: var(--icon);
   width: 3rem;
   height: 3rem;
   padding: 0rem;
-  color: black;
+  color: var(--text);
   margin-right: 1rem;
   display: flex;
   align-items: center;
