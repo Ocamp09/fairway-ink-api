@@ -41,7 +41,7 @@ const CameraController = ({ cameraRef, resetKey }) => {
   return null;
 };
 
-const STLViewer = ({ stlUrl }) => {
+const STLViewer = ({ stlUrl, cart = false }) => {
   const cameraRef = useRef();
   const [resetKey, setResetKey] = useState(0); // Use a key to force re-render
 
@@ -79,10 +79,14 @@ const STLViewer = ({ stlUrl }) => {
         {/* Add camera controls */}
         <CameraController cameraRef={cameraRef} resetKey={resetKey} />
       </Canvas>
-      <ZoomControls onZoomIn={handleZoomIn} onZoomOut={handleZoomOut} />
-      <button onClick={handleReset} className="reset">
-        Reset View
-      </button>
+      {!cart && (
+        <>
+          <ZoomControls onZoomIn={handleZoomIn} onZoomOut={handleZoomOut} />
+          <button onClick={handleReset} className="reset">
+            Reset View
+          </button>
+        </>
+      )}
     </div>
   );
 };

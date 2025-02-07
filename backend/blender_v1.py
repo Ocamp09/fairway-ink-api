@@ -36,11 +36,11 @@ def delete_bottom():
 def add_semi_sphere(cut_mesh_name
 ) -> None:
     # create the sphere
-    bpy.ops.mesh.primitive_uv_sphere_add(radius=23.3)
+    bpy.ops.mesh.primitive_uv_sphere_add(radius=21.4)
     
     # Add Solidify modifier for thickness
     bpy.ops.object.modifier_add(type='SOLIDIFY')
-    bpy.context.object.modifiers["Solidify"].thickness = -2
+    bpy.context.object.modifiers["Solidify"].thickness = -1.2
     delete_bottom() 
     
     # Add Boolean modifier to cut out the SVG shape

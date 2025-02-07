@@ -1,19 +1,21 @@
-import { useState } from "react";
 import "./App.css";
-import FileUpload from "./components/FileUpload";
 import GolfBallDisplay from "./components/GolfBallDisplay";
-import TopNav from "./components/TopNav/TopNav";
 import "../node_modules/bootstrap/dist/css/bootstrap.min.css";
+import Header from "./components/Header";
+import { CartProvider } from "./components/Cart/CartContext";
+import { useState } from "react";
+import ViewCartPopup from "./components/Cart/ViewCartPopup";
 
 function App() {
+  const [cartPopup, setCartPopup] = useState(false);
+
   return (
     <>
-      <div>
-        <TopNav> </TopNav>
-        <div className="body">
-          <GolfBallDisplay />
-        </div>
-      </div>
+      <CartProvider>
+        <Header cartPopup={cartPopup} setCartPopup={setCartPopup} />
+        <GolfBallDisplay />
+        <ViewCartPopup isOpen={cartPopup} setIsOpen={setCartPopup} />
+      </CartProvider>
     </>
   );
 }

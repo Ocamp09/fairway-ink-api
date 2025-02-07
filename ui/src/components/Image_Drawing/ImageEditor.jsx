@@ -2,24 +2,28 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import axios from "axios";
 import "./ImageEditor.css";
 import Toolbar from "./Toolbar";
-import FileUpload from "./FileUpload";
 
-function ImageEditor({ setSvgUrl, setSvgData, setShowDesign, setShowScale }) {
+function ImageEditor({
+  setSvgUrl,
+  setSvgData,
+  setShowDesign,
+  setShowScale,
+  showDesign,
+  paths,
+  setPaths,
+}) {
   const canvasRef = useRef(null);
   const [isDrawing, setIsDrawing] = useState(false);
-  // const [color, setColor] = useState("#000000");
-  const color = "#00000";
+  const lineColor = "#00000";
   const [lineWidth, setLineWidth] = useState(5);
-  const [paths, setPaths] = useState([]);
   const [reloadPaths, setReloadPaths] = useState(false);
   const [canvasScale, setCanvasScale] = useState(1);
   const [imageUrl, setImageUrl] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   // Function to redraw all paths
   const drawPaths = useCallback(
     (context) => {
-      console.log("Abouta draw paths");
-
       if (paths.length !== 0) {
         paths.forEach((path) => {
           context.beginPath();
@@ -27,7 +31,7 @@ function ImageEditor({ setSvgUrl, setSvgData, setShowDesign, setShowScale }) {
           path.points.forEach((point) => {
             context.lineTo(point.x, point.y);
           });
-          context.strokeStyle = path.color;
+          context.strokeStyle = path.lineColor;
           context.lineWidth = path.width;
           context.stroke();
         });
@@ -42,7 +46,6 @@ function ImageEditor({ setSvgUrl, setSvgData, setShowDesign, setShowScale }) {
       img.src = imageUrl;
 
       img.onload = () => {
-        console.log("bouta draw an image");
         const canvas = canvasRef.current;
         const context = canvas.getContext("2d");
 
@@ -84,7 +87,7 @@ function ImageEditor({ setSvgUrl, setSvgData, setShowDesign, setShowScale }) {
     drawImage();
     drawPaths(context);
     setReloadPaths(false);
-  }, [reloadPaths, canvasScale, lineWidth]);
+  }, [reloadPaths, canvasScale, lineWidth, showDesign]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -105,7 +108,7 @@ function ImageEditor({ setSvgUrl, setSvgData, setShowDesign, setShowScale }) {
     // Add a new path to the paths array
     setPaths((prevPaths) => [
       ...prevPaths,
-      { points: [{ x: startX, y: startY }], color, width: lineWidth },
+      { points: [{ x: startX, y: startY }], lineColor, width: lineWidth },
     ]);
   };
 
@@ -130,6 +133,7 @@ function ImageEditor({ setSvgUrl, setSvgData, setShowDesign, setShowScale }) {
   };
 
   const handleSvg = async () => {
+    setIsLoading(true);
     setSvgUrl(null);
     const canvas = canvasRef.current;
 
@@ -147,24 +151,24 @@ function ImageEditor({ setSvgUrl, setSvgData, setShowDesign, setShowScale }) {
     const blob = await fetch(dataURL).then((r) => r.blob());
 
     const formData = new FormData();
-    formData.append("file", blob, "fairway_ink_drawing.png"); // Add filename
+    formData.append("file", blob, "fairway_ink_drawing.png");
 
     try {
       const response = await axios.post(
-        "http://localhost:5001/upload", // Your backend endpoint
+        "http://localhost:5001/upload",
         formData,
         {
           headers: {
-            "Content-Type": "multipart/form-data", // Important!
+            "Content-Type": "multipart/form-data",
           },
         }
       );
 
       if (response.data.success) {
-        console.log("Image uploaded successfully:", response.data);
         const blob = new Blob([response.data.svgData], {
           type: "image/svg+xml",
         });
+        setIsLoading(false);
         const url = URL.createObjectURL(blob);
         setSvgData(response.data.svgData);
         setSvgUrl(url);
@@ -172,32 +176,60 @@ function ImageEditor({ setSvgUrl, setSvgData, setShowDesign, setShowScale }) {
         setShowDesign(false);
       } else {
         console.error("Upload error:", response.data);
+        setIsLoading(false);
       }
     } catch (err) {
       console.error("Upload error:", err);
+      setIsLoading(false);
     }
   };
 
-  const saveCanvas = () => {
+  // handle file drag and drop
+  useEffect(() => {
     const canvas = canvasRef.current;
 
-    const canvasBackground = document.createElement("canvas");
-    canvasBackground.width = canvas.width;
-    canvasBackground.height = canvas.height;
+    const handleDragEnter = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+    };
 
-    const ctx = canvasBackground.getContext("2d");
-    ctx.fillStyle = "white";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.drawImage(canvas, 0, 0);
+    const handleDragOver = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+    };
 
-    const dataUrl = canvasBackground.toDataURL("image/png");
+    const handleDragLeave = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+    };
 
-    const link = document.createElement("a");
-    link.href = dataUrl;
-    link.setAttribute("download", "fairway-ink-canvas.jpg");
-    document.body.appendChild(link);
-    link.click();
-  };
+    const handleDrop = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      const files = e.dataTransfer.files;
+      if (files.length > 0) {
+        const file = files[0];
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          setImageUrl(event.target.result);
+        };
+        reader.readAsDataURL(file);
+      }
+    };
+
+    canvas.addEventListener("dragenter", handleDragEnter);
+    canvas.addEventListener("dragover", handleDragOver);
+    canvas.addEventListener("dragleave", handleDragLeave);
+    canvas.addEventListener("drop", handleDrop);
+
+    return () => {
+      canvas.removeEventListener("dragenter", handleDragEnter);
+      canvas.removeEventListener("dragover", handleDragOver);
+      canvas.removeEventListener("dragleave", handleDragLeave);
+      canvas.removeEventListener("drop", handleDrop);
+    };
+  }, []);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -215,28 +247,35 @@ function ImageEditor({ setSvgUrl, setSvgData, setShowDesign, setShowScale }) {
   });
 
   return (
-    <div className="editor">
-      <Toolbar
-        setPaths={setPaths}
-        lineWidth={lineWidth}
-        setLineWidth={setLineWidth}
-        setReloadPaths={setReloadPaths}
-        scale={canvasScale}
-        setScale={setCanvasScale}
-        setImageUrl={setImageUrl}
-      ></Toolbar>
-      <div>
-        <canvas ref={canvasRef} width={500} height={500} className="canvas" />
+    <div className="designer">
+      <p className="desc">
+        Upload an image (button or drag and drop), or draw with your mouse to
+        get started
+      </p>
+      <div className="editor">
+        <Toolbar
+          setPaths={setPaths}
+          lineWidth={lineWidth}
+          setLineWidth={setLineWidth}
+          setReloadPaths={setReloadPaths}
+          scale={canvasScale}
+          setScale={setCanvasScale}
+          setImageUrl={setImageUrl}
+          imageUrl={imageUrl}
+          canvasRef={canvasRef}
+        ></Toolbar>
+        <div>
+          <canvas ref={canvasRef} width={500} height={500} className="canvas" />
+        </div>
       </div>
-      <div className="right-panel">
-        <FileUpload imageUrl={imageUrl} setImageUrl={setImageUrl} />
-        <button className="right-button" onClick={handleSvg}>
-          Preview
-        </button>
-        <button className="right-button" onClick={saveCanvas}>
-          Save Image
-        </button>
-      </div>
+      <button
+        className="submit-button"
+        onClick={handleSvg}
+        disabled={isLoading}
+      >
+        {!isLoading && "Convert Drawing"}
+        {isLoading && "Processing"}
+      </button>
     </div>
   );
 }

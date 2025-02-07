@@ -1,0 +1,10 @@
+.file-upload-container button {
+  width: 100%;
+  height: auto;
+}
+
+/* Style the error message */
+.file-error-message {
+  color: red;
+  margin-bottom: 20px;
+}

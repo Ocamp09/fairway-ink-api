@@ -1,0 +1,68 @@
+.designer {
+  margin-bottom: 1rem;
+}
+
+.editor {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 10px;
+}
+
+.canvas {
+  width: 500px;
+  height: 500px;
+  border-radius: 10%;
+  border: 2px solid black;
+  position: relative;
+  margin: 0 auto;
+  overflow: hidden;
+  background-color: var(--background);
+}
+
+.submit-button {
+  padding: 10px 20px;
+  width: auto;
+  background-color: var(--tool-button);
+  color: var(--icon);
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-top: 20px;
+}
+
+.submit-button:hover {
+  background-color: var(--submit-hover);
+}
+
+.submit-button:disabled {
+  background-color: var(--submit-disabled);
+  cursor: not-allowed;
+}
+
+.desc {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+@media screen and (max-width: 700px) {
+  .editor {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .desc {
+    width: 75%;
+  }
+}
+
+@media screen and (max-width: 525px) {
+  .canvas {
+    width: 95%;
+    height: auto;
+  }
+
+  .desc {
+    width: 85%;
+  }
+}

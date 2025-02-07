@@ -1,0 +1,67 @@
+.ball-displays {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.golf-template {
+  width: 400px;
+  height: 400px;
+  border-radius: 50%;
+  border: 2px solid black;
+  position: relative;
+  margin: 0 auto;
+  overflow: hidden;
+  background-color: var(--background);
+}
+
+.upload-img {
+  height: auto;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  max-width: 100%;
+  max-height: 100%;
+}
+
+.golf-real-size {
+  width: 173px;
+  height: 173px;
+  border-radius: 50%;
+  border: 2px solid black;
+  position: relative;
+  margin: 0 auto;
+  overflow: hidden;
+  background-color: var(--golf-ball);
+}
+
+.submit-button {
+  padding: 10px 20px;
+  background-color: var(--submit);
+  color: var(--icon);
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-top: 20px;
+}
+
+.submit-button:hover {
+  background-color: var(--submit-hover);
+}
+
+.submit-button:disabled {
+  background-color: var(--submit-disabled);
+  cursor: not-allowed;
+}
+
+@media screen and (max-width: 600px) {
+  .ball-displays {
+    flex-direction: column;
+  }
+
+  .golf-template {
+    display: none;
+  }
+}

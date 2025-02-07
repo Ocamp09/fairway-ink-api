@@ -5,6 +5,7 @@
   z-index: 1;
 }
 
-.zoom-button {
-  margin-right: 5px;
+.zoom-body button {
+  background-color: var(--tone);
+  border-radius: 10px;
 }

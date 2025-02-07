@@ -1,135 +1,55 @@
 import "../components/GolfBallDisplay.css";
 import { useState } from "react";
-import ImageEditor from "./ImageEditor";
-import ImageScaler from "./ImageScaler";
-import STLViewer from "./STLViewer";
-import axios from "axios";
+import ImageEditor from "./Image_Drawing/ImageEditor";
+import TabMenu from "./TabMenu";
+import ScaleSvg from "./Scale/ScaleSvg";
+import PreviewTab from "./Preview/PreviewTab";
 
 const GolfBallDisplay = () => {
-  const [scale, setScale] = useState(1);
   const [svgUrl, setSvgUrl] = useState(null);
   const [svgData, setSvgData] = useState(null);
-  const [stlUrl, setStlUrl] = useState(
-    "http://localhost:5001/output/stl/default.stl"
-  );
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [stlUrl, setStlUrl] = useState("default.stl");
   const [stlKey, setStlKey] = useState(0);
   const [showDesign, setShowDesign] = useState(true);
   const [showScale, setShowScale] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
-
-  // get svg width and height, scale down to size I want to display, then factor that scale into the query sent
-  const canvasSizePx = 125 * scale;
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!svgData) {
-      setError("Please select a file to upload.");
-      return;
-    }
-
-    setIsLoading(true);
-
-    const formData = new FormData();
-    formData.append(
-      "svg",
-      new Blob([svgData], { type: "image/svg+xml" }),
-      "golfball" + stlKey + ".svg"
-    );
-    formData.append("scale", scale);
-    setStlUrl("http://localhost:5001/output/stl/default.stl");
-
-    try {
-      const response = await axios.post(
-        "http://localhost:5001/generate",
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
-
-      if (response.data.success) {
-        console.log(response.data);
-        setStlUrl(response.data.stlUrl);
-        setStlKey((prevKey) => prevKey + 1);
-        setShowPreview(true);
-        setShowScale(false);
-      } else {
-        setError("Error processing file. Please try again.");
-      }
-    } catch (err) {
-      setError("An error occurred while uploading the file.");
-      console.error(err);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const [paths, setPaths] = useState([]);
 
   return (
     <div className="golf-ball-display">
-      <div className="image-body">
-        {showDesign && (
-          <div>
-            <h3 className="display-name">Design</h3>
-            <ImageEditor
-              setSvgUrl={setSvgUrl}
-              setSvgData={setSvgData}
-              setShowDesign={setShowDesign}
-              setShowScale={setShowScale}
-            ></ImageEditor>{" "}
-          </div>
-        )}
-
-        {showScale && (
-          <div>
-            <h3>Scale</h3>
-            <div className="golf-template">
-              {svgUrl && (
-                <img
-                  src={svgUrl}
-                  alt="Uploaded"
-                  className="upload-img"
-                  style={{
-                    width: `${canvasSizePx}px`, // Set width based on scale
-                  }}
-                />
-              )}
-            </div>
-
-            <div className="golf-real-size">
-              {svgUrl && (
-                <img
-                  src={svgUrl}
-                  alt="Uploaded"
-                  className="upload-img"
-                  style={{
-                    width: `${(canvasSizePx * 173) / 500}px`, // Set width based on scale
-                  }}
-                />
-              )}
-            </div>
-            <ImageScaler scale={scale} setScale={setScale}></ImageScaler>
-            <form onSubmit={handleSubmit}>
-              <button
-                type="submit"
-                className="submit-button"
-                disabled={isLoading}
-              >
-                {isLoading ? "Processing..." : "Upload and Generate STL"}
-              </button>
-              {error && <p className="error-message">{error}</p>}
-            </form>
-          </div>
-        )}
-      </div>
-      {showPreview && (
-        <div className="stl-viewer">
-          {stlUrl && <STLViewer key={stlKey} stlUrl={stlUrl} />}
-        </div>
+      <TabMenu
+        showDesign={showDesign}
+        setShowDesign={setShowDesign}
+        showScale={showScale}
+        setShowScale={setShowScale}
+        showPreview={showPreview}
+        setShowPreview={setShowPreview}
+      />
+      {showDesign && (
+        <ImageEditor
+          setSvgUrl={setSvgUrl}
+          setSvgData={setSvgData}
+          setShowDesign={setShowDesign}
+          setShowScale={setShowScale}
+          showDesign={showDesign}
+          paths={paths}
+          setPaths={setPaths}
+        />
       )}
+
+      {showScale && (
+        <ScaleSvg
+          svgUrl={svgUrl}
+          svgData={svgData}
+          setSvgData={setSvgData}
+          stlKey={stlKey}
+          setStlKey={setStlKey}
+          setStlUrl={setStlUrl}
+          setShowPreview={setShowPreview}
+          setShowScale={setShowScale}
+        />
+      )}
+      {showPreview && <PreviewTab stlUrl={stlUrl} />}
     </div>
   );
 };
