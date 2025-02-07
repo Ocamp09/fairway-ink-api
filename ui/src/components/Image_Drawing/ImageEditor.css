@@ -1,6 +1,11 @@
+.designer {
+  margin-bottom: 1rem;
+}
+
 .editor {
   display: flex;
   align-items: flex-start;
+  justify-content: center;
   gap: 10px;
 }
 
@@ -43,8 +48,29 @@
   cursor: not-allowed;
 }
 
+.desc {
+  margin-left: auto;
+  margin-right: auto;
+}
+
 @media screen and (max-width: 700px) {
   .editor {
     flex-direction: column;
+    align-items: center;
+  }
+
+  .desc {
+    width: 75%;
+  }
+}
+
+@media screen and (max-width: 525px) {
+  .canvas {
+    width: 95%;
+    height: auto;
+  }
+
+  .desc {
+    width: 85%;
   }
 }

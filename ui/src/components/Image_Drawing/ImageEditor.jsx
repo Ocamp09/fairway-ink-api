@@ -247,8 +247,8 @@ function ImageEditor({
   });
 
   return (
-    <div>
-      <p>
+    <div className="designer">
+      <p className="desc">
         Upload an image (button or drag and drop), or draw with your mouse to
         get started
       </p>

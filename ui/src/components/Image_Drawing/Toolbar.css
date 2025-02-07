@@ -10,11 +10,14 @@
   background-color: #f0f0f0;
   border-radius: 5px;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  width: 100%;
 }
 
 @media screen and (max-width: 700px) {
   .toolbar {
     flex-direction: row;
+    flex-wrap: wrap;
+    width: 95%;
   }
 }
 

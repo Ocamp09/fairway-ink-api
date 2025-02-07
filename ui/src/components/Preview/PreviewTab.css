@@ -2,3 +2,10 @@
   width: 500px;
   height: 500px;
 }
+
+@media screen and (max-width: 525px) {
+  .stl-viewer {
+    height: 375px;
+    width: 98%;
+  }
+}
