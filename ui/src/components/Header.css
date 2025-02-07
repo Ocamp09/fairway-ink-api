@@ -93,10 +93,6 @@
   .header-icons {
     width: 20%;
   }
-
-  .header {
-    width: 100%;
-  }
 }
 
 @media screen and (max-width: 400px) {
