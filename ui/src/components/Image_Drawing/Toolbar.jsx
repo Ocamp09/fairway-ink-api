@@ -2,9 +2,9 @@ import "./Toolbar.css";
 import QuantityDropdown from "../Preview/QuantityDropdown";
 import FileUpload from "./FileUpload";
 import { FiDownload } from "react-icons/fi";
-import { FcRemoveImage } from "react-icons/fc";
 import { FaDeleteLeft } from "react-icons/fa6";
 import { MdLineWeight } from "react-icons/md";
+import RemoveImage from "./RemoveImage";
 
 const Toolbar = ({
   setPaths,
@@ -79,11 +79,8 @@ const Toolbar = ({
         <button onClick={handleZoomOut}>Zoom Out</button>
         <button onClick={handleUndo}>Undo</button> */}
         <FileUpload imageUrl={imageUrl} setImageUrl={setImageUrl} />
-        <button onClick={saveCanvas}>
-          <FiDownload size={iconSize} />
-        </button>
         <button onClick={handleRemoveImage}>
-          <FcRemoveImage size={iconSize} />
+          <RemoveImage />
         </button>
         <button onClick={handleClear}>
           <FaDeleteLeft size={iconSize} />
@@ -95,6 +92,9 @@ const Toolbar = ({
           quantity={lineWidth}
           setQuantity={setLineWidth}
         />
+        <button onClick={saveCanvas}>
+          <FiDownload size={iconSize} />
+        </button>
       </div>
     </>
   );
