@@ -11,15 +11,11 @@ function App() {
 
   return (
     <>
-      <div>
-        <CartProvider>
-          <Header cartPopup={cartPopup} setCartPopup={setCartPopup} />
-          <div className="body">
-            <GolfBallDisplay />
-            <ViewCartPopup isOpen={cartPopup} setIsOpen={setCartPopup} />
-          </div>
-        </CartProvider>
-      </div>
+      <CartProvider>
+        <Header cartPopup={cartPopup} setCartPopup={setCartPopup} />
+        <GolfBallDisplay />
+        <ViewCartPopup isOpen={cartPopup} setIsOpen={setCartPopup} />
+      </CartProvider>
     </>
   );
 }
