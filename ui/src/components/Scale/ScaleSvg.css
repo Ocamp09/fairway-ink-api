@@ -37,7 +37,6 @@
   background-color: var(--golf-ball);
 }
 
-/* Style the submit button */
 .submit-button {
   padding: 10px 20px;
   background-color: var(--submit);
@@ -46,6 +45,10 @@
   border-radius: 5px;
   cursor: pointer;
   margin-top: 20px;
+}
+
+.submit-button:hover {
+  background-color: var(--submit-hover);
 }
 
 .submit-button:disabled {

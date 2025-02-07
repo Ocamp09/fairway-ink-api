@@ -31,6 +31,10 @@
   margin-top: 20px;
 }
 
+.submit-button:hover {
+  background-color: var(--submit-hover);
+}
+
 .submit-button:disabled {
   background-color: var(--submit-disabled);
   cursor: not-allowed;

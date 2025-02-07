@@ -99,3 +99,7 @@
   background-color: var(--submit);
   color: var(icon);
 }
+
+.checkout-button:hover {
+  background-color: var(--submit-hover);
+}
