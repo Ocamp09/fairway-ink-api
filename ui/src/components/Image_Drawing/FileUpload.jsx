@@ -45,7 +45,7 @@ const FileUpload = ({ setImageUrl }) => {
         ref={fileInputRef}
         hidden
       />
-      <button onClick={handleUploadClick}>
+      <button title="Upload image" onClick={handleUploadClick}>
         <FaImage size={28} />
       </button>
       {error && <p className="file-error-message">{error}</p>}

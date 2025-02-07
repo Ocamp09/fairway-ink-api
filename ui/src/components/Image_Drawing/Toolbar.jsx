@@ -79,10 +79,10 @@ const Toolbar = ({
         <button onClick={handleZoomOut}>Zoom Out</button>
         <button onClick={handleUndo}>Undo</button> */}
         <FileUpload imageUrl={imageUrl} setImageUrl={setImageUrl} />
-        <button onClick={handleRemoveImage}>
+        <button title="Remove image" onClick={handleRemoveImage}>
           <RemoveImage />
         </button>
-        <button onClick={handleClear}>
+        <button title="Delete drawings" onClick={handleClear}>
           <FaDeleteLeft size={iconSize} />
         </button>
         <QuantityDropdown
@@ -91,8 +91,9 @@ const Toolbar = ({
           step={2}
           quantity={lineWidth}
           setQuantity={setLineWidth}
+          title={"Adjust line width"}
         />
-        <button onClick={saveCanvas}>
+        <button title="Download drawings" onClick={saveCanvas}>
           <FiDownload size={iconSize} />
         </button>
       </div>

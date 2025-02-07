@@ -32,6 +32,7 @@ const Header = ({ cartPopup, setCartPopup }) => {
                 onClick={() => {
                   setCartPopup(!cartPopup);
                 }}
+                title="View cart"
               >
                 <IoIosCart size={28} /> ({getItemCount()})
               </button>

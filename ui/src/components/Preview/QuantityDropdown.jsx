@@ -7,13 +7,14 @@ function QuantityDropdown({
   maxQuantity = 15,
   labelText = "Quantity: ",
   step = 1,
+  title = "Set quantity",
 }) {
   const handleQuantityChange = (event) => {
     setQuantity(parseInt(event.target.value, 10));
   };
 
   return (
-    <div className="dropdown">
+    <div className="dropdown" title={title}>
       <label htmlFor="quantitySelect">{labelText}</label>
       <select
         id="quantitySelect"
