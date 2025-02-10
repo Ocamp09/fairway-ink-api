@@ -57,36 +57,39 @@ function ImageEditor({
     }
   }, [paths]);
 
-  const drawImage = useCallback(() => {
-    if (imageUrl) {
-      const img = new Image();
-      img.src = imageUrl;
+  const drawImage = useCallback(
+    (edit) => {
+      if (imageUrl) {
+        const img = new Image();
+        img.src = imageUrl;
 
-      img.onload = () => {
-        const canvas = canvasRef.current;
-        const context = canvas.getContext("2d");
+        img.onload = () => {
+          const canvas = canvasRef.current;
+          const context = canvas.getContext("2d");
 
-        const width = img.width;
-        const height = img.height;
-        const set_dimension = 425;
+          const width = img.width;
+          const height = img.height;
+          const set_dimension = 425;
 
-        let scale =
-          width > height ? set_dimension / width : set_dimension / height;
+          let scale =
+            width > height ? set_dimension / width : set_dimension / height;
 
-        const scaledWidth = img.width * scale;
-        const scaledHeight = img.height * scale;
+          const scaledWidth = img.width * scale;
+          const scaledHeight = img.height * scale;
 
-        const x = (canvas.width - scaledWidth) / 2;
-        const y = (canvas.height - scaledHeight) / 2;
+          const x = (canvas.width - scaledWidth) / 2;
+          const y = (canvas.height - scaledHeight) / 2;
 
-        context.clearRect(0, 0, canvas.width, canvas.height);
-        setPaths([]);
-        context.drawImage(img, x, y, scaledWidth, scaledHeight);
-        // if (!reloadPaths) drawPaths();
-      };
-    }
-    setReloadPaths(false);
-  }, [imageUrl]);
+          context.clearRect(0, 0, canvas.width, canvas.height);
+          if (!edit) setPaths([]);
+
+          context.drawImage(img, x, y, scaledWidth, scaledHeight);
+          setReloadPaths(false);
+        };
+      }
+    },
+    [imageUrl]
+  );
 
   const handleMouseMove = (e) => {
     if (isDrawing) {
@@ -225,7 +228,7 @@ function ImageEditor({
     context.clearRect(0, 0, canvas.width, canvas.height);
     context.scale(canvasScale, canvasScale);
 
-    drawImage();
+    drawImage(false);
   }, [imageUrl, drawImage]);
 
   // This useEffect will only run when paths or lineWidth changes
@@ -235,10 +238,10 @@ function ImageEditor({
 
     if (reloadPaths) {
       context.clearRect(0, 0, canvas.width, canvas.height);
-      drawImage();
+      drawImage(true);
     }
     drawPaths();
-    setReloadPaths(false);
+    // setReloadPaths(false);
   }, [paths, lineWidth, drawPaths, reloadPaths]);
 
   return (
@@ -249,6 +252,7 @@ function ImageEditor({
       </p>
       <div className="editor">
         <Toolbar
+          paths={paths}
           setPaths={setPaths}
           lineWidth={lineWidth}
           setLineWidth={setLineWidth}
