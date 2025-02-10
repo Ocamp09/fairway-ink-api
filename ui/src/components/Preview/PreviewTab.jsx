@@ -1,7 +1,7 @@
 import { useState } from "react";
 import STLViewer from "../3D-View/STLViewer";
 import QuantityDropdown from "./QuantityDropdown";
-import { useCart } from "../Cart/CartContext";
+import { useCart } from "../../contexts/CartContext";
 import "./PreviewTab.css";
 
 const PreviewTab = ({ stlUrl }) => {

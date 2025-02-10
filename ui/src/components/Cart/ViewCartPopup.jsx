@@ -1,5 +1,5 @@
 import React from "react";
-import { useCart } from "./CartContext";
+import { useCart } from "../../contexts/CartContext";
 import STLViewer from "../3D-View/STLViewer";
 import "./ViewCartPopup.css";
 
