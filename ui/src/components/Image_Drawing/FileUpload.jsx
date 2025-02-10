@@ -33,7 +33,8 @@ const FileUpload = ({ setImageUrl }) => {
   };
 
   const handleUploadClick = () => {
-    fileInputRef.current.click(); // Trigger the file input click
+    fileInputRef.current.value = "";
+    fileInputRef.current.click();
   };
 
   return (

@@ -1,7 +1,8 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import axios from "axios";
 import "./ImageEditor.css";
 import Toolbar from "./Toolbar";
+import getStroke from "perfect-freehand";
 
 function ImageEditor({
   setSvgUrl,
@@ -21,114 +22,128 @@ function ImageEditor({
   const [imageUrl, setImageUrl] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Function to redraw all paths
-  const drawPaths = useCallback(
-    (context) => {
-      if (paths.length !== 0) {
-        paths.forEach((path) => {
-          context.beginPath();
-          context.moveTo(path.points[0].x, path.points[0].y);
-          path.points.forEach((point) => {
-            context.lineTo(point.x, point.y);
-          });
-          context.strokeStyle = path.lineColor;
-          context.lineWidth = path.width;
-          context.stroke();
-        });
-      }
-    },
-    [paths]
-  );
+  const getSvgPathFromStroke = (stroke) => {
+    if (!stroke.length) return "";
 
-  const drawImage = useCallback(() => {
-    if (imageUrl) {
-      const img = new Image();
-      img.src = imageUrl;
+    const d = stroke.reduce(
+      (acc, [x0, y0], i, arr) => {
+        const [x1, y1] = arr[(i + 1) % arr.length];
+        acc.push(x0, y0, (x0 + x1) / 2, (y0 + y1) / 2);
+        return acc;
+      },
+      ["M", ...stroke[0], "Q"]
+    );
 
-      img.onload = () => {
+    d.push("Z");
+    return d.join(" ");
+  };
+
+  const drawPaths = useCallback(() => {
+    if (paths.length !== 0) {
+      paths.forEach((path) => {
         const canvas = canvasRef.current;
         const context = canvas.getContext("2d");
-
-        // Calculate the position to center the image
-        const width = img.width;
-        const height = img.height;
-        const set_dimension = 425; // default dimension
-
-        // calculate the scale based on the longer size
-        let scale =
-          width > height ? set_dimension / width : set_dimension / height;
-
-        const scaledWidth = img.width * scale;
-        const scaledHeight = img.height * scale;
-
-        const x = (canvas.width - scaledWidth) / 2;
-        const y = (canvas.height - scaledHeight) / 2;
-
-        // Draw the image centered on the canvas
-        context.clearRect(0, 0, canvas.width, canvas.height);
-        context.drawImage(img, x, y, scaledWidth, scaledHeight);
-      };
+        const stroke = getStroke(path.points, {
+          size: path.width,
+          thinning: 0.0,
+          smoothing: 0.0,
+          streamline: 1.0,
+        });
+        const pathData = getSvgPathFromStroke(stroke);
+        const path2D = new Path2D(pathData);
+        context.fillStyle = path.lineColor;
+        context.fill(path2D);
+      });
     }
-    setReloadPaths(false);
-  }, [imageUrl]);
+  }, [paths]);
 
-  // Redraw the canvas whenever paths or imageUrl changes
-  useEffect(() => {
-    drawImage();
-  }, [imageUrl, drawImage]);
+  const drawImage = useCallback(
+    (edit) => {
+      if (imageUrl) {
+        const img = new Image();
+        img.src = imageUrl;
 
-  useEffect(() => {
+        img.onload = () => {
+          const canvas = canvasRef.current;
+          const context = canvas.getContext("2d");
+
+          const width = img.width;
+          const height = img.height;
+          const set_dimension = 425;
+
+          let scale =
+            width > height ? set_dimension / width : set_dimension / height;
+
+          const scaledWidth = img.width * scale;
+          const scaledHeight = img.height * scale;
+
+          const x = (canvas.width - scaledWidth) / 2;
+          const y = (canvas.height - scaledHeight) / 2;
+
+          context.clearRect(0, 0, canvas.width, canvas.height);
+          if (!edit) setPaths([]);
+
+          context.drawImage(img, x, y, scaledWidth, scaledHeight);
+          setReloadPaths(false);
+        };
+      }
+    },
+    [imageUrl]
+  );
+
+  const getCoordinates = (e) => {
     const canvas = canvasRef.current;
-    const context = canvas.getContext("2d");
+    const rect = canvas.getBoundingClientRect();
+    const scale = canvasScale;
+    let clientX, clientY;
 
-    context.clearRect(0, 0, canvas.width, canvas.height);
-    context.scale(canvasScale, canvasScale);
+    if (e.touches && e.touches.length > 0) {
+      // Touch event
+      clientX = e.touches[0].clientX;
+      clientY = e.touches[0].clientY;
+    } else if (e.clientX) {
+      // Mouse event
+      clientX = e.clientX;
+      clientY = e.clientY;
+    } else {
+      return null;
+    }
 
-    drawImage();
-    drawPaths(context);
-    setReloadPaths(false);
-  }, [reloadPaths, canvasScale, lineWidth, showDesign]);
+    const x = (clientX - rect.left) / scale;
+    const y = (clientY - rect.top) / scale;
+    const pressure = e.pressure || 1;
 
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    const context = canvas.getContext("2d");
-    drawPaths(context);
-  }, [paths, drawPaths]);
+    return { x, y, pressure };
+  };
 
-  const handleMouseDown = (e) => {
+  const handleStartDrawing = (e) => {
+    e.preventDefault();
+    const coords = getCoordinates(e);
+    if (!coords) return;
+
     setIsDrawing(true);
-
-    // Get the bounding rectangle of the canvas
-    const rect = canvasRef.current.getBoundingClientRect();
-
-    // Calculate the mouse position relative to the canvas
-    const startX = e.clientX - rect.left;
-    const startY = e.clientY - rect.top;
-
-    // Add a new path to the paths array
+    const { x, y, pressure } = coords;
     setPaths((prevPaths) => [
       ...prevPaths,
-      { points: [{ x: startX, y: startY }], lineColor, width: lineWidth },
+      { points: [[x, y, pressure]], lineColor, width: lineWidth },
     ]);
   };
 
-  const handleMouseMove = (e) => {
-    if (isDrawing) {
-      const rect = canvasRef.current.getBoundingClientRect();
-      const newX = e.clientX - rect.left;
-      const newY = e.clientY - rect.top;
+  const handleMoveDrawing = (e) => {
+    e.preventDefault();
+    const coords = getCoordinates(e);
+    if (!coords || !isDrawing) return;
 
-      // Update the last path in the paths array
-      setPaths((prevPaths) => {
-        const updatedPaths = [...prevPaths];
-        const lastPath = updatedPaths[updatedPaths.length - 1];
-        lastPath.points.push({ x: newX, y: newY });
-        return updatedPaths;
-      });
-    }
+    const { x, y, pressure } = coords;
+    setPaths((prevPaths) => {
+      const updatedPaths = [...prevPaths];
+      const lastPath = updatedPaths[updatedPaths.length - 1];
+      lastPath.points.push([x, y, pressure]);
+      return updatedPaths;
+    });
   };
 
-  const handleMouseUp = () => {
+  const handleStopDrawing = () => {
     setIsDrawing(false);
   };
 
@@ -147,7 +162,6 @@ function ImageEditor({
     ctx.drawImage(canvas, 0, 0);
 
     const dataURL = canvasBackground.toDataURL("image/png");
-    // Convert data URL to Blob
     const blob = await fetch(dataURL).then((r) => r.blob());
 
     const formData = new FormData();
@@ -184,7 +198,7 @@ function ImageEditor({
     }
   };
 
-  // handle file drag and drop
+  // handle drag and drop into canvas
   useEffect(() => {
     const canvas = canvasRef.current;
 
@@ -231,20 +245,70 @@ function ImageEditor({
     };
   }, []);
 
+  // handles new image upload
   useEffect(() => {
     const canvas = canvasRef.current;
+    const context = canvas.getContext("2d");
 
-    canvas.addEventListener("mousedown", handleMouseDown);
-    canvas.addEventListener("mousemove", handleMouseMove);
-    canvas.addEventListener("mouseup", handleMouseUp);
+    context.clearRect(0, 0, canvas.width, canvas.height);
+    context.scale(canvasScale, canvasScale);
+
+    drawImage(false);
+  }, [imageUrl, drawImage]);
+
+  //will only run when paths or lineWidth changes
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    const context = canvas.getContext("2d");
+
+    if (reloadPaths) {
+      context.clearRect(0, 0, canvas.width, canvas.height);
+      drawImage(true);
+    }
+    drawPaths();
+  }, [paths, lineWidth, drawPaths, reloadPaths]);
+
+  // handles touch drawing
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (canvas) {
+      const handleTouchStart = (e) => handleStartDrawing(e);
+      const handleTouchMove = (e) => handleMoveDrawing(e);
+      const handleTouchEnd = () => handleStopDrawing();
+
+      canvas.addEventListener("touchstart", handleTouchStart, {
+        passive: false,
+      });
+      canvas.addEventListener("touchmove", handleTouchMove, { passive: false });
+      canvas.addEventListener("touchend", handleTouchEnd, { passive: false });
+
+      return () => {
+        canvas.removeEventListener("touchstart", handleTouchStart);
+        canvas.removeEventListener("touchmove", handleTouchMove);
+        canvas.removeEventListener("touchend", handleTouchEnd);
+      };
+    }
+  }, [handleStartDrawing, handleMoveDrawing, handleStopDrawing]);
+
+  // use effect to handle window scaling
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    const initialWidth = 500;
+
+    // Function to calculate scale factor based on current width
+    const calculateCanvasScale = () => {
+      const currentWidth = canvas.offsetWidth;
+      const scale = currentWidth / initialWidth;
+      setCanvasScale(scale);
+    };
+
+    calculateCanvasScale();
+    window.addEventListener("resize", calculateCanvasScale);
 
     return () => {
-      // Clean up event listeners
-      canvas.removeEventListener("mousedown", handleMouseDown);
-      canvas.removeEventListener("mousemove", handleMouseMove);
-      canvas.removeEventListener("mouseup", handleMouseUp);
+      window.removeEventListener("resize", calculateCanvasScale);
     };
-  });
+  }, []);
 
   return (
     <div className="designer">
@@ -254,6 +318,7 @@ function ImageEditor({
       </p>
       <div className="editor">
         <Toolbar
+          paths={paths}
           setPaths={setPaths}
           lineWidth={lineWidth}
           setLineWidth={setLineWidth}
@@ -265,7 +330,15 @@ function ImageEditor({
           canvasRef={canvasRef}
         ></Toolbar>
         <div>
-          <canvas ref={canvasRef} width={500} height={500} className="canvas" />
+          <canvas
+            ref={canvasRef}
+            width={500}
+            height={500}
+            className="canvas"
+            onMouseDown={handleStartDrawing}
+            onMouseMove={handleMoveDrawing}
+            onMouseUp={handleStopDrawing}
+          />
         </div>
       </div>
       <button
