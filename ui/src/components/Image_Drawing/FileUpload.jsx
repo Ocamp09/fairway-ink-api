@@ -1,11 +1,14 @@
 import { useState, useRef } from "react";
 import { FaImage } from "react-icons/fa6";
+import { useSession } from "../../contexts/FileContext";
 import "./FileUpload.css";
 import "./ImageEditor.css";
 
-const FileUpload = ({ setImageUrl }) => {
+const FileUpload = () => {
   const [error, setError] = useState("");
-  const fileInputRef = useRef(null); // Use a ref to access the file input
+  const fileInputRef = useRef(null);
+
+  const { updateUrl } = useSession();
 
   const allowedTypes = [
     "image/png",
@@ -29,7 +32,7 @@ const FileUpload = ({ setImageUrl }) => {
     }
 
     setError("");
-    setImageUrl(URL.createObjectURL(selectedFile));
+    updateUrl(URL.createObjectURL(selectedFile));
   };
 
   const handleUploadClick = () => {

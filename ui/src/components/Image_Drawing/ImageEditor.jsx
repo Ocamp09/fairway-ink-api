@@ -3,6 +3,7 @@ import axios from "axios";
 import "./ImageEditor.css";
 import Toolbar from "./Toolbar";
 import getStroke from "perfect-freehand";
+import { useSession } from "../../contexts/FileContext";
 
 function ImageEditor({
   setSvgUrl,
@@ -19,8 +20,10 @@ function ImageEditor({
   const [lineWidth, setLineWidth] = useState(5);
   const [reloadPaths, setReloadPaths] = useState(false);
   const [canvasScale, setCanvasScale] = useState(1);
-  const [imageUrl, setImageUrl] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+
+  const { imageUrl } = useSession();
+  const { updateUrl } = useSession();
 
   const getSvgPathFromStroke = (stroke) => {
     if (!stroke.length) return "";
@@ -226,7 +229,8 @@ function ImageEditor({
         const file = files[0];
         const reader = new FileReader();
         reader.onload = (event) => {
-          setImageUrl(event.target.result);
+          updateUrl(event.target.result);
+          sessionStorage.setItem("imageUrl", event.target.result);
         };
         reader.readAsDataURL(file);
       }
@@ -325,8 +329,6 @@ function ImageEditor({
           setReloadPaths={setReloadPaths}
           scale={canvasScale}
           setScale={setCanvasScale}
-          setImageUrl={setImageUrl}
-          imageUrl={imageUrl}
           canvasRef={canvasRef}
         ></Toolbar>
         <div>

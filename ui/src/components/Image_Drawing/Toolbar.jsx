@@ -7,6 +7,7 @@ import { FaDeleteLeft } from "react-icons/fa6";
 import { MdLineWeight } from "react-icons/md";
 import { IoMdUndo, IoMdRedo } from "react-icons/io";
 import RemoveImage from "./RemoveImage";
+import { useSession } from "../../contexts/FileContext";
 
 const Toolbar = ({
   paths,
@@ -14,25 +15,16 @@ const Toolbar = ({
   lineWidth,
   setLineWidth,
   setReloadPaths,
-  setScale,
-  scale,
-  setImageUrl,
-  imageUrl,
   canvasRef,
 }) => {
   const [undoStack, setUndoStack] = useState([]);
   const [redoStack, setRedoStack] = useState([]);
+
+  const { updateUrl } = useSession();
+
   const scaleMultiplier = 0.8;
   const iconSize = 28;
   const lineLabel = <MdLineWeight size={iconSize} color="white" />;
-
-  const handleZoomIn = () => {
-    setScale(scale / scaleMultiplier);
-  };
-
-  const handleZoomOut = () => {
-    setScale(scale * scaleMultiplier);
-  };
 
   const handleUndo = () => {
     if (paths.length > 0) {
@@ -55,7 +47,7 @@ const Toolbar = ({
   };
 
   const handleRemoveImage = () => {
-    setImageUrl(null);
+    updateUrl(null);
     setReloadPaths(true);
   };
 
@@ -90,7 +82,7 @@ const Toolbar = ({
   return (
     <>
       <div className="toolbar">
-        <FileUpload imageUrl={imageUrl} setImageUrl={setImageUrl} />
+        <FileUpload />
         <button title="Remove image" onClick={handleRemoveImage}>
           <RemoveImage />
         </button>
