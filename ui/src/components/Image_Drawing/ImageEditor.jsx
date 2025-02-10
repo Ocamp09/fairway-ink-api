@@ -91,36 +91,60 @@ function ImageEditor({
     [imageUrl]
   );
 
-  const handleMouseMove = (e) => {
-    if (isDrawing) {
-      const rect = canvasRef.current.getBoundingClientRect();
-      const newX = e.clientX - rect.left;
-      const newY = e.clientY - rect.top;
+  const getCoordinates = (e) => {
+    const canvas = canvasRef.current;
+    const rect = canvas.getBoundingClientRect();
+    const scale = canvasScale;
+    let clientX, clientY;
 
-      setPaths((prevPaths) => {
-        const updatedPaths = [...prevPaths];
-        const lastPath = updatedPaths[updatedPaths.length - 1];
-        lastPath.points.push([newX, newY, e.pressure]);
-        return updatedPaths;
-      });
+    if (e.touches && e.touches.length > 0) {
+      // Touch event
+      clientX = e.touches[0].clientX;
+      clientY = e.touches[0].clientY;
+    } else if (e.clientX) {
+      // Mouse event
+      clientX = e.clientX;
+      clientY = e.clientY;
+    } else {
+      return null;
     }
+
+    const x = (clientX - rect.left) / scale;
+    const y = (clientY - rect.top) / scale;
+    const pressure = e.pressure || 1;
+
+    return { x, y, pressure };
   };
 
-  const handleMouseUp = () => {
-    setIsDrawing(false);
-  };
+  const handleStartDrawing = (e) => {
+    e.preventDefault();
+    const coords = getCoordinates(e);
+    if (!coords) return;
 
-  const handleMouseDown = (e) => {
     setIsDrawing(true);
-
-    const rect = canvasRef.current.getBoundingClientRect();
-    const startX = e.clientX - rect.left;
-    const startY = e.clientY - rect.top;
-
+    const { x, y, pressure } = coords;
     setPaths((prevPaths) => [
       ...prevPaths,
-      { points: [[startX, startY, e.pressure]], lineColor, width: lineWidth },
+      { points: [[x, y, pressure]], lineColor, width: lineWidth },
     ]);
+  };
+
+  const handleMoveDrawing = (e) => {
+    e.preventDefault();
+    const coords = getCoordinates(e);
+    if (!coords || !isDrawing) return;
+
+    const { x, y, pressure } = coords;
+    setPaths((prevPaths) => {
+      const updatedPaths = [...prevPaths];
+      const lastPath = updatedPaths[updatedPaths.length - 1];
+      lastPath.points.push([x, y, pressure]);
+      return updatedPaths;
+    });
+  };
+
+  const handleStopDrawing = () => {
+    setIsDrawing(false);
   };
 
   const handleSvg = async () => {
@@ -221,6 +245,7 @@ function ImageEditor({
     };
   }, []);
 
+  // handles new image upload
   useEffect(() => {
     const canvas = canvasRef.current;
     const context = canvas.getContext("2d");
@@ -231,7 +256,7 @@ function ImageEditor({
     drawImage(false);
   }, [imageUrl, drawImage]);
 
-  // This useEffect will only run when paths or lineWidth changes
+  //will only run when paths or lineWidth changes
   useEffect(() => {
     const canvas = canvasRef.current;
     const context = canvas.getContext("2d");
@@ -241,8 +266,49 @@ function ImageEditor({
       drawImage(true);
     }
     drawPaths();
-    // setReloadPaths(false);
   }, [paths, lineWidth, drawPaths, reloadPaths]);
+
+  // handles touch drawing
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (canvas) {
+      const handleTouchStart = (e) => handleStartDrawing(e);
+      const handleTouchMove = (e) => handleMoveDrawing(e);
+      const handleTouchEnd = () => handleStopDrawing();
+
+      canvas.addEventListener("touchstart", handleTouchStart, {
+        passive: false,
+      });
+      canvas.addEventListener("touchmove", handleTouchMove, { passive: false });
+      canvas.addEventListener("touchend", handleTouchEnd, { passive: false });
+
+      return () => {
+        canvas.removeEventListener("touchstart", handleTouchStart);
+        canvas.removeEventListener("touchmove", handleTouchMove);
+        canvas.removeEventListener("touchend", handleTouchEnd);
+      };
+    }
+  }, [handleStartDrawing, handleMoveDrawing, handleStopDrawing]);
+
+  // use effect to handle window scaling
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    const initialWidth = 500;
+
+    // Function to calculate scale factor based on current width
+    const calculateCanvasScale = () => {
+      const currentWidth = canvas.offsetWidth;
+      const scale = currentWidth / initialWidth;
+      setCanvasScale(scale);
+    };
+
+    calculateCanvasScale();
+    window.addEventListener("resize", calculateCanvasScale);
+
+    return () => {
+      window.removeEventListener("resize", calculateCanvasScale);
+    };
+  }, []);
 
   return (
     <div className="designer">
@@ -269,9 +335,9 @@ function ImageEditor({
             width={500}
             height={500}
             className="canvas"
-            onMouseDown={handleMouseDown}
-            onMouseMove={handleMouseMove}
-            onMouseUp={handleMouseUp}
+            onMouseDown={handleStartDrawing}
+            onMouseMove={handleMoveDrawing}
+            onMouseUp={handleStopDrawing}
           />
         </div>
       </div>
