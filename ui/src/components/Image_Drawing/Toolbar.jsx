@@ -20,7 +20,7 @@ const Toolbar = ({
   const [undoStack, setUndoStack] = useState([]);
   const [redoStack, setRedoStack] = useState([]);
 
-  const { updateUrl } = useSession();
+  const { updateImageUrl } = useSession();
 
   const scaleMultiplier = 0.8;
   const iconSize = 28;
@@ -47,7 +47,7 @@ const Toolbar = ({
   };
 
   const handleRemoveImage = () => {
-    updateUrl(null);
+    updateImageUrl(null);
     setReloadPaths(true);
   };
 

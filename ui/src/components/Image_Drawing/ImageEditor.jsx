@@ -22,7 +22,7 @@ function ImageEditor({
   const [isLoading, setIsLoading] = useState(false);
 
   const { imageUrl } = useSession();
-  const { updateUrl } = useSession();
+  const { updateImageUrl } = useSession();
 
   const getSvgPathFromStroke = (stroke) => {
     if (!stroke.length) return "";
@@ -228,7 +228,7 @@ function ImageEditor({
         const file = files[0];
         const reader = new FileReader();
         reader.onload = (event) => {
-          updateUrl(event.target.result);
+          updateImageUrl(event.target.result);
           sessionStorage.setItem("imageUrl", event.target.result);
         };
         reader.readAsDataURL(file);

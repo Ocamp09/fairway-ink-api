@@ -11,7 +11,7 @@ export const FileProvider = ({ children }) => {
     sessionStorage.getItem("stlUrl") || "default.stl"
   );
 
-  const updateUrl = (newUrl) => {
+  const updateImageUrl = (newUrl) => {
     sessionStorage.setItem("imageUrl", newUrl);
     setImageUrl(newUrl);
   };
@@ -22,7 +22,9 @@ export const FileProvider = ({ children }) => {
   };
 
   return (
-    <FileContext.Provider value={{ imageUrl, stlUrl, updateUrl, updateStl }}>
+    <FileContext.Provider
+      value={{ imageUrl, stlUrl, updateImageUrl, updateStl }}
+    >
       {children}
     </FileContext.Provider>
   );

@@ -8,7 +8,7 @@ const FileUpload = () => {
   const [error, setError] = useState("");
   const fileInputRef = useRef(null);
 
-  const { updateUrl } = useSession();
+  const { updateImageUrl } = useSession();
 
   const allowedTypes = [
     "image/png",
@@ -32,7 +32,7 @@ const FileUpload = () => {
     }
 
     setError("");
-    updateUrl(URL.createObjectURL(selectedFile));
+    updateImageUrl(URL.createObjectURL(selectedFile));
   };
 
   const handleUploadClick = () => {
