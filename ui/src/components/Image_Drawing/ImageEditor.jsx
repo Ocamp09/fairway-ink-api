@@ -10,7 +10,6 @@ function ImageEditor({
   setSvgData,
   setShowDesign,
   setShowScale,
-  showDesign,
   paths,
   setPaths,
 }) {

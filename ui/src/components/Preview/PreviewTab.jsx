@@ -2,12 +2,14 @@ import { useState } from "react";
 import STLViewer from "../3D-View/STLViewer";
 import QuantityDropdown from "./QuantityDropdown";
 import { useCart } from "../../contexts/CartContext";
+import { useSession } from "../../contexts/FileContext";
 import "./PreviewTab.css";
 
-const PreviewTab = ({ stlUrl }) => {
+const PreviewTab = () => {
   const [quantity, setQuantity] = useState(1);
 
   const { addToCart } = useCart();
+  const { stlUrl } = useSession();
 
   const handleAddToCart = (event) => {
     event.preventDefault();

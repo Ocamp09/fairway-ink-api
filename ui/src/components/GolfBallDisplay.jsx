@@ -44,12 +44,11 @@ const GolfBallDisplay = () => {
           setSvgData={setSvgData}
           stlKey={stlKey}
           setStlKey={setStlKey}
-          setStlUrl={setStlUrl}
           setShowPreview={setShowPreview}
           setShowScale={setShowScale}
         />
       )}
-      {showPreview && <PreviewTab stlUrl={stlUrl} />}
+      {showPreview && <PreviewTab />}
     </div>
   );
 };
