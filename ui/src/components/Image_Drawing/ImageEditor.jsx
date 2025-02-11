@@ -14,12 +14,16 @@ function ImageEditor({
   setPaths,
 }) {
   const canvasRef = useRef(null);
+  const textRef = useRef(null);
+
   const [isDrawing, setIsDrawing] = useState(false);
   const lineColor = "#00000";
   const [lineWidth, setLineWidth] = useState(5);
   const [reloadPaths, setReloadPaths] = useState(false);
   const [canvasScale, setCanvasScale] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
+  const [mode, setMode] = useState(false); // false is draw, true is text
+  const [text, setText] = useState("");
 
   const { imageUrl } = useSession();
   const { updateImageUrl } = useSession();
@@ -313,6 +317,26 @@ function ImageEditor({
     };
   }, []);
 
+  useEffect(() => {
+    if (mode) {
+      const canvas = textRef.current;
+      const context = canvas.getContext("2d");
+
+      // Clear the canvas to avoid overlapping text
+      context.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Render the background image (if any)
+      drawImage(false); // Adjust this as needed, depending on whether you're drawing an image
+
+      // Render the text (if there's any)
+      if (text) {
+        context.font = "20px Arial"; // You can adjust the font, size, etc.
+        context.fillStyle = "black"; // Text color
+        context.fillText(text, 50, 50); // Position the text as desired (x, y)
+      }
+    }
+  }, [text, mode, canvasScale, drawImage]);
+
   return (
     <div className="designer">
       <p className="desc">
@@ -329,8 +353,10 @@ function ImageEditor({
           scale={canvasScale}
           setScale={setCanvasScale}
           canvasRef={canvasRef}
+          mode={mode}
+          setMode={setMode}
         ></Toolbar>
-        <div>
+        <div hidden={mode}>
           <canvas
             ref={canvasRef}
             width={500}
@@ -340,6 +366,16 @@ function ImageEditor({
             onMouseMove={handleMoveDrawing}
             onMouseUp={handleStopDrawing}
           />
+        </div>
+        <div hidden={!mode}>
+          <input
+            type="textarea"
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            placeholder="Type your text here"
+            className="canvas-text"
+          />
+          <canvas ref={textRef} width={500} height={500} className="canvas" />
         </div>
       </div>
       <button

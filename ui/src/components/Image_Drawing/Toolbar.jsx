@@ -4,10 +4,12 @@ import QuantityDropdown from "../Preview/QuantityDropdown";
 import FileUpload from "./FileUpload";
 import { FiDownload } from "react-icons/fi";
 import { FaDeleteLeft } from "react-icons/fa6";
-import { MdLineWeight } from "react-icons/md";
+import { MdLineWeight, MdTextFields } from "react-icons/md";
 import { IoMdUndo, IoMdRedo } from "react-icons/io";
+import { BiSolidPencil } from "react-icons/bi";
 import RemoveImage from "./RemoveImage";
 import { useSession } from "../../contexts/FileContext";
+import DrawTools from "./DrawTools";
 
 const Toolbar = ({
   paths,
@@ -16,46 +18,13 @@ const Toolbar = ({
   setLineWidth,
   setReloadPaths,
   canvasRef,
+  mode,
+  setMode,
 }) => {
-  const [undoStack, setUndoStack] = useState([]);
-  const [redoStack, setRedoStack] = useState([]);
-
-  const { updateImageUrl } = useSession();
-
-  const scaleMultiplier = 0.8;
   const iconSize = 28;
-  const lineLabel = <MdLineWeight size={iconSize} color="white" />;
 
-  const handleUndo = () => {
-    if (paths.length > 0) {
-      const lastPath = paths.pop();
-      setUndoStack([...undoStack, lastPath]);
-      setRedoStack([lastPath, ...redoStack]); // Preserve redo history
-      setPaths([...paths]); // Trigger re-render with modified paths
-      setReloadPaths(true);
-    }
-  };
-
-  const handleRedo = () => {
-    if (redoStack.length > 0) {
-      const nextPath = redoStack.shift();
-      setPaths([...paths, nextPath]);
-      setUndoStack([...undoStack, nextPath]); // Update undo stack
-      setRedoStack([...redoStack]); // Trigger re-render with modified paths
-      setReloadPaths(true);
-    }
-  };
-
-  const handleRemoveImage = () => {
-    updateImageUrl(null);
-    setReloadPaths(true);
-  };
-
-  const handleClear = () => {
-    setUndoStack([...undoStack, ...paths]);
-    setRedoStack([]); // Clear redo stack on clear
-    setPaths([]);
-    setReloadPaths(true);
+  const handleText = () => {
+    setMode(!mode);
   };
 
   const saveCanvas = () => {
@@ -82,35 +51,20 @@ const Toolbar = ({
   return (
     <>
       <div className="toolbar">
-        <FileUpload />
-        <button title="Remove image" onClick={handleRemoveImage}>
-          <RemoveImage />
+        <button title="Switch editor mode" onClick={handleText}>
+          {mode && <MdTextFields size={iconSize} />}
+          {!mode && <BiSolidPencil size={iconSize} />}
         </button>
-        <button title="Undo" onClick={handleUndo} disabled={paths.length === 0}>
-          <IoMdUndo size={iconSize} />
-        </button>
-        <button
-          title="Redo"
-          onClick={handleRedo}
-          disabled={redoStack.length === 0}
-        >
-          <IoMdRedo size={iconSize} />
-        </button>
-        <button
-          title="Delete drawings"
-          onClick={handleClear}
-          disabled={paths.length === 0}
-        >
-          <FaDeleteLeft size={iconSize} />
-        </button>
-        <QuantityDropdown
-          maxQuantity={20}
-          labelText={lineLabel}
-          step={2}
-          quantity={lineWidth}
-          setQuantity={setLineWidth}
-          title={"Adjust line width"}
-        />
+        {!mode && (
+          <DrawTools
+            paths={paths}
+            setPaths={setPaths}
+            lineWidth={lineWidth}
+            setLineWidth={setLineWidth}
+            setReloadPaths={setReloadPaths}
+            iconSize={iconSize}
+          />
+        )}
         <button title="Download drawings" onClick={saveCanvas}>
           <FiDownload size={iconSize} />
         </button>
