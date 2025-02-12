@@ -15,6 +15,20 @@ const ScaleSvg = ({ svgUrl, svgData, setShowPreview, setShowScale }) => {
   // then factor that scale into the query sent
   const canvasSizePx = 125 * scale;
 
+  const setSvgSize = () => {
+    const parser = new DOMParser();
+    const xmlDoc = parser.parseFromString(svgData, "image/svg+xml");
+    const svgElement = xmlDoc.querySelector("svg");
+
+    if (svgElement) {
+      svgElement.setAttribute("width", 25);
+      svgElement.setAttribute("height", 25);
+      return new XMLSerializer().serializeToString(xmlDoc);
+    } else {
+      return "Invalid SVG data";
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!svgData) {
@@ -23,11 +37,12 @@ const ScaleSvg = ({ svgUrl, svgData, setShowPreview, setShowScale }) => {
     }
 
     setIsLoading(true);
-
+    const newData = setSvgSize();
+    console.log(newData);
     const formData = new FormData();
     formData.append(
       "svg",
-      new Blob([svgData], { type: "image/svg+xml" }),
+      new Blob([newData], { type: "image/svg+xml" }),
       "golfball" + stlKey + ".svg"
     );
     formData.append("scale", scale);
@@ -46,7 +61,7 @@ const ScaleSvg = ({ svgUrl, svgData, setShowPreview, setShowScale }) => {
 
       if (response.data.success) {
         updateStl(response.data.stlUrl);
-        updateStlKey(stlKey + 1);
+        updateStlKey();
         setShowPreview(true);
         setShowScale(false);
       } else {

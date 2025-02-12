@@ -8,6 +8,7 @@ from enum import Enum
 
 class PrintType(Enum):
     SOLID = 1
+    MULTI = 2
 
 def fill_svg(svg_data):
     try:
@@ -53,7 +54,7 @@ def image_to_svg(image_path, method=PrintType.SOLID):
     image = image.crop(bbox)
  
     # default size for the SVGs to be saved
-    max_size_px = 125
+    max_size_px = 500
 
     # Resize the image while maintaining aspect ratio
     width, height = image.size
