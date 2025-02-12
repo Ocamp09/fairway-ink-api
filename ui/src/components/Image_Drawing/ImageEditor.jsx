@@ -128,7 +128,7 @@ function ImageEditor({
   const writeText = (text, x, y) => {
     const canvas = canvasRef.current;
     const context = canvas.getContext("2d");
-    context.font = fontSize + "px serif";
+    context.font = fontSize + "px test";
     context.fillText(text, x, y);
   };
 
@@ -348,6 +348,22 @@ function ImageEditor({
     return () => {
       window.removeEventListener("resize", calculateCanvasScale);
     };
+  }, []);
+
+  useEffect(() => {
+    // Create a new FontFace object to load the custom font
+    const myFont = new FontFace("test", "url(/gunplay.otf)");
+
+    // Load the font
+    myFont
+      .load()
+      .then(() => {
+        // Add the font to the document
+        document.fonts.add(myFont);
+      })
+      .catch((error) => {
+        console.error("Error loading font:", error);
+      });
   }, []);
 
   return (
