@@ -1,15 +1,15 @@
 import { useState } from "react";
 import "./Toolbar.css";
-import QuantityDropdown from "../Preview/QuantityDropdown";
 import FileUpload from "./FileUpload";
 import { FiDownload } from "react-icons/fi";
 import { FaDeleteLeft } from "react-icons/fa6";
-import { MdLineWeight, MdTextFields } from "react-icons/md";
 import { IoMdUndo, IoMdRedo } from "react-icons/io";
+import { IoText } from "react-icons/io5";
 import { BiSolidPencil } from "react-icons/bi";
 import RemoveImage from "./RemoveImage";
 import { useSession } from "../../contexts/FileContext";
 import DrawTools from "./DrawTools";
+import TextTools from "./TextTools";
 
 const Toolbar = ({
   paths,
@@ -20,11 +20,50 @@ const Toolbar = ({
   canvasRef,
   mode,
   setMode,
+  fontSize,
+  setFontSize,
 }) => {
+  const [undoStack, setUndoStack] = useState([]);
+  const [redoStack, setRedoStack] = useState([]);
+
+  const { updateImageUrl } = useSession();
+
   const iconSize = 28;
 
   const handleText = () => {
     setMode(!mode);
+  };
+
+  const handleUndo = () => {
+    if (paths.length > 0) {
+      const lastPath = paths.pop();
+      setUndoStack([...undoStack, lastPath]);
+      setRedoStack([lastPath, ...redoStack]);
+      setPaths([...paths]);
+      setReloadPaths(true);
+    }
+  };
+
+  const handleRedo = () => {
+    if (redoStack.length > 0) {
+      const nextPath = redoStack.shift();
+      setPaths([...paths, nextPath]);
+      setUndoStack([...undoStack, nextPath]);
+      setRedoStack([...redoStack]);
+      setReloadPaths(true);
+    }
+  };
+
+  const handleRemoveImage = () => {
+    updateImageUrl(null);
+    setReloadPaths(true);
+  };
+
+  const handleClear = () => {
+    setUndoStack([...undoStack, ...paths]);
+    setRedoStack([]);
+    setPaths([]);
+    setReloadPaths(true);
   };
 
   const saveCanvas = () => {
@@ -52,16 +91,41 @@ const Toolbar = ({
     <>
       <div className="toolbar">
         <button title="Switch editor mode" onClick={handleText}>
-          {mode && <MdTextFields size={iconSize} />}
+          {mode && <IoText size={iconSize} />}
           {!mode && <BiSolidPencil size={iconSize} />}
+        </button>
+        <FileUpload />
+        <button title="Remove image" onClick={handleRemoveImage}>
+          <RemoveImage />
+        </button>
+        <button title="Undo" onClick={handleUndo} disabled={paths.length === 0}>
+          <IoMdUndo size={iconSize} />
+        </button>
+        <button
+          title="Redo"
+          onClick={handleRedo}
+          disabled={redoStack.length === 0}
+        >
+          <IoMdRedo size={iconSize} />
+        </button>
+        <button
+          title="Delete drawings"
+          onClick={handleClear}
+          disabled={paths.length === 0}
+        >
+          <FaDeleteLeft size={iconSize} />
         </button>
         {!mode && (
           <DrawTools
-            paths={paths}
-            setPaths={setPaths}
             lineWidth={lineWidth}
             setLineWidth={setLineWidth}
-            setReloadPaths={setReloadPaths}
+            iconSize={iconSize}
+          />
+        )}
+        {mode && (
+          <TextTools
+            fontSize={fontSize}
+            setFontSize={setFontSize}
             iconSize={iconSize}
           />
         )}

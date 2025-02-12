@@ -14,7 +14,6 @@ function ImageEditor({
   setPaths,
 }) {
   const canvasRef = useRef(null);
-  const textRef = useRef(null);
 
   const [isDrawing, setIsDrawing] = useState(false);
   const lineColor = "#00000";
@@ -23,7 +22,7 @@ function ImageEditor({
   const [canvasScale, setCanvasScale] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [mode, setMode] = useState(false); // false is draw, true is text
-  const [text, setText] = useState("");
+  const [fontSize, setFontSize] = useState(40);
 
   const { imageUrl } = useSession();
   const { updateImageUrl } = useSession();
@@ -49,16 +48,20 @@ function ImageEditor({
       paths.forEach((path) => {
         const canvas = canvasRef.current;
         const context = canvas.getContext("2d");
-        const stroke = getStroke(path.points, {
-          size: path.width,
-          thinning: 0.0,
-          smoothing: 0.0,
-          streamline: 1.0,
-        });
-        const pathData = getSvgPathFromStroke(stroke);
-        const path2D = new Path2D(pathData);
-        context.fillStyle = path.lineColor;
-        context.fill(path2D);
+        if (path.type === "text") {
+          writeText(path.text, path.points[0][0], path.points[0][1]);
+        } else {
+          const stroke = getStroke(path.points, {
+            size: path.width,
+            thinning: 0.0,
+            smoothing: 0.0,
+            streamline: 1.0,
+          });
+          const pathData = getSvgPathFromStroke(stroke);
+          const path2D = new Path2D(pathData);
+          context.fillStyle = path.lineColor;
+          context.fill(path2D);
+        }
       });
     }
   }, [paths]);
@@ -122,6 +125,13 @@ function ImageEditor({
     return { x, y, pressure };
   };
 
+  const writeText = (text, x, y) => {
+    const canvas = canvasRef.current;
+    const context = canvas.getContext("2d");
+    context.font = fontSize + "px serif";
+    context.fillText(text, x, y);
+  };
+
   const handleStartDrawing = (e) => {
     e.preventDefault();
     const coords = getCoordinates(e);
@@ -129,14 +139,37 @@ function ImageEditor({
 
     setIsDrawing(true);
     const { x, y, pressure } = coords;
-    setPaths((prevPaths) => [
-      ...prevPaths,
-      { points: [[x, y, pressure]], lineColor, width: lineWidth },
-    ]);
+
+    if (mode) {
+      var inputText = prompt("Enter text: ");
+      if (inputText) {
+        setPaths((prevPaths) => [
+          ...prevPaths,
+          {
+            points: [[x, y, 1]],
+            lineColor,
+            width: fontSize,
+            type: "text",
+            text: inputText,
+          },
+        ]);
+      }
+    } else {
+      setPaths((prevPaths) => [
+        ...prevPaths,
+        {
+          points: [[x, y, pressure]],
+          lineColor,
+          width: lineWidth,
+          type: "draw",
+        },
+      ]);
+    }
   };
 
   const handleMoveDrawing = (e) => {
     e.preventDefault();
+    if (mode) return;
     const coords = getCoordinates(e);
     if (!coords || !isDrawing) return;
 
@@ -154,6 +187,8 @@ function ImageEditor({
   };
 
   const handleSvg = async () => {
+    console.log(paths);
+    return;
     setIsLoading(true);
     setSvgUrl(null);
     const canvas = canvasRef.current;
@@ -317,26 +352,6 @@ function ImageEditor({
     };
   }, []);
 
-  useEffect(() => {
-    if (mode) {
-      const canvas = textRef.current;
-      const context = canvas.getContext("2d");
-
-      // Clear the canvas to avoid overlapping text
-      context.clearRect(0, 0, canvas.width, canvas.height);
-
-      // Render the background image (if any)
-      drawImage(false); // Adjust this as needed, depending on whether you're drawing an image
-
-      // Render the text (if there's any)
-      if (text) {
-        context.font = "20px Arial"; // You can adjust the font, size, etc.
-        context.fillStyle = "black"; // Text color
-        context.fillText(text, 50, 50); // Position the text as desired (x, y)
-      }
-    }
-  }, [text, mode, canvasScale, drawImage]);
-
   return (
     <div className="designer">
       <p className="desc">
@@ -355,8 +370,10 @@ function ImageEditor({
           canvasRef={canvasRef}
           mode={mode}
           setMode={setMode}
+          fontSize={fontSize}
+          setFontSize={setFontSize}
         ></Toolbar>
-        <div hidden={mode}>
+        <div>
           <canvas
             ref={canvasRef}
             width={500}
@@ -366,16 +383,6 @@ function ImageEditor({
             onMouseMove={handleMoveDrawing}
             onMouseUp={handleStopDrawing}
           />
-        </div>
-        <div hidden={!mode}>
-          <input
-            type="textarea"
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            placeholder="Type your text here"
-            className="canvas-text"
-          />
-          <canvas ref={textRef} width={500} height={500} className="canvas" />
         </div>
       </div>
       <button

@@ -4,6 +4,7 @@ import "./QuantityDropdown.css";
 function QuantityDropdown({
   setQuantity,
   quantity,
+  minQuantity = 1,
   maxQuantity = 15,
   labelText = "Quantity: ",
   step = 1,
@@ -13,7 +14,7 @@ function QuantityDropdown({
   const dropdownRef = useRef(null);
 
   const quantities = [];
-  for (let i = 1; i <= maxQuantity; i += step) {
+  for (let i = minQuantity; i <= maxQuantity; i += step) {
     quantities.push(i);
   }
 
