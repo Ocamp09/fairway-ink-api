@@ -23,9 +23,9 @@ export const FileProvider = ({ children }) => {
     setStlUrl(stlUrl);
   };
 
-  const updateStlKey = (key) => {
-    sessionStorage.setItem("stlKey", key);
-    setStlKey(key);
+  const updateStlKey = () => {
+    sessionStorage.setItem("stlKey", Number(stlKey) + 1);
+    setStlKey(Number(stlKey) + 1);
   };
 
   return (
