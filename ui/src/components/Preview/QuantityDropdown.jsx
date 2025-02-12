@@ -9,6 +9,7 @@ function QuantityDropdown({
   labelText = "Quantity: ",
   step = 1,
   title = "Set quantity",
+  hidden = false,
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
@@ -40,7 +41,7 @@ function QuantityDropdown({
   }, [isOpen]);
 
   return (
-    <div className="dropdown" title={title} ref={dropdownRef}>
+    <div className="dropdown" title={title} ref={dropdownRef} hidden={hidden}>
       <button className="dropdown-toggle" onClick={() => setIsOpen(!isOpen)}>
         <label>{labelText}</label>
         {quantity}

@@ -7,6 +7,7 @@ import "./PreviewTab.css";
 
 const PreviewTab = () => {
   const [quantity, setQuantity] = useState(1);
+  const [isAdded, setIsAdded] = useState(false);
 
   const { addToCart } = useCart();
   const { stlUrl, stlKey } = useSession();
@@ -15,6 +16,7 @@ const PreviewTab = () => {
     event.preventDefault();
     console.log("cartUrl: ", stlUrl);
     addToCart(stlKey, stlUrl, quantity);
+    setIsAdded(true);
   };
 
   return (
@@ -26,9 +28,14 @@ const PreviewTab = () => {
           setQuantity={setQuantity}
           quantity={quantity}
           maxQuantity={15}
+          hidden={isAdded}
         />
-        <button onClick={handleAddToCart} className="submit-button">
-          Add to Cart
+        <button
+          onClick={handleAddToCart}
+          className="submit-button"
+          disabled={isAdded}
+        >
+          {!isAdded ? "Add to Cart" : "Item added!"}
         </button>
       </div>
     </div>
