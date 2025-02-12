@@ -187,8 +187,6 @@ function ImageEditor({
   };
 
   const handleSvg = async () => {
-    console.log(paths);
-    return;
     setIsLoading(true);
     setSvgUrl(null);
     const canvas = canvasRef.current;
