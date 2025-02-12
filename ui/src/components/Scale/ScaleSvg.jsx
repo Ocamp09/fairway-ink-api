@@ -4,19 +4,12 @@ import axios from "axios";
 import { useSession } from "../../contexts/FileContext";
 import "./ScaleSvg.css";
 
-const ScaleSvg = ({
-  svgUrl,
-  svgData,
-  stlKey,
-  setStlKey,
-  setShowPreview,
-  setShowScale,
-}) => {
+const ScaleSvg = ({ svgUrl, svgData, setShowPreview, setShowScale }) => {
   const [scale, setScale] = useState(1);
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  const { updateStl } = useSession();
+  const { updateStl, stlKey, updateStlKey } = useSession();
 
   // get svg width and height, scale down to size I want to display
   // then factor that scale into the query sent
@@ -53,7 +46,7 @@ const ScaleSvg = ({
 
       if (response.data.success) {
         updateStl(response.data.stlUrl);
-        setStlKey((prevKey) => prevKey + 1);
+        updateStlKey(stlKey + 1);
         setShowPreview(true);
         setShowScale(false);
       } else {

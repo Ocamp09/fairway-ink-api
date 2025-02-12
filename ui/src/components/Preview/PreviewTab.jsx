@@ -9,11 +9,12 @@ const PreviewTab = () => {
   const [quantity, setQuantity] = useState(1);
 
   const { addToCart } = useCart();
-  const { stlUrl } = useSession();
+  const { stlUrl, stlKey } = useSession();
 
   const handleAddToCart = (event) => {
     event.preventDefault();
-    addToCart(stlUrl, quantity);
+    console.log("cartUrl: ", stlUrl);
+    addToCart(stlKey, stlUrl, quantity);
   };
 
   return (

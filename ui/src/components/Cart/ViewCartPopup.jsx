@@ -5,7 +5,7 @@ import "./ViewCartPopup.css";
 
 const ViewCartPopup = ({ isOpen, setIsOpen }) => {
   const { cartItems, removeFromCart, updateQuantity } = useCart();
-
+  console.log("cart: ", cartItems);
   const handleQuantityChange = (itemId, newQuantity) => {
     if (newQuantity < 1) return;
     updateQuantity(itemId, newQuantity);
@@ -36,7 +36,7 @@ const ViewCartPopup = ({ isOpen, setIsOpen }) => {
         ) : (
           <ul className="cart-items">
             {cartItems.map((item) => (
-              <li key={item.id} className="cart-item">
+              <li key={item.stl} className="cart-item">
                 <div className="stl-viewer-container">
                   <STLViewer stlUrl={item.stl} cart={true} />{" "}
                 </div>

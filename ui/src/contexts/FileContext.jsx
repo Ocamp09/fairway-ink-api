@@ -11,6 +11,8 @@ export const FileProvider = ({ children }) => {
     sessionStorage.getItem("stlUrl") || "default.stl"
   );
 
+  const [stlKey, setStlKey] = useState(sessionStorage.getItem("stlKey") || 0);
+
   const updateImageUrl = (newUrl) => {
     sessionStorage.setItem("imageUrl", newUrl);
     setImageUrl(newUrl);
@@ -21,9 +23,21 @@ export const FileProvider = ({ children }) => {
     setStlUrl(stlUrl);
   };
 
+  const updateStlKey = (key) => {
+    sessionStorage.setItem("stlKey", key);
+    setStlKey(key);
+  };
+
   return (
     <FileContext.Provider
-      value={{ imageUrl, stlUrl, updateImageUrl, updateStl }}
+      value={{
+        imageUrl,
+        stlUrl,
+        stlKey,
+        updateImageUrl,
+        updateStl,
+        updateStlKey,
+      }}
     >
       {children}
     </FileContext.Provider>
