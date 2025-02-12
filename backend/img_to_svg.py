@@ -8,7 +8,8 @@ from enum import Enum
 
 class PrintType(Enum):
     SOLID = 1
-    MULTI = 2
+    TEXT = 2
+    MULTI = 3
 
 def fill_svg(svg_data):
     try:

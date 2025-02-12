@@ -23,7 +23,7 @@ function ImageEditor({
   const [reloadPaths, setReloadPaths] = useState(false);
   const [canvasScale, setCanvasScale] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
-  const [mode, setMode] = useState(false); // false is draw, true is text
+  const [editorMode, setEditorMode] = useState(false); // false is draw, true is text
   const [fontSize, setFontSize] = useState(40);
 
   const { imageUrl } = useSession();
@@ -142,7 +142,7 @@ function ImageEditor({
     setIsDrawing(true);
     const { x, y, pressure } = coords;
 
-    if (mode) {
+    if (editorMode) {
       var inputText = prompt("Enter text: ");
       if (inputText) {
         setPaths((prevPaths) => [
@@ -171,7 +171,8 @@ function ImageEditor({
 
   const handleMoveDrawing = (e) => {
     e.preventDefault();
-    if (mode) return;
+    if (editorMode) return;
+
     const coords = getCoordinates(e);
     if (!coords || !isDrawing) return;
 
@@ -179,8 +180,13 @@ function ImageEditor({
     setPaths((prevPaths) => {
       const updatedPaths = [...prevPaths];
       const lastPath = updatedPaths[updatedPaths.length - 1];
-      lastPath.points.push([x, y, pressure]);
-      return updatedPaths;
+
+      if (lastPath) {
+        lastPath.points.push([x, y, pressure]);
+        return updatedPaths;
+      } else {
+        return [];
+      }
     });
   };
 
@@ -368,13 +374,27 @@ function ImageEditor({
       });
   }, []);
 
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    const context = canvas.getContext("2d");
+
+    context.clearRect(0, 0, canvas.width, canvas.height);
+    setPaths([]);
+  }, [templateType]);
+
   return (
     <div className="designer">
       <p className="desc">
-        Upload an image (button or drag and drop), or draw with your mouse to
-        get started
+        {templateType == "text"
+          ? `Click inside the editor and type a message`
+          : ` Upload an image (button or drag and drop), or draw with your mouse to
+        get started`}
       </p>
-      <TypeSelector type={templateType} setType={setTemplateType} />
+      <TypeSelector
+        type={templateType}
+        setType={setTemplateType}
+        setEditorMode={setEditorMode}
+      />
       <div className="editor">
         <Toolbar
           paths={paths}
@@ -385,8 +405,8 @@ function ImageEditor({
           scale={canvasScale}
           setScale={setCanvasScale}
           canvasRef={canvasRef}
-          mode={mode}
-          setMode={setMode}
+          mode={editorMode}
+          setMode={setEditorMode}
           fontSize={fontSize}
           setFontSize={setFontSize}
           templateType={templateType}

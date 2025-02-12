@@ -54,8 +54,9 @@ def upload_file():
 
     method = request.form.get("method", img_to_svg.PrintType.SOLID)  
     if method == "multi":
-        print("multi")
         method = img_to_svg.PrintType.MULTI
+    elif method == "text":
+        method = img_to_svg.PrintType.TEXT
     else:
         method = img_to_svg.PrintType.SOLID
     

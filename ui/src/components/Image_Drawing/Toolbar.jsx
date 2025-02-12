@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import "./Toolbar.css";
 import FileUpload from "./FileUpload";
 import { FiDownload } from "react-icons/fi";
@@ -67,6 +67,11 @@ const Toolbar = ({
     setReloadPaths(true);
   };
 
+  useEffect(() => {
+    setRedoStack([]);
+    setUndoStack([]);
+  }, [templateType]);
+
   const saveCanvas = () => {
     const canvas = canvasRef.current;
 
@@ -95,14 +100,20 @@ const Toolbar = ({
           title="Switch editor mode"
           onClick={handleText}
           hidden={templateType == "solid"}
+          disabled={templateType == "text"}
         >
           {mode && <IoText size={iconSize} />}
           {!mode && <BiSolidPencil size={iconSize} />}
         </button>
-        <FileUpload />
-        <button title="Remove image" onClick={handleRemoveImage}>
-          <RemoveImage />
-        </button>
+        {templateType != "text" && (
+          <>
+            <FileUpload />
+            <button title="Remove image" onClick={handleRemoveImage}>
+              <RemoveImage />
+            </button>
+          </>
+        )}
+
         <button title="Undo" onClick={handleUndo} disabled={paths.length === 0}>
           <IoMdUndo size={iconSize} />
         </button>
