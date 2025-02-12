@@ -4,6 +4,7 @@ import "./ImageEditor.css";
 import Toolbar from "./Toolbar";
 import getStroke from "perfect-freehand";
 import { useSession } from "../../contexts/FileContext";
+import TypeSelector from "./TypeSelector";
 
 function ImageEditor({
   setSvgUrl,
@@ -15,6 +16,7 @@ function ImageEditor({
 }) {
   const canvasRef = useRef(null);
 
+  const [templateType, setTemplateType] = useState("solid");
   const [isDrawing, setIsDrawing] = useState(false);
   const lineColor = "#00000";
   const [lineWidth, setLineWidth] = useState(5);
@@ -205,7 +207,7 @@ function ImageEditor({
 
     const formData = new FormData();
     formData.append("file", blob, "fairway_ink_drawing.png");
-
+    formData.append("method", templateType);
     try {
       const response = await axios.post(
         "http://localhost:5001/upload",
@@ -372,6 +374,7 @@ function ImageEditor({
         Upload an image (button or drag and drop), or draw with your mouse to
         get started
       </p>
+      <TypeSelector type={templateType} setType={setTemplateType} />
       <div className="editor">
         <Toolbar
           paths={paths}
@@ -386,6 +389,7 @@ function ImageEditor({
           setMode={setMode}
           fontSize={fontSize}
           setFontSize={setFontSize}
+          templateType={templateType}
         ></Toolbar>
         <div>
           <canvas

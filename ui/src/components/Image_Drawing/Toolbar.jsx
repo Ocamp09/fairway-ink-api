@@ -22,6 +22,7 @@ const Toolbar = ({
   setMode,
   fontSize,
   setFontSize,
+  templateType,
 }) => {
   const [undoStack, setUndoStack] = useState([]);
   const [redoStack, setRedoStack] = useState([]);
@@ -90,7 +91,11 @@ const Toolbar = ({
   return (
     <>
       <div className="toolbar">
-        <button title="Switch editor mode" onClick={handleText}>
+        <button
+          title="Switch editor mode"
+          onClick={handleText}
+          hidden={templateType == "solid"}
+        >
           {mode && <IoText size={iconSize} />}
           {!mode && <BiSolidPencil size={iconSize} />}
         </button>
