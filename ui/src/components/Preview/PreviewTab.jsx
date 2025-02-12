@@ -14,7 +14,7 @@ const PreviewTab = () => {
 
   const handleAddToCart = (event) => {
     event.preventDefault();
-    console.log("cartUrl: ", stlUrl);
+
     addToCart(stlKey, stlUrl, quantity);
     setIsAdded(true);
   };

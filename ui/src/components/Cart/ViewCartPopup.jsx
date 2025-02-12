@@ -5,7 +5,7 @@ import "./ViewCartPopup.css";
 
 const ViewCartPopup = ({ isOpen, setIsOpen }) => {
   const { cartItems, removeFromCart, updateQuantity } = useCart();
-  console.log("cart: ", cartItems);
+
   const handleQuantityChange = (itemId, newQuantity) => {
     if (newQuantity < 1) return;
     updateQuantity(itemId, newQuantity);
