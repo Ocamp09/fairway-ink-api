@@ -96,3 +96,40 @@ export const centerCanvasDrawing = (canvas) => {
 
   return centeredCanvas;
 };
+
+export const drawImage = (
+  edit,
+  imageUrl,
+  canvasRef,
+  setPaths,
+  setReloadPaths
+) => {
+  if (imageUrl) {
+    const img = new Image();
+    img.src = imageUrl;
+
+    img.onload = () => {
+      const canvas = canvasRef.current;
+      const context = canvas.getContext("2d");
+
+      const width = img.width;
+      const height = img.height;
+      const set_dimension = 425;
+
+      let scale =
+        width > height ? set_dimension / width : set_dimension / height;
+
+      const scaledWidth = img.width * scale;
+      const scaledHeight = img.height * scale;
+
+      const x = (canvas.width - scaledWidth) / 2;
+      const y = (canvas.height - scaledHeight) / 2;
+
+      context.clearRect(0, 0, canvas.width, canvas.height);
+      if (!edit) setPaths([]);
+
+      context.drawImage(img, x, y, scaledWidth, scaledHeight);
+      setReloadPaths(false);
+    };
+  }
+};
