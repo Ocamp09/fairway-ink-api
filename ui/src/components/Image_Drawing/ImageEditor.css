@@ -13,8 +13,24 @@
   gap: 10px;
 }
 
-.modes {
+.modes-top {
+  display: none;
+  justify-content: center;
+  margin-bottom: 0.5rem;
+}
+
+.modes-bottom {
   margin-left: 1rem;
+}
+
+@media screen and (max-width: 900px) {
+  .modes-bottom {
+    display: none;
+  }
+
+  .modes-top {
+    display: flex;
+  }
 }
 
 .canvas {

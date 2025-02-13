@@ -463,6 +463,9 @@ function ImageEditor({
           : ` Upload an image (button or drag and drop), or draw with your mouse to
         get started`}
       </p>
+      <div className="modes-top">
+        <ModeExamples small={true} />
+      </div>
       <TypeSelector />
       <div className="displays">
         <div className="editor">
@@ -491,7 +494,7 @@ function ImageEditor({
             />
           </div>
         </div>
-        <div className="modes">
+        <div className="modes-bottom">
           <ModeExamples />
         </div>
       </div>
