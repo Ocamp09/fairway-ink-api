@@ -469,19 +469,21 @@ function ImageEditor({
       <TypeSelector />
       <div className="displays">
         <div className="editor">
-          <Toolbar
-            paths={paths}
-            setPaths={setPaths}
-            lineWidth={lineWidth}
-            setLineWidth={setLineWidth}
-            setReloadPaths={setReloadPaths}
-            scale={canvasScale}
-            setScale={setCanvasScale}
-            canvasRef={canvasRef}
-            fontSize={fontSize}
-            setFontSize={setFontSize}
-            templateType={templateType}
-          ></Toolbar>
+          <div className="tool">
+            <Toolbar
+              paths={paths}
+              setPaths={setPaths}
+              lineWidth={lineWidth}
+              setLineWidth={setLineWidth}
+              setReloadPaths={setReloadPaths}
+              scale={canvasScale}
+              setScale={setCanvasScale}
+              canvasRef={canvasRef}
+              fontSize={fontSize}
+              setFontSize={setFontSize}
+              templateType={templateType}
+            ></Toolbar>
+          </div>
           <div>
             <canvas
               ref={canvasRef}
@@ -497,6 +499,7 @@ function ImageEditor({
         <div className="modes-bottom">
           <ModeExamples />
         </div>
+        <div className="editor-spacer"></div>
       </div>
       <button
         className="submit-button"

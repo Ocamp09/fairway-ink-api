@@ -13,6 +13,12 @@
   gap: 10px;
 }
 
+.tool {
+  width: 12rem;
+  display: flex;
+  justify-content: flex-end;
+}
+
 .modes-top {
   display: none;
   justify-content: center;
@@ -20,17 +26,12 @@
 }
 
 .modes-bottom {
+  width: 12rem;
   margin-left: 1rem;
 }
 
-@media screen and (max-width: 900px) {
-  .modes-bottom {
-    display: none;
-  }
-
-  .modes-top {
-    display: flex;
-  }
+.editor-spacer {
+  display: none;
 }
 
 .canvas {
@@ -69,7 +70,35 @@
   margin-right: auto;
 }
 
+@media screen and (max-width: 900px) {
+  .modes-bottom {
+    display: none;
+    width: 7rem;
+  }
+
+  .modes-top {
+    display: flex;
+  }
+
+  .tool {
+    width: 7rem;
+  }
+
+  .editor-spacer {
+    display: block;
+    width: 7rem;
+  }
+}
+
 @media screen and (max-width: 700px) {
+  .tool {
+    width: 95%;
+    justify-content: center;
+  }
+  .editor-spacer {
+    display: none;
+  }
+
   .editor {
     flex-direction: column;
     align-items: center;
@@ -77,6 +106,10 @@
 
   .desc {
     width: 75%;
+  }
+
+  .displays {
+    justify-content: center;
   }
 }
 
