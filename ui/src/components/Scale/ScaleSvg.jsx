@@ -96,7 +96,7 @@ const ScaleSvg = ({ svgUrl, svgData, setShowPreview, setShowScale }) => {
                 alt="Uploaded"
                 className="upload-img"
                 style={{
-                  width: `${(canvasSizePx * 180) / 500}px`, // Set width based on scale
+                  width: `${(canvasSizePx * 210) / 500}px`, // Set width based on scale
                 }}
               />
             )}
