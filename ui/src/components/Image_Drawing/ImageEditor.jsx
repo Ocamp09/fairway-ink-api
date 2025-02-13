@@ -23,7 +23,7 @@ function ImageEditor({
   const [reloadPaths, setReloadPaths] = useState(false);
   const [canvasScale, setCanvasScale] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
-  const [fontSize, setFontSize] = useState(40);
+  const [fontSize, setFontSize] = useState(80);
 
   const { imageUrl, updateImageUrl, templateType, editorMode } = useSession();
 
@@ -130,24 +130,7 @@ function ImageEditor({
     const context = canvas.getContext("2d");
 
     context.font = fontSize + "px stencil";
-
-    // write text in center if text only mode
-    if (templateType === "text") {
-      context.font = "80px stencil";
-
-      const textMetrics = context.measureText(text);
-      const textWidth = textMetrics.width;
-
-      const centerX = canvas.width / 2;
-      const centerY = canvas.height / 2;
-
-      const x = centerX - textWidth / 2;
-      const y = centerY + fontSize / 2;
-
-      context.fillText(text, x, y);
-    } else {
-      context.fillText(text, x, y);
-    }
+    context.fillText(text, x, y);
   };
 
   const handleStartDrawing = (e) => {
@@ -156,11 +139,28 @@ function ImageEditor({
     if (!coords) return;
 
     setIsDrawing(true);
-    const { x, y, pressure } = coords;
+    var { x, y, pressure } = coords;
 
     if (editorMode === "type") {
       var inputText = prompt("Enter text: ");
       if (inputText) {
+        if (templateType === "text") {
+          const canvas = canvasRef.current;
+          const context = canvas.getContext("2d");
+          context.font = fontSize + "px stencil";
+
+          const offset = (paths.length - 1) * (fontSize * 1.75);
+          const textMetrics = context.measureText(inputText);
+          const textWidth = textMetrics.width;
+
+          const centerX = canvas.width / 2;
+          const centerY = canvas.height / 2;
+
+          x = centerX - textWidth / 2;
+          y = centerY + fontSize + offset / 2;
+          console.log(textMetrics, centerX, x);
+        }
+
         setPaths((prevPaths) => [
           ...prevPaths,
           {
@@ -215,16 +215,65 @@ function ImageEditor({
     setSvgUrl(null);
     const canvas = canvasRef.current;
 
-    const canvasBackground = document.createElement("canvas");
-    canvasBackground.width = canvas.width;
-    canvasBackground.height = canvas.height;
+    // Create a temporary canvas to calculate the bounding box
+    const tempCanvas = document.createElement("canvas");
+    tempCanvas.width = canvas.width;
+    tempCanvas.height = canvas.height;
+    const tempCtx = tempCanvas.getContext("2d");
 
-    const ctx = canvasBackground.getContext("2d");
-    ctx.fillStyle = "white";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.drawImage(canvas, 0, 0);
+    // Draw the current canvas content onto the temporary canvas
+    tempCtx.drawImage(canvas, 0, 0);
 
-    const dataURL = canvasBackground.toDataURL("image/png");
+    // Get the image data from the temporary canvas
+    const imageData = tempCtx.getImageData(
+      0,
+      0,
+      tempCanvas.width,
+      tempCanvas.height
+    );
+    const data = imageData.data;
+
+    // Calculate the bounding box of the drawn content
+    let minX = tempCanvas.width;
+    let minY = tempCanvas.height;
+    let maxX = 0;
+    let maxY = 0;
+
+    for (let y = 0; y < tempCanvas.height; y++) {
+      for (let x = 0; x < tempCanvas.width; x++) {
+        const alpha = data[(y * tempCanvas.width + x) * 4 + 3];
+        if (alpha > 0) {
+          // Non-transparent pixel found
+          if (x < minX) minX = x;
+          if (y < minY) minY = y;
+          if (x > maxX) maxX = x;
+          if (y > maxY) maxY = y;
+        }
+      }
+    }
+
+    // Calculate the center of the drawn content
+    const contentWidth = maxX - minX;
+    const contentHeight = maxY - minY;
+    const centerX = (tempCanvas.width - contentWidth) / 2;
+    const centerY = (tempCanvas.height - contentHeight) / 2;
+
+    // Create a new canvas to draw the centered content
+    const centeredCanvas = document.createElement("canvas");
+    centeredCanvas.width = canvas.width;
+    centeredCanvas.height = canvas.height;
+    const centeredCtx = centeredCanvas.getContext("2d");
+
+    // Fill the background with white
+    centeredCtx.fillStyle = "white";
+    centeredCtx.fillRect(0, 0, centeredCanvas.width, centeredCanvas.height);
+
+    // Translate and draw the content onto the centered canvas
+    centeredCtx.translate(centerX - minX, centerY - minY);
+    centeredCtx.drawImage(canvas, 0, 0);
+
+    // Export the centered canvas as an image
+    const dataURL = centeredCanvas.toDataURL("image/png");
     const blob = await fetch(dataURL).then((r) => r.blob());
 
     const formData = new FormData();
@@ -384,6 +433,7 @@ function ImageEditor({
       .then(() => {
         // Add the font to the document
         document.fonts.add(myFont);
+        console.log("font loaded");
       })
       .catch((error) => {
         console.error("Error loading font:", error);
