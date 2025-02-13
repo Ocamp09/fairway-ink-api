@@ -6,6 +6,10 @@ import getStroke from "perfect-freehand";
 import { useSession } from "../../contexts/DesignContext";
 import TypeSelector from "./TypeSelector";
 import ModeExamples from "./ModeExamples";
+import { getCoordinates, getSvgPathFromStroke } from "../../utils/utils";
+import { useFontLoader } from "../../hooks/useFontLoader";
+import { useCanvasScaling } from "../../hooks/useCanvasScaling";
+import { useCanvasEvents } from "../../hooks/useCanvasEvents";
 
 function ImageEditor({
   setSvgUrl,
@@ -25,23 +29,10 @@ function ImageEditor({
   const [isLoading, setIsLoading] = useState(false);
   const [fontSize, setFontSize] = useState(80);
 
-  const { imageUrl, updateImageUrl, templateType, editorMode } = useSession();
+  const { imageUrl, templateType, editorMode } = useSession();
 
-  const getSvgPathFromStroke = (stroke) => {
-    if (!stroke.length) return "";
-
-    const d = stroke.reduce(
-      (acc, [x0, y0], i, arr) => {
-        const [x1, y1] = arr[(i + 1) % arr.length];
-        acc.push(x0, y0, (x0 + x1) / 2, (y0 + y1) / 2);
-        return acc;
-      },
-      ["M", ...stroke[0], "Q"]
-    );
-
-    d.push("Z");
-    return d.join(" ");
-  };
+  useFontLoader();
+  useCanvasScaling(canvasRef, setCanvasScale);
 
   const drawPaths = useCallback(() => {
     if (paths.length !== 0) {
@@ -105,31 +96,6 @@ function ImageEditor({
     [imageUrl]
   );
 
-  const getCoordinates = (e) => {
-    const canvas = canvasRef.current;
-    const rect = canvas.getBoundingClientRect();
-    const scale = canvasScale;
-    let clientX, clientY;
-
-    if (e.touches && e.touches.length > 0) {
-      // Touch event
-      clientX = e.touches[0].clientX;
-      clientY = e.touches[0].clientY;
-    } else if (e.clientX) {
-      // Mouse event
-      clientX = e.clientX;
-      clientY = e.clientY;
-    } else {
-      return null;
-    }
-
-    const x = (clientX - rect.left) / scale;
-    const y = (clientY - rect.top) / scale;
-    const pressure = e.pressure || 1;
-
-    return { x, y, pressure };
-  };
-
   const writeText = (text, x, y, pathSize) => {
     const canvas = canvasRef.current;
     const context = canvas.getContext("2d");
@@ -140,7 +106,7 @@ function ImageEditor({
 
   const handleStartDrawing = (e) => {
     e.preventDefault();
-    const coords = getCoordinates(e);
+    const coords = getCoordinates(e, canvasRef, canvasScale);
     if (!coords) return;
 
     setIsDrawing(true);
@@ -197,7 +163,7 @@ function ImageEditor({
     e.preventDefault();
     if (editorMode === "type") return;
 
-    const coords = getCoordinates(e);
+    const coords = getCoordinates(e, canvasRef, canvasScale);
     if (!coords || !isDrawing) return;
 
     const { x, y, pressure } = coords;
@@ -318,54 +284,6 @@ function ImageEditor({
     }
   };
 
-  // handle drag and drop into canvas
-  useEffect(() => {
-    const canvas = canvasRef.current;
-
-    const handleDragEnter = (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-    };
-
-    const handleDragOver = (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-    };
-
-    const handleDragLeave = (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-    };
-
-    const handleDrop = (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-
-      const files = e.dataTransfer.files;
-      if (files.length > 0) {
-        const file = files[0];
-        const reader = new FileReader();
-        reader.onload = (event) => {
-          updateImageUrl(event.target.result);
-          sessionStorage.setItem("imageUrl", event.target.result);
-        };
-        reader.readAsDataURL(file);
-      }
-    };
-
-    canvas.addEventListener("dragenter", handleDragEnter);
-    canvas.addEventListener("dragover", handleDragOver);
-    canvas.addEventListener("dragleave", handleDragLeave);
-    canvas.addEventListener("drop", handleDrop);
-
-    return () => {
-      canvas.removeEventListener("dragenter", handleDragEnter);
-      canvas.removeEventListener("dragover", handleDragOver);
-      canvas.removeEventListener("dragleave", handleDragLeave);
-      canvas.removeEventListener("drop", handleDrop);
-    };
-  }, []);
-
   // handles new image upload
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -389,63 +307,12 @@ function ImageEditor({
     drawPaths();
   }, [paths, lineWidth, drawPaths, reloadPaths]);
 
-  // handles touch drawing
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (canvas) {
-      const handleTouchStart = (e) => handleStartDrawing(e);
-      const handleTouchMove = (e) => handleMoveDrawing(e);
-      const handleTouchEnd = () => handleStopDrawing();
-
-      canvas.addEventListener("touchstart", handleTouchStart, {
-        passive: false,
-      });
-      canvas.addEventListener("touchmove", handleTouchMove, { passive: false });
-      canvas.addEventListener("touchend", handleTouchEnd, { passive: false });
-
-      return () => {
-        canvas.removeEventListener("touchstart", handleTouchStart);
-        canvas.removeEventListener("touchmove", handleTouchMove);
-        canvas.removeEventListener("touchend", handleTouchEnd);
-      };
-    }
-  }, [handleStartDrawing, handleMoveDrawing, handleStopDrawing]);
-
-  // use effect to handle window scaling
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    const initialWidth = 500;
-
-    // Function to calculate scale factor based on current width
-    const calculateCanvasScale = () => {
-      const currentWidth = canvas.offsetWidth;
-      const scale = currentWidth / initialWidth;
-      setCanvasScale(scale);
-    };
-
-    calculateCanvasScale();
-    window.addEventListener("resize", calculateCanvasScale);
-
-    return () => {
-      window.removeEventListener("resize", calculateCanvasScale);
-    };
-  }, []);
-
-  useEffect(() => {
-    // Create a new FontFace object to load the custom font
-    const myFont = new FontFace("stencil", "url(/gunplay.otf)");
-
-    // Load the font
-    myFont
-      .load()
-      .then(() => {
-        // Add the font to the document
-        document.fonts.add(myFont);
-      })
-      .catch((error) => {
-        console.error("Error loading font:", error);
-      });
-  }, []);
+  useCanvasEvents(
+    canvasRef,
+    handleStartDrawing,
+    handleMoveDrawing,
+    handleStartDrawing
+  );
 
   useEffect(() => {
     const canvas = canvasRef.current;
