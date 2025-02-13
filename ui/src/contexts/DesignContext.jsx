@@ -4,7 +4,7 @@ const DesignContext = createContext();
 
 export const FileProvider = ({ children }) => {
   const [imageUrl, setImageUrl] = useState(
-    sessionStorage.getItem("imageUrl") || ""
+    sessionStorage.getItem("imageUrl") || null
   );
 
   const [stlUrl, setStlUrl] = useState(
