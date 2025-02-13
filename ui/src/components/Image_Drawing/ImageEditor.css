@@ -14,19 +14,20 @@
 }
 
 .tool {
-  width: 12rem;
+  width: 11rem;
   display: flex;
   justify-content: flex-end;
 }
 
 .modes-top {
   display: none;
-  justify-content: center;
   margin-bottom: 0.5rem;
+  justify-content: center;
+  gap: 10px;
 }
 
 .modes-bottom {
-  width: 12rem;
+  width: 11rem;
   margin-left: 1rem;
 }
 

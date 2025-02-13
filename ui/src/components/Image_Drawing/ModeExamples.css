@@ -18,8 +18,7 @@
   margin: 0 auto;
   overflow: hidden;
   background-color: var(--golf-ball);
-  margin-left: 1.5rem;
-  justify-content: ;
+  justify-content: center;
 }
 
 .display-img {
