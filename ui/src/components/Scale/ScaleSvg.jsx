@@ -1,8 +1,8 @@
 import { useState } from "react";
 import ImageScaler from "./ImageScaler";
-import axios from "axios";
 import { useSession } from "../../contexts/DesignContext";
 import "./ScaleSvg.css";
+import { generateStl } from "../../api/api";
 
 const ScaleSvg = ({ svgUrl, svgData, setShowPreview, setShowScale }) => {
   const [scale, setScale] = useState(1);
@@ -13,7 +13,6 @@ const ScaleSvg = ({ svgUrl, svgData, setShowPreview, setShowScale }) => {
 
   // get svg width and height, scale down to size I want to display
   // then factor that scale into the query sent
-
   let canvasSizePx;
   if (templateType === "text") {
     canvasSizePx = 110 * scale * 2.5;
@@ -24,45 +23,20 @@ const ScaleSvg = ({ svgUrl, svgData, setShowPreview, setShowScale }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!svgData) {
-      setError("Please select a file to upload.");
+      setError("Please draw an image and convert it");
       return;
     }
 
     setIsLoading(true);
-
-    const formData = new FormData();
-    formData.append(
-      "svg",
-      new Blob([svgData], { type: "image/svg+xml" }),
-      "golfball" + stlKey + ".svg"
-    );
-
-    if (templateType === "text") {
-      formData.append("scale", scale * 2.5);
-    } else {
-      formData.append("scale", scale);
-    }
     updateStl("http://localhost:5001/output/stl/default.stl");
 
     try {
-      const response = await axios.post(
-        "http://localhost:5001/generate",
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
+      const response = await generateStl(svgData, scale, stlKey, templateType);
 
-      if (response.data.success) {
-        updateStl(response.data.stlUrl);
-        updateStlKey();
-        setShowPreview(true);
-        setShowScale(false);
-      } else {
-        setError("Error processing file. Please try again.");
-      }
+      updateStl(response.stlUrl);
+      updateStlKey();
+      setShowPreview(true);
+      setShowScale(false);
     } catch (err) {
       setError("An error occurred while uploading the file.");
       console.error(err);

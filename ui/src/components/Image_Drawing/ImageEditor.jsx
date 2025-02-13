@@ -1,15 +1,19 @@
 import { useState, useRef, useCallback, useEffect } from "react";
-import axios from "axios";
 import "./ImageEditor.css";
 import Toolbar from "./Toolbar";
 import getStroke from "perfect-freehand";
 import { useSession } from "../../contexts/DesignContext";
 import TypeSelector from "./TypeSelector";
 import ModeExamples from "./ModeExamples";
-import { getCoordinates, getSvgPathFromStroke } from "../../utils/utils";
+import {
+  getCoordinates,
+  getSvgPathFromStroke,
+  centerCanvasDrawing,
+} from "../../utils/utils";
 import { useFontLoader } from "../../hooks/useFontLoader";
 import { useCanvasScaling } from "../../hooks/useCanvasScaling";
 import { useCanvasEvents } from "../../hooks/useCanvasEvents";
+import { uploadImage } from "../../api/api";
 
 function ImageEditor({
   setSvgUrl,
@@ -187,97 +191,27 @@ function ImageEditor({
   const handleSvg = async () => {
     setIsLoading(true);
     setSvgUrl(null);
-    const canvas = canvasRef.current;
-
-    // Create a temporary canvas to calculate the bounding box
-    const tempCanvas = document.createElement("canvas");
-    tempCanvas.width = canvas.width;
-    tempCanvas.height = canvas.height;
-    const tempCtx = tempCanvas.getContext("2d");
-
-    // Draw the current canvas content onto the temporary canvas
-    tempCtx.drawImage(canvas, 0, 0);
-
-    // Get the image data from the temporary canvas
-    const imageData = tempCtx.getImageData(
-      0,
-      0,
-      tempCanvas.width,
-      tempCanvas.height
-    );
-    const data = imageData.data;
-
-    // Calculate the bounding box of the drawn content
-    let minX = tempCanvas.width;
-    let minY = tempCanvas.height;
-    let maxX = 0;
-    let maxY = 0;
-
-    for (let y = 0; y < tempCanvas.height; y++) {
-      for (let x = 0; x < tempCanvas.width; x++) {
-        const alpha = data[(y * tempCanvas.width + x) * 4 + 3];
-        if (alpha > 0) {
-          // Non-transparent pixel found
-          if (x < minX) minX = x;
-          if (y < minY) minY = y;
-          if (x > maxX) maxX = x;
-          if (y > maxY) maxY = y;
-        }
-      }
-    }
-
-    // Calculate the center of the drawn content
-    const contentWidth = maxX - minX;
-    const contentHeight = maxY - minY;
-    const centerX = (tempCanvas.width - contentWidth) / 2;
-    const centerY = (tempCanvas.height - contentHeight) / 2;
-
-    // Create a new canvas to draw the centered content
-    const centeredCanvas = document.createElement("canvas");
-    centeredCanvas.width = canvas.width;
-    centeredCanvas.height = canvas.height;
-    const centeredCtx = centeredCanvas.getContext("2d");
-
-    // Fill the background with white
-    centeredCtx.fillStyle = "white";
-    centeredCtx.fillRect(0, 0, centeredCanvas.width, centeredCanvas.height);
-
-    // Translate and draw the content onto the centered canvas
-    centeredCtx.translate(centerX - minX, centerY - minY);
-    centeredCtx.drawImage(canvas, 0, 0);
+    const centeredCanvas = centerCanvasDrawing(canvasRef.current);
 
     // Export the centered canvas as an image
     const dataURL = centeredCanvas.toDataURL("image/png");
     const blob = await fetch(dataURL).then((r) => r.blob());
 
-    const formData = new FormData();
-    formData.append("file", blob, "fairway_ink_drawing.png");
-    formData.append("method", templateType);
     try {
-      const response = await axios.post(
-        "http://localhost:5001/upload",
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
+      // Call the uploadImage function from api.js
+      const response = await uploadImage(blob, templateType);
 
-      if (response.data.success) {
-        const blob = new Blob([response.data.svgData], {
-          type: "image/svg+xml",
-        });
-        setIsLoading(false);
-        const url = URL.createObjectURL(blob);
-        setSvgData(response.data.svgData);
-        setSvgUrl(url);
-        setShowScale(true);
-        setShowDesign(false);
-      } else {
-        console.error("Upload error:", response.data);
-        setIsLoading(false);
-      }
+      // Handle the response
+      const blobSvg = new Blob([response.svgData], {
+        type: "image/svg+xml",
+      });
+
+      setIsLoading(false);
+      const url = URL.createObjectURL(blobSvg);
+      setSvgData(response.svgData);
+      setSvgUrl(url);
+      setShowScale(true);
+      setShowDesign(false);
     } catch (err) {
       console.error("Upload error:", err);
       setIsLoading(false);
@@ -343,8 +277,6 @@ function ImageEditor({
               lineWidth={lineWidth}
               setLineWidth={setLineWidth}
               setReloadPaths={setReloadPaths}
-              scale={canvasScale}
-              setScale={setCanvasScale}
               canvasRef={canvasRef}
               fontSize={fontSize}
               setFontSize={setFontSize}

@@ -35,3 +35,64 @@ export const getCoordinates = (e, canvasRef, canvasScale) => {
 
   return { x, y, pressure };
 };
+
+export const centerCanvasDrawing = (canvas) => {
+  // Create a temporary canvas to calculate the bounding box
+  const tempCanvas = document.createElement("canvas");
+  tempCanvas.width = canvas.width;
+  tempCanvas.height = canvas.height;
+  const tempCtx = tempCanvas.getContext("2d");
+
+  // Draw the current canvas content onto the temporary canvas
+  tempCtx.drawImage(canvas, 0, 0);
+
+  // Get the image data from the temporary canvas
+  const imageData = tempCtx.getImageData(
+    0,
+    0,
+    tempCanvas.width,
+    tempCanvas.height
+  );
+  const data = imageData.data;
+
+  // Calculate the bounding box of the drawn content
+  let minX = tempCanvas.width;
+  let minY = tempCanvas.height;
+  let maxX = 0;
+  let maxY = 0;
+
+  for (let y = 0; y < tempCanvas.height; y++) {
+    for (let x = 0; x < tempCanvas.width; x++) {
+      const alpha = data[(y * tempCanvas.width + x) * 4 + 3];
+      if (alpha > 0) {
+        // Non-transparent pixel found
+        if (x < minX) minX = x;
+        if (y < minY) minY = y;
+        if (x > maxX) maxX = x;
+        if (y > maxY) maxY = y;
+      }
+    }
+  }
+
+  // Calculate the center of the drawn content
+  const contentWidth = maxX - minX;
+  const contentHeight = maxY - minY;
+  const centerX = (tempCanvas.width - contentWidth) / 2;
+  const centerY = (tempCanvas.height - contentHeight) / 2;
+
+  // Create a new canvas to draw the centered content
+  const centeredCanvas = document.createElement("canvas");
+  centeredCanvas.width = canvas.width;
+  centeredCanvas.height = canvas.height;
+  const centeredCtx = centeredCanvas.getContext("2d");
+
+  // Fill the background with white
+  centeredCtx.fillStyle = "white";
+  centeredCtx.fillRect(0, 0, centeredCanvas.width, centeredCanvas.height);
+
+  // Translate and draw the content onto the centered canvas
+  centeredCtx.translate(centerX - minX, centerY - minY);
+  centeredCtx.drawImage(canvas, 0, 0);
+
+  return centeredCanvas;
+};
