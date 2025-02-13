@@ -1,3 +1,7 @@
+.type-selector {
+  margin-bottom: 0.5rem;
+}
+
 .type-selector button {
   background-color: transparent;
   border: none;

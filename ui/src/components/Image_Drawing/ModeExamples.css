@@ -1,0 +1,18 @@
+.ball-display {
+  width: 173px;
+  height: 173px;
+  border-radius: 50%;
+  border: 2px solid black;
+  position: relative;
+  margin: 0 auto;
+  overflow: hidden;
+  background-color: var(--golf-ball);
+}
+
+.mode-item {
+  margin-top: 0.25rem;
+}
+
+.mode-item p {
+  margin-block-end: 0;
+}

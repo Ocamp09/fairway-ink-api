@@ -5,6 +5,7 @@ import Toolbar from "./Toolbar";
 import getStroke from "perfect-freehand";
 import { useSession } from "../../contexts/DesignContext";
 import TypeSelector from "./TypeSelector";
+import ModeExamples from "./ModeExamples";
 
 function ImageEditor({
   setSvgUrl,
@@ -406,30 +407,35 @@ function ImageEditor({
         get started`}
       </p>
       <TypeSelector />
-      <div className="editor">
-        <Toolbar
-          paths={paths}
-          setPaths={setPaths}
-          lineWidth={lineWidth}
-          setLineWidth={setLineWidth}
-          setReloadPaths={setReloadPaths}
-          scale={canvasScale}
-          setScale={setCanvasScale}
-          canvasRef={canvasRef}
-          fontSize={fontSize}
-          setFontSize={setFontSize}
-          templateType={templateType}
-        ></Toolbar>
-        <div>
-          <canvas
-            ref={canvasRef}
-            width={500}
-            height={500}
-            className="canvas"
-            onMouseDown={handleStartDrawing}
-            onMouseMove={handleMoveDrawing}
-            onMouseUp={handleStopDrawing}
-          />
+      <div className="displays">
+        <div className="editor">
+          <Toolbar
+            paths={paths}
+            setPaths={setPaths}
+            lineWidth={lineWidth}
+            setLineWidth={setLineWidth}
+            setReloadPaths={setReloadPaths}
+            scale={canvasScale}
+            setScale={setCanvasScale}
+            canvasRef={canvasRef}
+            fontSize={fontSize}
+            setFontSize={setFontSize}
+            templateType={templateType}
+          ></Toolbar>
+          <div>
+            <canvas
+              ref={canvasRef}
+              width={500}
+              height={500}
+              className="canvas"
+              onMouseDown={handleStartDrawing}
+              onMouseMove={handleMoveDrawing}
+              onMouseUp={handleStopDrawing}
+            />
+          </div>
+        </div>
+        <div className="modes">
+          <ModeExamples />
         </div>
       </div>
       <button

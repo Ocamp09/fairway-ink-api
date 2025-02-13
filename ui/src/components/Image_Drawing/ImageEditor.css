@@ -2,11 +2,19 @@
   margin-bottom: 1rem;
 }
 
+.displays {
+  display: flex;
+}
+
 .editor {
   display: flex;
   align-items: flex-start;
   justify-content: center;
   gap: 10px;
+}
+
+.modes {
+  margin-left: 1rem;
 }
 
 .canvas {
