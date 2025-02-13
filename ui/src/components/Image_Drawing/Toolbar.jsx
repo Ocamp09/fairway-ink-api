@@ -97,8 +97,7 @@ const Toolbar = ({
         <button
           title="Switch editor mode"
           onClick={handleText}
-          hidden={templateType == "solid"}
-          disabled={templateType == "text"}
+          hidden={templateType == "solid" || "text"}
         >
           {editorMode == "type" && <IoText size={iconSize} />}
           {editorMode == "draw" && <BiSolidPencil size={iconSize} />}
@@ -136,7 +135,7 @@ const Toolbar = ({
             iconSize={iconSize}
           />
         )}
-        {editorMode == "type" && templateType == "multi" && (
+        {editorMode == "type" && templateType == "text" && (
           <TextTools
             fontSize={fontSize}
             setFontSize={setFontSize}

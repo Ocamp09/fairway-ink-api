@@ -49,7 +49,12 @@ function ImageEditor({
         const canvas = canvasRef.current;
         const context = canvas.getContext("2d");
         if (path.type === "text") {
-          writeText(path.text, path.points[0][0], path.points[0][1]);
+          writeText(
+            path.text,
+            path.points[0][0],
+            path.points[0][1],
+            path.width
+          );
         } else {
           const stroke = getStroke(path.points, {
             size: path.width,
@@ -125,11 +130,11 @@ function ImageEditor({
     return { x, y, pressure };
   };
 
-  const writeText = (text, x, y) => {
+  const writeText = (text, x, y, pathSize) => {
     const canvas = canvasRef.current;
     const context = canvas.getContext("2d");
 
-    context.font = fontSize + "px stencil";
+    context.font = pathSize + "px stencil";
     context.fillText(text, x, y);
   };
 
@@ -149,7 +154,11 @@ function ImageEditor({
           const context = canvas.getContext("2d");
           context.font = fontSize + "px stencil";
 
-          const offset = (paths.length - 1) * (fontSize * 1.75);
+          var offset = 0;
+          paths.forEach((path) => {
+            offset += path.width;
+          });
+
           const textMetrics = context.measureText(inputText);
           const textWidth = textMetrics.width;
 
@@ -157,8 +166,7 @@ function ImageEditor({
           const centerY = canvas.height / 2;
 
           x = centerX - textWidth / 2;
-          y = centerY + fontSize + offset / 2;
-          console.log(textMetrics, centerX, x);
+          y = centerY + fontSize + offset - 75;
         }
 
         setPaths((prevPaths) => [
@@ -433,7 +441,6 @@ function ImageEditor({
       .then(() => {
         // Add the font to the document
         document.fonts.add(myFont);
-        console.log("font loaded");
       })
       .catch((error) => {
         console.error("Error loading font:", error);

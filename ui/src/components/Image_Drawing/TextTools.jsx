@@ -7,10 +7,10 @@ const TextTools = ({ fontSize, setFontSize, iconSize }) => {
   return (
     <>
       <QuantityDropdown
-        minQuantity={20}
+        minQuantity={30}
         maxQuantity={80}
         labelText={lineLabel}
-        step={5}
+        step={10}
         quantity={fontSize}
         setQuantity={setFontSize}
         title={"Adjust font size"}
