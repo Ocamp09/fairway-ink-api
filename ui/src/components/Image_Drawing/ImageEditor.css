@@ -91,7 +91,7 @@
   }
 }
 
-@media screen and (max-width: 700px) {
+@media screen and (max-width: 750px) {
   .tool {
     width: 95%;
     justify-content: center;
