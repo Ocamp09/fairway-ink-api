@@ -1,62 +1,42 @@
 import { useState } from "react";
 import ImageScaler from "./ImageScaler";
-import axios from "axios";
+import { useSession } from "../../contexts/DesignContext";
 import "./ScaleSvg.css";
+import { generateStl } from "../../api/api";
 
-const ScaleSvg = ({
-  svgUrl,
-  svgData,
-  stlKey,
-  setStlKey,
-  setStlUrl,
-  setShowPreview,
-  setShowScale,
-}) => {
+const ScaleSvg = ({ svgUrl, svgData, setShowPreview, setShowScale }) => {
   const [scale, setScale] = useState(1);
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
 
+  const { updateStl, stlKey, updateStlKey, templateType } = useSession();
+
   // get svg width and height, scale down to size I want to display
   // then factor that scale into the query sent
-  const canvasSizePx = 125 * scale;
+  let canvasSizePx;
+  if (templateType === "text") {
+    canvasSizePx = 110 * scale * 2.5;
+  } else {
+    canvasSizePx = 110 * scale;
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!svgData) {
-      setError("Please select a file to upload.");
+      setError("Please draw an image and convert it");
       return;
     }
 
     setIsLoading(true);
-
-    const formData = new FormData();
-    formData.append(
-      "svg",
-      new Blob([svgData], { type: "image/svg+xml" }),
-      "golfball" + stlKey + ".svg"
-    );
-    formData.append("scale", scale);
-    setStlUrl("http://localhost:5001/output/stl/default.stl");
+    updateStl("http://localhost:5001/output/stl/default.stl");
 
     try {
-      const response = await axios.post(
-        "http://localhost:5001/generate",
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
+      const response = await generateStl(svgData, scale, stlKey, templateType);
 
-      if (response.data.success) {
-        setStlUrl(response.data.stlUrl);
-        setStlKey((prevKey) => prevKey + 1);
-        setShowPreview(true);
-        setShowScale(false);
-      } else {
-        setError("Error processing file. Please try again.");
-      }
+      updateStl(response.stlUrl);
+      updateStlKey();
+      setShowPreview(true);
+      setShowScale(false);
     } catch (err) {
       setError("An error occurred while uploading the file.");
       console.error(err);
@@ -90,7 +70,7 @@ const ScaleSvg = ({
                 alt="Uploaded"
                 className="upload-img"
                 style={{
-                  width: `${(canvasSizePx * 173) / 500}px`, // Set width based on scale
+                  width: `${(canvasSizePx * 210) / 500}px`, // Set width based on scale
                 }}
               />
             )}

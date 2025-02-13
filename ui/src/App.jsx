@@ -2,7 +2,8 @@ import "./App.css";
 import GolfBallDisplay from "./components/GolfBallDisplay";
 import "../node_modules/bootstrap/dist/css/bootstrap.min.css";
 import Header from "./components/Header";
-import { CartProvider } from "./components/Cart/CartContext";
+import { CartProvider } from "./contexts/CartContext";
+import { FileProvider } from "./contexts/DesignContext";
 import { useState } from "react";
 import ViewCartPopup from "./components/Cart/ViewCartPopup";
 
@@ -11,11 +12,13 @@ function App() {
 
   return (
     <>
-      <CartProvider>
-        <Header cartPopup={cartPopup} setCartPopup={setCartPopup} />
-        <GolfBallDisplay />
-        <ViewCartPopup isOpen={cartPopup} setIsOpen={setCartPopup} />
-      </CartProvider>
+      <FileProvider>
+        <CartProvider>
+          <Header cartPopup={cartPopup} setCartPopup={setCartPopup} />
+          <GolfBallDisplay />
+          <ViewCartPopup isOpen={cartPopup} setIsOpen={setCartPopup} />
+        </CartProvider>
+      </FileProvider>
     </>
   );
 }

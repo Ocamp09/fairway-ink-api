@@ -10,6 +10,7 @@
   background-color: lightgrey;
   cursor: pointer;
   margin-bottom: 10px;
+  width: 100%;
 }
 
 label {
@@ -19,7 +20,7 @@ label {
 .dropdown-list {
   position: absolute;
   top: 100%;
-  left: 0;
+  right: 0;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -28,7 +29,7 @@ label {
   background-color: var(--tone);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   z-index: 10;
-  width: 3rem;
+  width: 4rem;
   overflow-y: scroll;
   height: 200px;
 }

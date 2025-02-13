@@ -10,14 +10,16 @@
   background-color: var(--tone);
   border-radius: 5px;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-  width: 100%;
+  width: 6rem;
 }
 
-@media screen and (max-width: 700px) {
+@media screen and (max-width: 750px) {
   .toolbar {
     flex-direction: row;
     flex-wrap: wrap;
     width: auto;
+    justify-content: center;
+    width: 95%;
   }
 }
 
@@ -28,7 +30,6 @@
   border-radius: 4px;
   cursor: pointer;
   transition: background-color 0.3s;
-  height: 100%;
 }
 
 .toolbar button:hover {

@@ -1,12 +1,15 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import "./Toolbar.css";
-import QuantityDropdown from "../Preview/QuantityDropdown";
 import FileUpload from "./FileUpload";
 import { FiDownload } from "react-icons/fi";
 import { FaDeleteLeft } from "react-icons/fa6";
-import { MdLineWeight } from "react-icons/md";
 import { IoMdUndo, IoMdRedo } from "react-icons/io";
+import { IoText } from "react-icons/io5";
+import { BiSolidPencil } from "react-icons/bi";
 import RemoveImage from "./RemoveImage";
+import { useSession } from "../../contexts/DesignContext";
+import DrawTools from "./DrawTools";
+import TextTools from "./TextTools";
 
 const Toolbar = ({
   paths,
@@ -14,32 +17,28 @@ const Toolbar = ({
   lineWidth,
   setLineWidth,
   setReloadPaths,
-  setScale,
-  scale,
-  setImageUrl,
-  imageUrl,
   canvasRef,
+  fontSize,
+  setFontSize,
 }) => {
   const [undoStack, setUndoStack] = useState([]);
   const [redoStack, setRedoStack] = useState([]);
-  const scaleMultiplier = 0.8;
+
+  const { updateImageUrl, templateType, editorMode, updateEditorMode } =
+    useSession();
+
   const iconSize = 28;
-  const lineLabel = <MdLineWeight size={iconSize} color="white" />;
 
-  const handleZoomIn = () => {
-    setScale(scale / scaleMultiplier);
-  };
-
-  const handleZoomOut = () => {
-    setScale(scale * scaleMultiplier);
+  const handleText = () => {
+    updateEditorMode("type");
   };
 
   const handleUndo = () => {
     if (paths.length > 0) {
       const lastPath = paths.pop();
       setUndoStack([...undoStack, lastPath]);
-      setRedoStack([lastPath, ...redoStack]); // Preserve redo history
-      setPaths([...paths]); // Trigger re-render with modified paths
+      setRedoStack([lastPath, ...redoStack]);
+      setPaths([...paths]);
       setReloadPaths(true);
     }
   };
@@ -48,23 +47,28 @@ const Toolbar = ({
     if (redoStack.length > 0) {
       const nextPath = redoStack.shift();
       setPaths([...paths, nextPath]);
-      setUndoStack([...undoStack, nextPath]); // Update undo stack
-      setRedoStack([...redoStack]); // Trigger re-render with modified paths
+      setUndoStack([...undoStack, nextPath]);
+      setRedoStack([...redoStack]);
       setReloadPaths(true);
     }
   };
 
   const handleRemoveImage = () => {
-    setImageUrl(null);
+    updateImageUrl(null);
     setReloadPaths(true);
   };
 
   const handleClear = () => {
     setUndoStack([...undoStack, ...paths]);
-    setRedoStack([]); // Clear redo stack on clear
+    setRedoStack([]);
     setPaths([]);
     setReloadPaths(true);
   };
+
+  useEffect(() => {
+    setRedoStack([]);
+    setUndoStack([]);
+  }, [templateType]);
 
   const saveCanvas = () => {
     const canvas = canvasRef.current;
@@ -90,10 +94,23 @@ const Toolbar = ({
   return (
     <>
       <div className="toolbar">
-        <FileUpload imageUrl={imageUrl} setImageUrl={setImageUrl} />
-        <button title="Remove image" onClick={handleRemoveImage}>
-          <RemoveImage />
+        <button
+          title="Switch editor mode"
+          onClick={handleText}
+          hidden={templateType == "solid" || "text"}
+        >
+          {editorMode == "type" && <IoText size={iconSize} />}
+          {editorMode == "draw" && <BiSolidPencil size={iconSize} />}
         </button>
+        {templateType != "text" && (
+          <>
+            <FileUpload />
+            <button title="Remove image" onClick={handleRemoveImage}>
+              <RemoveImage />
+            </button>
+          </>
+        )}
+
         <button title="Undo" onClick={handleUndo} disabled={paths.length === 0}>
           <IoMdUndo size={iconSize} />
         </button>
@@ -111,14 +128,20 @@ const Toolbar = ({
         >
           <FaDeleteLeft size={iconSize} />
         </button>
-        <QuantityDropdown
-          maxQuantity={20}
-          labelText={lineLabel}
-          step={2}
-          quantity={lineWidth}
-          setQuantity={setLineWidth}
-          title={"Adjust line width"}
-        />
+        {editorMode == "draw" && (
+          <DrawTools
+            lineWidth={lineWidth}
+            setLineWidth={setLineWidth}
+            iconSize={iconSize}
+          />
+        )}
+        {editorMode == "type" && templateType == "text" && (
+          <TextTools
+            fontSize={fontSize}
+            setFontSize={setFontSize}
+            iconSize={iconSize}
+          />
+        )}
         <button title="Download drawings" onClick={saveCanvas}>
           <FiDownload size={iconSize} />
         </button>

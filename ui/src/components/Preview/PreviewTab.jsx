@@ -1,17 +1,22 @@
 import { useState } from "react";
 import STLViewer from "../3D-View/STLViewer";
 import QuantityDropdown from "./QuantityDropdown";
-import { useCart } from "../Cart/CartContext";
+import { useCart } from "../../contexts/CartContext";
+import { useSession } from "../../contexts/DesignContext";
 import "./PreviewTab.css";
 
-const PreviewTab = ({ stlUrl }) => {
+const PreviewTab = () => {
   const [quantity, setQuantity] = useState(1);
+  const [isAdded, setIsAdded] = useState(false);
 
   const { addToCart } = useCart();
+  const { stlUrl, stlKey, templateType } = useSession();
 
   const handleAddToCart = (event) => {
     event.preventDefault();
-    addToCart(stlUrl, quantity);
+
+    addToCart(stlKey, stlUrl, quantity, templateType);
+    setIsAdded(true);
   };
 
   return (
@@ -23,9 +28,14 @@ const PreviewTab = ({ stlUrl }) => {
           setQuantity={setQuantity}
           quantity={quantity}
           maxQuantity={15}
+          hidden={isAdded}
         />
-        <button onClick={handleAddToCart} className="submit-button">
-          Add to Cart
+        <button
+          onClick={handleAddToCart}
+          className="submit-button"
+          disabled={isAdded}
+        >
+          {!isAdded ? "Add to Cart" : "Item added!"}
         </button>
       </div>
     </div>

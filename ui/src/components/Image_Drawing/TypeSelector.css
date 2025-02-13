@@ -1,0 +1,28 @@
+.type-selector {
+  margin-bottom: 0.5rem;
+}
+
+.type-selector button {
+  background-color: transparent;
+  border: none;
+  padding: 10px 15px;
+  cursor: pointer;
+  font-size: 16px;
+  color: #333;
+  transition: color 0.3s ease;
+  border-radius: 0;
+}
+
+.type-selector button:hover {
+  color: #007bff;
+}
+
+.type-selector button:focus {
+  outline: none;
+}
+
+.type-selector button.active {
+  color: #007bff;
+  border-bottom: 2px solid #007bff;
+  font-weight: bold;
+}

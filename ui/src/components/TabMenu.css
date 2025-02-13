@@ -1,12 +1,14 @@
 .tab-menu {
   display: flex;
   padding-bottom: 1rem;
+  flex-wrap: wrap;
+  justify-content: center;
 }
 
 .tab-menu h3 {
   display: flex;
   align-items: center;
-  margin-right: 1rem;
+  margin-right: 1.5rem;
 }
 
 .tab-menu h3:hover {

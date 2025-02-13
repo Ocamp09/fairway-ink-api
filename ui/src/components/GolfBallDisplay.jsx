@@ -8,8 +8,6 @@ import PreviewTab from "./Preview/PreviewTab";
 const GolfBallDisplay = () => {
   const [svgUrl, setSvgUrl] = useState(null);
   const [svgData, setSvgData] = useState(null);
-  const [stlUrl, setStlUrl] = useState("default.stl");
-  const [stlKey, setStlKey] = useState(0);
   const [showDesign, setShowDesign] = useState(true);
   const [showScale, setShowScale] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
@@ -42,14 +40,11 @@ const GolfBallDisplay = () => {
           svgUrl={svgUrl}
           svgData={svgData}
           setSvgData={setSvgData}
-          stlKey={stlKey}
-          setStlKey={setStlKey}
-          setStlUrl={setStlUrl}
           setShowPreview={setShowPreview}
           setShowScale={setShowScale}
         />
       )}
-      {showPreview && <PreviewTab stlUrl={stlUrl} />}
+      {showPreview && <PreviewTab />}
     </div>
   );
 };

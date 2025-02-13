@@ -53,7 +53,13 @@ def upload_file():
     file.seek(0)  # Reset file pointer after reading
 
     method = request.form.get("method", img_to_svg.PrintType.SOLID)  
-
+    if method == "multi":
+        method = img_to_svg.PrintType.MULTI
+    elif method == "text":
+        method = img_to_svg.PrintType.TEXT
+    else:
+        method = img_to_svg.PrintType.SOLID
+    
 
     # Save the file securely
     filename = secure_filename(file.filename)

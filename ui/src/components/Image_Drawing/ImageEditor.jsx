@@ -1,145 +1,153 @@
 import { useState, useRef, useCallback, useEffect } from "react";
-import axios from "axios";
 import "./ImageEditor.css";
 import Toolbar from "./Toolbar";
 import getStroke from "perfect-freehand";
+import { useSession } from "../../contexts/DesignContext";
+import TypeSelector from "./TypeSelector";
+import ModeExamples from "./ModeExamples";
+import {
+  getCoordinates,
+  getSvgPathFromStroke,
+  centerCanvasDrawing,
+  drawImage,
+} from "../../utils/canvasUtils";
+import { useFontLoader } from "../../hooks/useFontLoader";
+import { useCanvasScaling } from "../../hooks/useCanvasScaling";
+import { useCanvasEvents } from "../../hooks/useCanvasEvents";
+import { uploadImage } from "../../api/api";
 
 function ImageEditor({
   setSvgUrl,
   setSvgData,
   setShowDesign,
   setShowScale,
-  showDesign,
   paths,
   setPaths,
 }) {
   const canvasRef = useRef(null);
+
   const [isDrawing, setIsDrawing] = useState(false);
   const lineColor = "#00000";
   const [lineWidth, setLineWidth] = useState(5);
   const [reloadPaths, setReloadPaths] = useState(false);
   const [canvasScale, setCanvasScale] = useState(1);
-  const [imageUrl, setImageUrl] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [fontSize, setFontSize] = useState(80);
 
-  const getSvgPathFromStroke = (stroke) => {
-    if (!stroke.length) return "";
+  const { imageUrl, templateType, editorMode } = useSession();
 
-    const d = stroke.reduce(
-      (acc, [x0, y0], i, arr) => {
-        const [x1, y1] = arr[(i + 1) % arr.length];
-        acc.push(x0, y0, (x0 + x1) / 2, (y0 + y1) / 2);
-        return acc;
-      },
-      ["M", ...stroke[0], "Q"]
-    );
-
-    d.push("Z");
-    return d.join(" ");
-  };
+  useFontLoader();
+  useCanvasScaling(canvasRef, setCanvasScale);
 
   const drawPaths = useCallback(() => {
     if (paths.length !== 0) {
       paths.forEach((path) => {
         const canvas = canvasRef.current;
         const context = canvas.getContext("2d");
-        const stroke = getStroke(path.points, {
-          size: path.width,
-          thinning: 0.0,
-          smoothing: 0.0,
-          streamline: 1.0,
-        });
-        const pathData = getSvgPathFromStroke(stroke);
-        const path2D = new Path2D(pathData);
-        context.fillStyle = path.lineColor;
-        context.fill(path2D);
+        if (path.type === "text") {
+          writeText(
+            path.text,
+            path.points[0][0],
+            path.points[0][1],
+            path.width
+          );
+        } else {
+          const stroke = getStroke(path.points, {
+            size: path.width,
+            thinning: 0.0,
+            smoothing: 0.0,
+            streamline: 1.0,
+          });
+          const pathData = getSvgPathFromStroke(stroke);
+          const path2D = new Path2D(pathData);
+          context.fillStyle = path.lineColor;
+          context.fill(path2D);
+        }
       });
     }
   }, [paths]);
 
-  const drawImage = useCallback(
-    (edit) => {
-      if (imageUrl) {
-        const img = new Image();
-        img.src = imageUrl;
-
-        img.onload = () => {
-          const canvas = canvasRef.current;
-          const context = canvas.getContext("2d");
-
-          const width = img.width;
-          const height = img.height;
-          const set_dimension = 425;
-
-          let scale =
-            width > height ? set_dimension / width : set_dimension / height;
-
-          const scaledWidth = img.width * scale;
-          const scaledHeight = img.height * scale;
-
-          const x = (canvas.width - scaledWidth) / 2;
-          const y = (canvas.height - scaledHeight) / 2;
-
-          context.clearRect(0, 0, canvas.width, canvas.height);
-          if (!edit) setPaths([]);
-
-          context.drawImage(img, x, y, scaledWidth, scaledHeight);
-          setReloadPaths(false);
-        };
-      }
-    },
-    [imageUrl]
-  );
-
-  const getCoordinates = (e) => {
+  const writeText = (text, x, y, pathSize) => {
     const canvas = canvasRef.current;
-    const rect = canvas.getBoundingClientRect();
-    const scale = canvasScale;
-    let clientX, clientY;
+    const context = canvas.getContext("2d");
 
-    if (e.touches && e.touches.length > 0) {
-      // Touch event
-      clientX = e.touches[0].clientX;
-      clientY = e.touches[0].clientY;
-    } else if (e.clientX) {
-      // Mouse event
-      clientX = e.clientX;
-      clientY = e.clientY;
-    } else {
-      return null;
-    }
-
-    const x = (clientX - rect.left) / scale;
-    const y = (clientY - rect.top) / scale;
-    const pressure = e.pressure || 1;
-
-    return { x, y, pressure };
+    context.font = pathSize + "px stencil";
+    context.fillText(text, x, y);
   };
 
   const handleStartDrawing = (e) => {
     e.preventDefault();
-    const coords = getCoordinates(e);
+    const coords = getCoordinates(e, canvasRef, canvasScale);
     if (!coords) return;
 
     setIsDrawing(true);
-    const { x, y, pressure } = coords;
-    setPaths((prevPaths) => [
-      ...prevPaths,
-      { points: [[x, y, pressure]], lineColor, width: lineWidth },
-    ]);
+    var { x, y, pressure } = coords;
+
+    if (editorMode === "type") {
+      var inputText = prompt("Enter text: ");
+      if (inputText) {
+        if (templateType === "text") {
+          const canvas = canvasRef.current;
+          const context = canvas.getContext("2d");
+          context.font = fontSize + "px stencil";
+
+          var offset = 0;
+          paths.forEach((path) => {
+            offset += path.width;
+          });
+
+          const textMetrics = context.measureText(inputText);
+          const textWidth = textMetrics.width;
+
+          const centerX = canvas.width / 2;
+          const centerY = canvas.height / 2;
+
+          x = centerX - textWidth / 2;
+          y = centerY + fontSize + offset - 75;
+        }
+
+        setPaths((prevPaths) => [
+          ...prevPaths,
+          {
+            points: [[x, y, 1]],
+            lineColor,
+            width: fontSize,
+            type: "text",
+            text: inputText,
+          },
+        ]);
+      }
+    } else {
+      setPaths((prevPaths) => [
+        ...prevPaths,
+        {
+          points: [[x, y, pressure]],
+          lineColor,
+          width: lineWidth,
+          type: "draw",
+        },
+      ]);
+    }
   };
 
   const handleMoveDrawing = (e) => {
     e.preventDefault();
-    const coords = getCoordinates(e);
+    if (editorMode === "type") return;
+
+    const coords = getCoordinates(e, canvasRef, canvasScale);
     if (!coords || !isDrawing) return;
 
     const { x, y, pressure } = coords;
     setPaths((prevPaths) => {
       const updatedPaths = [...prevPaths];
       const lastPath = updatedPaths[updatedPaths.length - 1];
-      lastPath.points.push([x, y, pressure]);
-      return updatedPaths;
+
+      if (lastPath) {
+        lastPath.points.push([x, y, pressure]);
+        return updatedPaths;
+      } else {
+        return [];
+      }
     });
   };
 
@@ -150,100 +158,32 @@ function ImageEditor({
   const handleSvg = async () => {
     setIsLoading(true);
     setSvgUrl(null);
-    const canvas = canvasRef.current;
+    const centeredCanvas = centerCanvasDrawing(canvasRef.current);
 
-    const canvasBackground = document.createElement("canvas");
-    canvasBackground.width = canvas.width;
-    canvasBackground.height = canvas.height;
-
-    const ctx = canvasBackground.getContext("2d");
-    ctx.fillStyle = "white";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.drawImage(canvas, 0, 0);
-
-    const dataURL = canvasBackground.toDataURL("image/png");
+    // Export the centered canvas as an image
+    const dataURL = centeredCanvas.toDataURL("image/png");
     const blob = await fetch(dataURL).then((r) => r.blob());
 
-    const formData = new FormData();
-    formData.append("file", blob, "fairway_ink_drawing.png");
-
     try {
-      const response = await axios.post(
-        "http://localhost:5001/upload",
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
+      // Call the uploadImage function from api.js
+      const response = await uploadImage(blob, templateType);
 
-      if (response.data.success) {
-        const blob = new Blob([response.data.svgData], {
-          type: "image/svg+xml",
-        });
-        setIsLoading(false);
-        const url = URL.createObjectURL(blob);
-        setSvgData(response.data.svgData);
-        setSvgUrl(url);
-        setShowScale(true);
-        setShowDesign(false);
-      } else {
-        console.error("Upload error:", response.data);
-        setIsLoading(false);
-      }
+      // Handle the response
+      const blobSvg = new Blob([response.svgData], {
+        type: "image/svg+xml",
+      });
+
+      setIsLoading(false);
+      const url = URL.createObjectURL(blobSvg);
+      setSvgData(response.svgData);
+      setSvgUrl(url);
+      setShowScale(true);
+      setShowDesign(false);
     } catch (err) {
       console.error("Upload error:", err);
       setIsLoading(false);
     }
   };
-
-  // handle drag and drop into canvas
-  useEffect(() => {
-    const canvas = canvasRef.current;
-
-    const handleDragEnter = (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-    };
-
-    const handleDragOver = (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-    };
-
-    const handleDragLeave = (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-    };
-
-    const handleDrop = (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-
-      const files = e.dataTransfer.files;
-      if (files.length > 0) {
-        const file = files[0];
-        const reader = new FileReader();
-        reader.onload = (event) => {
-          setImageUrl(event.target.result);
-        };
-        reader.readAsDataURL(file);
-      }
-    };
-
-    canvas.addEventListener("dragenter", handleDragEnter);
-    canvas.addEventListener("dragover", handleDragOver);
-    canvas.addEventListener("dragleave", handleDragLeave);
-    canvas.addEventListener("drop", handleDrop);
-
-    return () => {
-      canvas.removeEventListener("dragenter", handleDragEnter);
-      canvas.removeEventListener("dragover", handleDragOver);
-      canvas.removeEventListener("dragleave", handleDragLeave);
-      canvas.removeEventListener("drop", handleDrop);
-    };
-  }, []);
 
   // handles new image upload
   useEffect(() => {
@@ -253,7 +193,7 @@ function ImageEditor({
     context.clearRect(0, 0, canvas.width, canvas.height);
     context.scale(canvasScale, canvasScale);
 
-    drawImage(false);
+    drawImage(false, imageUrl, canvasRef, setPaths, setReloadPaths);
   }, [imageUrl, drawImage]);
 
   //will only run when paths or lineWidth changes
@@ -263,83 +203,69 @@ function ImageEditor({
 
     if (reloadPaths) {
       context.clearRect(0, 0, canvas.width, canvas.height);
-      drawImage(true);
+      drawImage(true, imageUrl, canvasRef, setPaths, setReloadPaths);
     }
     drawPaths();
   }, [paths, lineWidth, drawPaths, reloadPaths]);
 
-  // handles touch drawing
+  useCanvasEvents(
+    canvasRef,
+    handleStartDrawing,
+    handleMoveDrawing,
+    handleStartDrawing
+  );
+
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (canvas) {
-      const handleTouchStart = (e) => handleStartDrawing(e);
-      const handleTouchMove = (e) => handleMoveDrawing(e);
-      const handleTouchEnd = () => handleStopDrawing();
+    const context = canvas.getContext("2d");
 
-      canvas.addEventListener("touchstart", handleTouchStart, {
-        passive: false,
-      });
-      canvas.addEventListener("touchmove", handleTouchMove, { passive: false });
-      canvas.addEventListener("touchend", handleTouchEnd, { passive: false });
-
-      return () => {
-        canvas.removeEventListener("touchstart", handleTouchStart);
-        canvas.removeEventListener("touchmove", handleTouchMove);
-        canvas.removeEventListener("touchend", handleTouchEnd);
-      };
-    }
-  }, [handleStartDrawing, handleMoveDrawing, handleStopDrawing]);
-
-  // use effect to handle window scaling
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    const initialWidth = 500;
-
-    // Function to calculate scale factor based on current width
-    const calculateCanvasScale = () => {
-      const currentWidth = canvas.offsetWidth;
-      const scale = currentWidth / initialWidth;
-      setCanvasScale(scale);
-    };
-
-    calculateCanvasScale();
-    window.addEventListener("resize", calculateCanvasScale);
-
-    return () => {
-      window.removeEventListener("resize", calculateCanvasScale);
-    };
-  }, []);
+    context.clearRect(0, 0, canvas.width, canvas.height);
+    setPaths([]);
+  }, [templateType]);
 
   return (
     <div className="designer">
       <p className="desc">
-        Upload an image (button or drag and drop), or draw with your mouse to
-        get started
+        {templateType == "text"
+          ? `Click inside the editor and type a message`
+          : ` Upload an image (button or drag and drop), or draw with your mouse to
+        get started`}
       </p>
-      <div className="editor">
-        <Toolbar
-          paths={paths}
-          setPaths={setPaths}
-          lineWidth={lineWidth}
-          setLineWidth={setLineWidth}
-          setReloadPaths={setReloadPaths}
-          scale={canvasScale}
-          setScale={setCanvasScale}
-          setImageUrl={setImageUrl}
-          imageUrl={imageUrl}
-          canvasRef={canvasRef}
-        ></Toolbar>
-        <div>
-          <canvas
-            ref={canvasRef}
-            width={500}
-            height={500}
-            className="canvas"
-            onMouseDown={handleStartDrawing}
-            onMouseMove={handleMoveDrawing}
-            onMouseUp={handleStopDrawing}
-          />
+      <div className="modes-top">
+        <ModeExamples small={true} />
+      </div>
+      <TypeSelector />
+      <div className="displays">
+        <div className="editor">
+          <div className="tool">
+            <Toolbar
+              paths={paths}
+              setPaths={setPaths}
+              lineWidth={lineWidth}
+              setLineWidth={setLineWidth}
+              setReloadPaths={setReloadPaths}
+              canvasRef={canvasRef}
+              fontSize={fontSize}
+              setFontSize={setFontSize}
+              templateType={templateType}
+            ></Toolbar>
+          </div>
+          <div>
+            <canvas
+              ref={canvasRef}
+              width={500}
+              height={500}
+              className="canvas"
+              onMouseDown={handleStartDrawing}
+              onMouseMove={handleMoveDrawing}
+              onMouseUp={handleStopDrawing}
+            />
+          </div>
         </div>
+        <div className="modes-bottom">
+          <ModeExamples />
+        </div>
+        <div className="editor-spacer"></div>
       </div>
       <button
         className="submit-button"

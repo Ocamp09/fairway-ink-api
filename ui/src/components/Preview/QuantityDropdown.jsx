@@ -4,16 +4,18 @@ import "./QuantityDropdown.css";
 function QuantityDropdown({
   setQuantity,
   quantity,
+  minQuantity = 1,
   maxQuantity = 15,
   labelText = "Quantity: ",
   step = 1,
   title = "Set quantity",
+  hidden = false,
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
 
   const quantities = [];
-  for (let i = 1; i <= maxQuantity; i += step) {
+  for (let i = minQuantity; i <= maxQuantity; i += step) {
     quantities.push(i);
   }
 
@@ -39,7 +41,7 @@ function QuantityDropdown({
   }, [isOpen]);
 
   return (
-    <div className="dropdown" title={title} ref={dropdownRef}>
+    <div className="dropdown" title={title} ref={dropdownRef} hidden={hidden}>
       <button className="dropdown-toggle" onClick={() => setIsOpen(!isOpen)}>
         <label>{labelText}</label>
         {quantity}

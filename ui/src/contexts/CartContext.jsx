@@ -4,16 +4,16 @@ const CartContext = createContext();
 
 export const CartProvider = ({ children }) => {
   const [cartItems, setCartItems] = useState([
-    {
-      id: "golfball0",
-      stl: "http://localhost:5001/output/stl/golfball0.stl",
-      quantity: 2,
-    },
-    {
-      id: "golfball1",
-      stl: "http://localhost:5001/output/stl/golfball1.stl",
-      quantity: 1,
-    },
+    // {
+    //   id: "golfball0",
+    //   stl: "http://localhost:5001/output/stl/golfball0.stl",
+    //   quantity: 2,
+    // },
+    // {
+    //   id: "golfball1",
+    //   stl: "http://localhost:5001/output/stl/golfball1.stl",
+    //   quantity: 1,
+    // },
   ]);
 
   useEffect(() => {
@@ -27,8 +27,8 @@ export const CartProvider = ({ children }) => {
     localStorage.setItem("cart", JSON.stringify(cartItems));
   }, [cartItems]);
 
-  const addToCart = (item, quantity) => {
-    const existingItem = cartItems.find((cartItem) => cartItem.id === item.id);
+  const addToCart = (key, item, quantity, type) => {
+    const existingItem = cartItems.find((cartItem) => cartItem.id === key);
     if (existingItem) {
       setCartItems(
         cartItems.map((cartItem) =>
@@ -38,7 +38,10 @@ export const CartProvider = ({ children }) => {
         )
       );
     } else {
-      setCartItems([...cartItems, { ...item, quantity: Number(quantity) }]);
+      setCartItems([
+        ...cartItems,
+        { id: key, stl: item, quantity: Number(quantity), type: type },
+      ]);
     }
   };
 

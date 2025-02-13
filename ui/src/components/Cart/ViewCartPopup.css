@@ -49,10 +49,21 @@
   padding-bottom: 10px;
 }
 
+.cart-item:hover {
+  background-color: var(--background);
+  cursor: default;
+}
+
 .stl-viewer-container {
   width: 200px;
   height: 200px;
   margin-right: 10px;
+}
+
+.item-details {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
 }
 
 .quantity {
@@ -94,7 +105,14 @@
   background-color: var(--remove-hover);
 }
 
+.checkout {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .checkout-button {
+  margin-left: 10px;
   border-radius: 5px;
   background-color: var(--submit);
   color: var(icon);
