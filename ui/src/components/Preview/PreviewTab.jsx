@@ -10,12 +10,12 @@ const PreviewTab = () => {
   const [isAdded, setIsAdded] = useState(false);
 
   const { addToCart } = useCart();
-  const { stlUrl, stlKey } = useSession();
+  const { stlUrl, stlKey, templateType } = useSession();
 
   const handleAddToCart = (event) => {
     event.preventDefault();
 
-    addToCart(stlKey, stlUrl, quantity);
+    addToCart(stlKey, stlUrl, quantity, templateType);
     setIsAdded(true);
   };
 

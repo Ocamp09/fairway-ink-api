@@ -27,7 +27,7 @@ export const CartProvider = ({ children }) => {
     localStorage.setItem("cart", JSON.stringify(cartItems));
   }, [cartItems]);
 
-  const addToCart = (key, item, quantity) => {
+  const addToCart = (key, item, quantity, type) => {
     const existingItem = cartItems.find((cartItem) => cartItem.id === key);
     if (existingItem) {
       setCartItems(
@@ -40,7 +40,7 @@ export const CartProvider = ({ children }) => {
     } else {
       setCartItems([
         ...cartItems,
-        { id: key, stl: item, quantity: Number(quantity) },
+        { id: key, stl: item, quantity: Number(quantity), type: type },
       ]);
     }
   };

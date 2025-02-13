@@ -60,6 +60,12 @@
   margin-right: 10px;
 }
 
+.item-details {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+}
+
 .quantity {
   display: flex;
   flex-direction: column;
@@ -99,7 +105,14 @@
   background-color: var(--remove-hover);
 }
 
+.checkout {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .checkout-button {
+  margin-left: 10px;
   border-radius: 5px;
   background-color: var(--submit);
   color: var(icon);
