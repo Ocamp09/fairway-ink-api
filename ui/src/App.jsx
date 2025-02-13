@@ -3,7 +3,7 @@ import GolfBallDisplay from "./components/GolfBallDisplay";
 import "../node_modules/bootstrap/dist/css/bootstrap.min.css";
 import Header from "./components/Header";
 import { CartProvider } from "./contexts/CartContext";
-import { FileProvider } from "./contexts/FileContext";
+import { FileProvider } from "./contexts/DesignContext";
 import { useState } from "react";
 import ViewCartPopup from "./components/Cart/ViewCartPopup";
 

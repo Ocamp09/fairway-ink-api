@@ -1,34 +1,39 @@
 import "./TypeSelector.css";
+import { useSession } from "../../contexts/DesignContext";
 
-const TypeSelector = ({ type, setType, setEditorMode }) => {
+const TypeSelector = () => {
+  const { templateType, updateTemplateType, updateEditorMode } = useSession();
   const handleSolid = () => {
-    setType("solid");
-    setEditorMode(false);
+    updateTemplateType("solid");
+    updateEditorMode("draw");
   };
 
   const handleText = () => {
-    setType("text");
-    setEditorMode(true);
+    updateTemplateType("text");
+    updateEditorMode("type");
   };
 
   const handleMulti = () => {
-    setType("multi");
-    setEditorMode(false);
+    updateTemplateType("multi");
+    updateEditorMode("draw");
   };
 
   return (
     <div className="type-selector">
       <button
-        className={type === "solid" ? "active" : ""}
+        className={templateType === "solid" ? "active" : ""}
         onClick={handleSolid}
       >
         Solid
       </button>
-      <button className={type === "text" ? "active" : ""} onClick={handleText}>
+      <button
+        className={templateType === "text" ? "active" : ""}
+        onClick={handleText}
+      >
         Text Only
       </button>
       {/* <button
-        className={type === "multi" ? "active" : ""}
+        className={templateType === "multi" ? "active" : ""}
         onClick={handleMulti}
       >
         Multi-Color Mode

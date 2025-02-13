@@ -1,7 +1,7 @@
 import { useState } from "react";
 import ImageScaler from "./ImageScaler";
 import axios from "axios";
-import { useSession } from "../../contexts/FileContext";
+import { useSession } from "../../contexts/DesignContext";
 import "./ScaleSvg.css";
 
 const ScaleSvg = ({ svgUrl, svgData, setShowPreview, setShowScale }) => {
@@ -9,25 +9,17 @@ const ScaleSvg = ({ svgUrl, svgData, setShowPreview, setShowScale }) => {
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  const { updateStl, stlKey, updateStlKey } = useSession();
+  const { updateStl, stlKey, updateStlKey, templateType } = useSession();
 
   // get svg width and height, scale down to size I want to display
   // then factor that scale into the query sent
-  const canvasSizePx = 125 * scale;
 
-  const setSvgSize = () => {
-    const parser = new DOMParser();
-    const xmlDoc = parser.parseFromString(svgData, "image/svg+xml");
-    const svgElement = xmlDoc.querySelector("svg");
-
-    if (svgElement) {
-      svgElement.setAttribute("width", 25);
-      svgElement.setAttribute("height", 25);
-      return new XMLSerializer().serializeToString(xmlDoc);
-    } else {
-      return "Invalid SVG data";
-    }
-  };
+  let canvasSizePx;
+  if (templateType === "text") {
+    canvasSizePx = 110 * scale * 2.5;
+  } else {
+    canvasSizePx = 110 * scale;
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -37,15 +29,19 @@ const ScaleSvg = ({ svgUrl, svgData, setShowPreview, setShowScale }) => {
     }
 
     setIsLoading(true);
-    const newData = setSvgSize();
-    console.log(newData);
+
     const formData = new FormData();
     formData.append(
       "svg",
-      new Blob([newData], { type: "image/svg+xml" }),
+      new Blob([svgData], { type: "image/svg+xml" }),
       "golfball" + stlKey + ".svg"
     );
-    formData.append("scale", scale);
+
+    if (templateType === "text") {
+      formData.append("scale", scale * 2.5);
+    } else {
+      formData.append("scale", scale);
+    }
     updateStl("http://localhost:5001/output/stl/default.stl");
 
     try {
@@ -100,7 +96,7 @@ const ScaleSvg = ({ svgUrl, svgData, setShowPreview, setShowScale }) => {
                 alt="Uploaded"
                 className="upload-img"
                 style={{
-                  width: `${(canvasSizePx * 173) / 500}px`, // Set width based on scale
+                  width: `${(canvasSizePx * 180) / 500}px`, // Set width based on scale
                 }}
               />
             )}

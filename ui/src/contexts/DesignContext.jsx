@@ -1,6 +1,6 @@
 import { createContext, useContext, useState } from "react";
 
-const FileContext = createContext();
+const DesignContext = createContext();
 
 export const FileProvider = ({ children }) => {
   const [imageUrl, setImageUrl] = useState(
@@ -12,6 +12,14 @@ export const FileProvider = ({ children }) => {
   );
 
   const [stlKey, setStlKey] = useState(sessionStorage.getItem("stlKey") || 0);
+
+  const [templateType, setTemplateType] = useState(
+    sessionStorage.getItem("templateType") || "solid"
+  );
+
+  const [editorMode, setEditorMode] = useState(
+    sessionStorage.getItem("editorMode") || "draw"
+  );
 
   const updateImageUrl = (newUrl) => {
     sessionStorage.setItem("imageUrl", newUrl);
@@ -28,22 +36,34 @@ export const FileProvider = ({ children }) => {
     setStlKey(Number(stlKey) + 1);
   };
 
+  const updateTemplateType = (type) => {
+    setTemplateType(type);
+  };
+
+  const updateEditorMode = (mode) => {
+    setEditorMode(mode);
+  };
+
   return (
-    <FileContext.Provider
+    <DesignContext.Provider
       value={{
         imageUrl,
-        stlUrl,
-        stlKey,
         updateImageUrl,
+        stlUrl,
         updateStl,
+        stlKey,
         updateStlKey,
+        templateType,
+        updateTemplateType,
+        editorMode,
+        updateEditorMode,
       }}
     >
       {children}
-    </FileContext.Provider>
+    </DesignContext.Provider>
   );
 };
 
 export const useSession = () => {
-  return useContext(FileContext);
+  return useContext(DesignContext);
 };

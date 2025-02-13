@@ -3,7 +3,7 @@ import axios from "axios";
 import "./ImageEditor.css";
 import Toolbar from "./Toolbar";
 import getStroke from "perfect-freehand";
-import { useSession } from "../../contexts/FileContext";
+import { useSession } from "../../contexts/DesignContext";
 import TypeSelector from "./TypeSelector";
 
 function ImageEditor({
@@ -16,18 +16,15 @@ function ImageEditor({
 }) {
   const canvasRef = useRef(null);
 
-  const [templateType, setTemplateType] = useState("solid");
   const [isDrawing, setIsDrawing] = useState(false);
   const lineColor = "#00000";
   const [lineWidth, setLineWidth] = useState(5);
   const [reloadPaths, setReloadPaths] = useState(false);
   const [canvasScale, setCanvasScale] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
-  const [editorMode, setEditorMode] = useState(false); // false is draw, true is text
   const [fontSize, setFontSize] = useState(40);
 
-  const { imageUrl } = useSession();
-  const { updateImageUrl } = useSession();
+  const { imageUrl, updateImageUrl, templateType, editorMode } = useSession();
 
   const getSvgPathFromStroke = (stroke) => {
     if (!stroke.length) return "";
@@ -130,8 +127,26 @@ function ImageEditor({
   const writeText = (text, x, y) => {
     const canvas = canvasRef.current;
     const context = canvas.getContext("2d");
-    context.font = fontSize + "px test";
-    context.fillText(text, x, y);
+
+    context.font = fontSize + "px stencil";
+
+    // write text in center if text only mode
+    if (templateType === "text") {
+      context.font = "80px stencil";
+
+      const textMetrics = context.measureText(text);
+      const textWidth = textMetrics.width;
+
+      const centerX = canvas.width / 2;
+      const centerY = canvas.height / 2;
+
+      const x = centerX - textWidth / 2;
+      const y = centerY + fontSize / 2;
+
+      context.fillText(text, x, y);
+    } else {
+      context.fillText(text, x, y);
+    }
   };
 
   const handleStartDrawing = (e) => {
@@ -142,7 +157,7 @@ function ImageEditor({
     setIsDrawing(true);
     const { x, y, pressure } = coords;
 
-    if (editorMode) {
+    if (editorMode === "type") {
       var inputText = prompt("Enter text: ");
       if (inputText) {
         setPaths((prevPaths) => [
@@ -171,7 +186,7 @@ function ImageEditor({
 
   const handleMoveDrawing = (e) => {
     e.preventDefault();
-    if (editorMode) return;
+    if (editorMode === "type") return;
 
     const coords = getCoordinates(e);
     if (!coords || !isDrawing) return;
@@ -360,7 +375,7 @@ function ImageEditor({
 
   useEffect(() => {
     // Create a new FontFace object to load the custom font
-    const myFont = new FontFace("test", "url(/gunplay.otf)");
+    const myFont = new FontFace("stencil", "url(/gunplay.otf)");
 
     // Load the font
     myFont
@@ -390,11 +405,7 @@ function ImageEditor({
           : ` Upload an image (button or drag and drop), or draw with your mouse to
         get started`}
       </p>
-      <TypeSelector
-        type={templateType}
-        setType={setTemplateType}
-        setEditorMode={setEditorMode}
-      />
+      <TypeSelector />
       <div className="editor">
         <Toolbar
           paths={paths}
@@ -405,8 +416,6 @@ function ImageEditor({
           scale={canvasScale}
           setScale={setCanvasScale}
           canvasRef={canvasRef}
-          mode={editorMode}
-          setMode={setEditorMode}
           fontSize={fontSize}
           setFontSize={setFontSize}
           templateType={templateType}

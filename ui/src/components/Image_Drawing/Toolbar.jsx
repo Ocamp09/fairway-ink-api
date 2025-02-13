@@ -7,7 +7,7 @@ import { IoMdUndo, IoMdRedo } from "react-icons/io";
 import { IoText } from "react-icons/io5";
 import { BiSolidPencil } from "react-icons/bi";
 import RemoveImage from "./RemoveImage";
-import { useSession } from "../../contexts/FileContext";
+import { useSession } from "../../contexts/DesignContext";
 import DrawTools from "./DrawTools";
 import TextTools from "./TextTools";
 
@@ -18,21 +18,19 @@ const Toolbar = ({
   setLineWidth,
   setReloadPaths,
   canvasRef,
-  mode,
-  setMode,
   fontSize,
   setFontSize,
-  templateType,
 }) => {
   const [undoStack, setUndoStack] = useState([]);
   const [redoStack, setRedoStack] = useState([]);
 
-  const { updateImageUrl } = useSession();
+  const { updateImageUrl, templateType, editorMode, updateEditorMode } =
+    useSession();
 
   const iconSize = 28;
 
   const handleText = () => {
-    setMode(!mode);
+    updateEditorMode("type");
   };
 
   const handleUndo = () => {
@@ -102,8 +100,8 @@ const Toolbar = ({
           hidden={templateType == "solid"}
           disabled={templateType == "text"}
         >
-          {mode && <IoText size={iconSize} />}
-          {!mode && <BiSolidPencil size={iconSize} />}
+          {editorMode == "type" && <IoText size={iconSize} />}
+          {editorMode == "draw" && <BiSolidPencil size={iconSize} />}
         </button>
         {templateType != "text" && (
           <>
@@ -131,14 +129,14 @@ const Toolbar = ({
         >
           <FaDeleteLeft size={iconSize} />
         </button>
-        {!mode && (
+        {editorMode == "draw" && (
           <DrawTools
             lineWidth={lineWidth}
             setLineWidth={setLineWidth}
             iconSize={iconSize}
           />
         )}
-        {mode && (
+        {editorMode == "type" && templateType == "multi" && (
           <TextTools
             fontSize={fontSize}
             setFontSize={setFontSize}

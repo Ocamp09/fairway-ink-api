@@ -1,6 +1,6 @@
 import { useState, useRef } from "react";
 import { FaImage } from "react-icons/fa6";
-import { useSession } from "../../contexts/FileContext";
+import { useSession } from "../../contexts/DesignContext";
 import "./FileUpload.css";
 import "./ImageEditor.css";
 
