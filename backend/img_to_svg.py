@@ -77,12 +77,12 @@ def image_to_svg(image_path, method=PrintType.SOLID):
     svg_data = trace(temp_image_path, blackAndWhite=True)
     os.remove(temp_image_path)
 
-    # with open(svg_path, "w") as svg_file:
-    #     svg_file.write(svg_data)
-
     print(method)
     if method == PrintType.SOLID:
         svg_data = fill_svg(svg_data)
+
+    with open("./output/svg/recent.svg", "w") as svg_file:
+         svg_file.write(svg_data)
 
     return svg_data
 
