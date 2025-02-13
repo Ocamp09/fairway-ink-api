@@ -80,7 +80,7 @@ const ScaleSvg = ({ svgUrl, svgData, setShowPreview, setShowScale }) => {
       <ImageScaler scale={scale} setScale={setScale}></ImageScaler>
       <form onSubmit={handleSubmit}>
         <button type="submit" className="submit-button" disabled={isLoading}>
-          {isLoading ? "Processing..." : "Upload and Generate STL"}
+          {isLoading ? "Processing..." : "3-D Preview"}
         </button>
         {error && <p className="error-message">{error}</p>}
       </form>

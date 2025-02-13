@@ -272,8 +272,8 @@ function ImageEditor({
         onClick={handleSvg}
         disabled={isLoading}
       >
-        {!isLoading && "Convert Drawing"}
-        {isLoading && "Processing"}
+        {!isLoading && "Proceed to Scale"}
+        {isLoading && "Loading"}
       </button>
     </div>
   );
