@@ -3,8 +3,6 @@ from flask_cors import CORS  # Import CORS
 import os
 import subprocess
 from werkzeug.utils import secure_filename
-import pathlib
-import sys
 import img_to_svg
 import platform
 
@@ -13,13 +11,8 @@ app = Flask(__name__)
 CORS(app)
 
 # Configuration
-UPLOAD_FOLDER = "uploads"
 ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "svg"}
 MAX_FILE_SIZE = 5 * 1024 * 1024  # 5MB
-app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
-
-# Ensure the upload folder exists
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 def allowed_file(filename):
     """Check if the file has an allowed extension."""
@@ -59,15 +52,6 @@ def upload_file():
         method = img_to_svg.PrintType.TEXT
     else:
         method = img_to_svg.PrintType.SOLID
-    
-
-    # Save the file securely
-    filename = secure_filename(file.filename)
-    file_path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
-    file.save(file_path)
-
-    dir_path = pathlib.Path.cwd()
-    script_path = dir_path / "img_to_svg.py"
 
     svg_data = img_to_svg.image_to_svg(file, method=method)
     return jsonify({"success": True, "svgData": svg_data})
