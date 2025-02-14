@@ -161,7 +161,7 @@ function ImageEditor({
   const handleSvg = async () => {
     setError("");
 
-    if (paths.length === 0) {
+    if (paths.length === 0 && !imageUrl) {
       setError("Unable to upload blank drawing");
       return;
     }
