@@ -7,6 +7,8 @@ export const FileProvider = ({ children }) => {
     sessionStorage.getItem("imageUrl") || null
   );
 
+  const [imageType, setImageType] = useState("");
+
   const [stlUrl, setStlUrl] = useState(
     sessionStorage.getItem("stlUrl") || "default.stl"
   );
@@ -24,6 +26,11 @@ export const FileProvider = ({ children }) => {
   const updateImageUrl = (newUrl) => {
     sessionStorage.setItem("imageUrl", newUrl);
     setImageUrl(newUrl);
+  };
+
+  const updateImageType = (type) => {
+    sessionStorage.setItem("imageType", type);
+    setImageType(type);
   };
 
   const updateStl = (stlUrl) => {
@@ -49,6 +56,8 @@ export const FileProvider = ({ children }) => {
       value={{
         imageUrl,
         updateImageUrl,
+        imageType,
+        updateImageType,
         stlUrl,
         updateStl,
         stlKey,
