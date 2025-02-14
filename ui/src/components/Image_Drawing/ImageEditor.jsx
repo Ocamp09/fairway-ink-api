@@ -26,15 +26,18 @@ function ImageEditor({
 }) {
   const canvasRef = useRef(null);
 
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
+
   const [isDrawing, setIsDrawing] = useState(false);
-  const lineColor = "#00000";
-  const [lineWidth, setLineWidth] = useState(5);
   const [reloadPaths, setReloadPaths] = useState(false);
   const [canvasScale, setCanvasScale] = useState(1);
-  const [isLoading, setIsLoading] = useState(false);
+  const [lineWidth, setLineWidth] = useState(5);
   const [fontSize, setFontSize] = useState(80);
 
   const { imageUrl, templateType, editorMode } = useSession();
+
+  const lineColor = "#00000";
 
   useFontLoader();
   useCanvasScaling(canvasRef, setCanvasScale);
@@ -156,6 +159,13 @@ function ImageEditor({
   };
 
   const handleSvg = async () => {
+    setError("");
+
+    if (paths.length === 0) {
+      setError("Unable to upload blank drawing");
+      return;
+    }
+
     setIsLoading(true);
     setSvgUrl(null);
     const centeredCanvas = centerCanvasDrawing(canvasRef.current);
@@ -182,6 +192,7 @@ function ImageEditor({
     } catch (err) {
       console.error("Upload error:", err);
       setIsLoading(false);
+      setError("Unable to connect to the server, try again later");
     }
   };
 
@@ -275,6 +286,7 @@ function ImageEditor({
         {!isLoading && "Proceed to Scale"}
         {isLoading && "Loading"}
       </button>
+      {error && <p className="file-error-message">{error}</p>}
     </div>
   );
 }

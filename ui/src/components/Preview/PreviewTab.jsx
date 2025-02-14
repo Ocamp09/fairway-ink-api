@@ -8,12 +8,18 @@ import "./PreviewTab.css";
 const PreviewTab = () => {
   const [quantity, setQuantity] = useState(1);
   const [isAdded, setIsAdded] = useState(false);
+  const [error, setError] = useState("");
 
   const { addToCart } = useCart();
   const { stlUrl, stlKey, templateType } = useSession();
 
   const handleAddToCart = (event) => {
     event.preventDefault();
+
+    if (stlUrl == "default.stl") {
+      setError("No custom design uploaded");
+      return;
+    }
 
     addToCart(stlKey, stlUrl, quantity, templateType);
     setIsAdded(true);
@@ -37,6 +43,7 @@ const PreviewTab = () => {
         >
           {!isAdded ? "Add to Cart" : "Item added!"}
         </button>
+        {error && <p className="file-error-message">{error}</p>}
       </div>
     </div>
   );

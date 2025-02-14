@@ -28,7 +28,7 @@ const ScaleSvg = ({ svgUrl, svgData, setShowPreview, setShowScale }) => {
     }
 
     setIsLoading(true);
-    updateStl("http://localhost:5001/output/stl/default.stl");
+    updateStl("default.stl");
 
     try {
       const response = await generateStl(svgData, scale, stlKey, templateType);
@@ -38,7 +38,7 @@ const ScaleSvg = ({ svgUrl, svgData, setShowPreview, setShowScale }) => {
       setShowPreview(true);
       setShowScale(false);
     } catch (err) {
-      setError("An error occurred while uploading the file.");
+      setError("An error occurred while uploading the file, try again later");
       console.error(err);
     } finally {
       setIsLoading(false);
@@ -82,7 +82,7 @@ const ScaleSvg = ({ svgUrl, svgData, setShowPreview, setShowScale }) => {
         <button type="submit" className="submit-button" disabled={isLoading}>
           {isLoading ? "Processing..." : "3-D Preview"}
         </button>
-        {error && <p className="error-message">{error}</p>}
+        {error && <p className="file-error-message">{error}</p>}
       </form>
     </div>
   );
