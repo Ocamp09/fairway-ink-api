@@ -1,3 +1,4 @@
+import sys
 from svgtrace import trace
 from PIL import Image
 import tempfile
@@ -83,3 +84,26 @@ def image_to_svg(image_path, method=PrintType.SOLID):
          svg_file.write(svg_data)
 
     return svg_data
+
+def main(image_path):
+    filename = image_path.split("/")[2].split(".")[0]
+    extension =  image_path.split("/")[2].split(".")[1]
+    svg_path = "./output/svg/" + filename + ".svg"
+    
+    try:
+        # Step 1: Convert image to SVG
+        if extension != "svg":
+            image_to_svg(image_path)
+      
+    except Exception as e:
+        print(f"Error: {e}")
+        sys.exit(1)
+
+if __name__ == "__main__":
+    # if there is a command line image use that
+    if len(sys.argv) != 2:
+        print("Usage: python image_to_svg.py <input_image_path>")
+        sys.exit(1)
+
+    image_path = sys.argv[1]
+    main(image_path)
