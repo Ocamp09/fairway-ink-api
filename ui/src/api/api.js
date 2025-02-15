@@ -63,3 +63,20 @@ export const generateStl = async (svgData, scale, stlKey, templateType) => {
     throw error;
   }
 };
+
+export const addToCartApi = (stlUrl) => {
+  const formData = new FormData();
+  formData.append("filename", stlUrl);
+
+  try {
+    axios.post(API_URL + "/cart", formData, {
+      headers: {
+        "Content-Type": "text/plain",
+        ssid: session_id,
+      },
+    });
+  } catch (error) {
+    console.log("Err adding to cart: ", error);
+    throw error;
+  }
+};

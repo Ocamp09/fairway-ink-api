@@ -15,6 +15,8 @@ ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "svg"}
 MAX_FILE_SIZE = 5 * 1024 * 1024  # 5MB
 OUTPUT_FOLDER = "./output/"
 
+cart_items = {}
+
 def allowed_file(filename):
     """Check if the file has an allowed extension."""
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -68,13 +70,16 @@ def generate_gcode():
     svg_file = request.files['svg']
     filename = secure_filename(svg_file.filename)
 
-    # if request.headers["stlKey"]:
-    #     key = request.headers["stlKey"]
-    #     if int(key) > 0:
-    #         stripped = filename.find("g")
-    #         prevKey = int(key) - 1
-    #         newFile = str(prevKey) + filename[stripped::].replace("svg", "stl")
-    #         os.remove(OUTPUT_FOLDER + session_id + "/" + newFile)
+    if request.headers["stlKey"]:
+        key = request.headers["stlKey"]
+        if int(key) > 0:
+            stripped = filename.find("g")
+            prevKey = int(key) - 1
+            prevFile = str(prevKey) + filename[stripped::].replace("svg", "stl")
+            # print(os.path.exists(prevFile), prevFile)
+            # print(prevFile not in cart_items[session_id])
+            # if os.path.exists(prevFile) and prevFile not in cart_items[session_id]:
+            #     os.remove(OUTPUT_FOLDER + session_id + "/" + prevFile)
 
     os.makedirs("./output/" + session_id, exist_ok=True)
 
@@ -103,6 +108,21 @@ def generate_gcode():
         return jsonify({"success": True, "stlUrl": stl_url})
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 502
+    
+
+@app.route("/cart", methods=["POST"])
+def add_to_cart():
+    session_id = request.headers["ssid"]
+    filename = request.form.get("filename")
+
+    if session_id not in cart_items:
+        cart_items[session_id] = set()
+
+    cart_items[session_id].add(filename)
+    print(cart_items)
+
+    return jsonify({"success": True})
+
     
 
 if __name__ == "__main__":

@@ -3,6 +3,7 @@ import STLViewer from "../3D-View/STLViewer";
 import QuantityDropdown from "./QuantityDropdown";
 import { useCart } from "../../contexts/CartContext";
 import { useSession } from "../../contexts/DesignContext";
+import { addToCartApi } from "../../api/api";
 import "./PreviewTab.css";
 
 const PreviewTab = () => {
@@ -20,7 +21,7 @@ const PreviewTab = () => {
       setError("No custom design uploaded");
       return;
     }
-
+    addToCartApi(stlUrl);
     addToCart(stlKey, stlUrl, quantity, templateType);
     setIsAdded(true);
   };
