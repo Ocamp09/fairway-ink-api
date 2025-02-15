@@ -25,7 +25,6 @@ def output_stl(ssid, filename):
     return send_from_directory(f"output/{ssid}", filename)
 
 
-
 @app.route("/upload", methods=["POST"])
 def upload_file():
     # Check if a file was uploaded
@@ -68,10 +67,18 @@ def generate_gcode():
     session_id = request.headers["ssid"]
     svg_file = request.files['svg']
     filename = secure_filename(svg_file.filename)
+
+    # if request.headers["stlKey"]:
+    #     key = request.headers["stlKey"]
+    #     if int(key) > 0:
+    #         stripped = filename.find("g")
+    #         prevKey = int(key) - 1
+    #         newFile = str(prevKey) + filename[stripped::].replace("svg", "stl")
+    #         os.remove(OUTPUT_FOLDER + session_id + "/" + newFile)
+
     os.makedirs("./output/" + session_id, exist_ok=True)
 
     output_svg_path = os.path.join(OUTPUT_FOLDER + session_id, filename)
-    print("output", output_svg_path)
     try:
         svg_file.save(output_svg_path)
 
@@ -89,6 +96,7 @@ def generate_gcode():
         ]
 
         subprocess.run(blender_command, capture_output=True, text=True)
+
         os.remove(OUTPUT_FOLDER + session_id + "/" + filename)
         stl_name = filename.split(".")[0] + ".stl"  
         stl_url = f"http://localhost:5001/output/{session_id}/{stl_name}"

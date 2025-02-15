@@ -33,7 +33,7 @@ export const generateStl = async (svgData, scale, stlKey, templateType) => {
   formData.append(
     "svg",
     new Blob([svgData], { type: "image/svg+xml" }),
-    "golfball" + stlKey + ".svg"
+    stlKey + "golfball" + ".svg"
   );
 
   if (templateType === "text") {
@@ -50,6 +50,7 @@ export const generateStl = async (svgData, scale, stlKey, templateType) => {
         headers: {
           "Content-Type": "multipart/form-data",
           ssid: session_id,
+          stlKey: stlKey,
         },
       }
     );
