@@ -70,14 +70,15 @@ def generate_gcode():
     svg_file = request.files['svg']
     filename = secure_filename(svg_file.filename)
 
+    # remove the previous STL file if not saved to cart
     if request.headers["stlKey"]:
         key = request.headers["stlKey"]
         if int(key) > 0:
             stripped = filename.find("g")
             prevKey = int(key) - 1
             prevFile = str(prevKey) + filename[stripped::].replace("svg", "stl")
-            # print(os.path.exists(prevFile), prevFile)
-            # print(prevFile not in cart_items[session_id])
+            print(os.path.exists("./output/" + session_id + "/" + prevFile), "./output/" + session_id + "/" + prevFile)
+            print(cart_items)
             # if os.path.exists(prevFile) and prevFile not in cart_items[session_id]:
             #     os.remove(OUTPUT_FOLDER + session_id + "/" + prevFile)
 
