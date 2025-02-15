@@ -13,8 +13,8 @@ const TypeSelector = () => {
     updateEditorMode("type");
   };
 
-  const handleMulti = () => {
-    updateTemplateType("multi");
+  const handleCustom = () => {
+    updateTemplateType("custom");
     updateEditorMode("draw");
   };
 
@@ -32,12 +32,12 @@ const TypeSelector = () => {
       >
         Text Only
       </button>
-      {/* <button
-        className={templateType === "multi" ? "active" : ""}
-        onClick={handleMulti}
+      <button
+        className={templateType === "custom" ? "active" : ""}
+        onClick={handleCustom}
       >
-        Multi-Color Mode
-      </button> */}
+        Custom
+      </button>
     </div>
   );
 };

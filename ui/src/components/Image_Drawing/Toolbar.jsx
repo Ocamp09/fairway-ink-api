@@ -30,6 +30,10 @@ const Toolbar = ({
   const iconSize = 28;
 
   const handleText = () => {
+    if (editorMode == "type") {
+      updateEditorMode("draw");
+      return;
+    }
     updateEditorMode("type");
   };
 
@@ -97,7 +101,7 @@ const Toolbar = ({
         <button
           title="Switch editor mode"
           onClick={handleText}
-          hidden={templateType == "solid" || "text"}
+          hidden={templateType == "solid" || templateType === "text"}
         >
           {editorMode == "type" && <IoText size={iconSize} />}
           {editorMode == "draw" && <BiSolidPencil size={iconSize} />}
@@ -135,13 +139,14 @@ const Toolbar = ({
             iconSize={iconSize}
           />
         )}
-        {editorMode == "type" && templateType == "text" && (
-          <TextTools
-            fontSize={fontSize}
-            setFontSize={setFontSize}
-            iconSize={iconSize}
-          />
-        )}
+        {editorMode == "type" &&
+          (templateType === "text" || templateType === "custom") && (
+            <TextTools
+              fontSize={fontSize}
+              setFontSize={setFontSize}
+              iconSize={iconSize}
+            />
+          )}
         <button title="Download drawings" onClick={saveCanvas}>
           <FiDownload size={iconSize} />
         </button>

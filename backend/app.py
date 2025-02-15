@@ -45,8 +45,8 @@ def upload_file():
     file.seek(0)  # Reset file pointer after reading
 
     method = request.form.get("method", img_to_svg.PrintType.SOLID)  
-    if method == "multi":
-        method = img_to_svg.PrintType.MULTI
+    if method == "custom":
+        method = img_to_svg.PrintType.CUSTOM
     elif method == "text":
         method = img_to_svg.PrintType.TEXT
     else:

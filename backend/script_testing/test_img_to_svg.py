@@ -5,11 +5,12 @@ import tempfile
 import os
 import xml.etree.ElementTree as ET    
 from enum import Enum
+from svgpathtools import svg2paths, parse_path  # Add this import
 
 class PrintType(Enum):
     SOLID = 1
     TEXT = 2
-    MULTI = 3
+    CUSTOM = 3
 
 def fill_svg(svg_data):
     try:
@@ -44,6 +45,40 @@ def fill_svg(svg_data):
     except Exception as e:
         print(f"Error processing SVG: {e}")
 
+
+def remove_outline(svg_data):
+    root = ET.fromstring(svg_data)
+    paths = root.findall('.//{http://www.w3.org/2000/svg}path')
+
+    if len(paths) < 2:
+        return svg_data  # No outline to remove if there's only one path
+
+    # Parse the first path's `d` attribute into a Path object
+    outline_path_d = paths[0].get('d')
+    outline_path = parse_path(outline_path_d)
+    outline_bbox = outline_path.bbox()  # Get the bounding box of the first path
+
+    # Check if the first path is an outline by comparing its bounding box with others
+    is_outline = True
+    for path_element in paths[1:]:
+        path_d = path_element.get('d')
+        if path_d:
+            path = parse_path(path_d)
+            path_bbox = path.bbox()
+            if (outline_bbox[0] <= path_bbox[0] and outline_bbox[1] <= path_bbox[1] and
+                    outline_bbox[2] >= path_bbox[2] and outline_bbox[3] >= path_bbox[3]):
+                is_outline = True
+                break
+
+    # If the first path is an outline, remove it
+    if is_outline:
+        root.remove(paths[0])  # Remove the first path
+        new_svg_data = ET.tostring(root, encoding='unicode', method='xml').replace("ns0:", "").replace(":ns0", "")
+        return new_svg_data
+
+    return svg_data 
+
+
 def image_to_svg(image_path, method=PrintType.SOLID):
     image = Image.open(image_path)
 
@@ -76,16 +111,17 @@ def image_to_svg(image_path, method=PrintType.SOLID):
     svg_data = trace(temp_image_path, blackAndWhite=True)
     os.remove(temp_image_path)
 
-    print(method)
     if method == PrintType.SOLID:
         svg_data = fill_svg(svg_data)
+    elif method == PrintType.CUSTOM:
+        svg_data = remove_outline(svg_data)
 
-    with open("./output/svg/recent.svg", "w") as svg_file:
-         svg_file.write(svg_data)
+    with open("./test.svg", "w") as svg_file:
+        svg_file.write(svg_data)
 
     return svg_data
 
-def main(image_path):
+def main(image_path, method):
     filename = image_path.split("/")[2].split(".")[0]
     extension =  image_path.split("/")[2].split(".")[1]
     svg_path = "./output/svg/" + filename + ".svg"
@@ -93,7 +129,11 @@ def main(image_path):
     try:
         # Step 1: Convert image to SVG
         if extension != "svg":
-            image_to_svg(image_path)
+            if method == "custom":
+                method = PrintType.CUSTOM
+            elif method == "text":
+                method = PrintType.TEXT
+            image_to_svg(image_path, method)
       
     except Exception as e:
         print(f"Error: {e}")
@@ -101,9 +141,10 @@ def main(image_path):
 
 if __name__ == "__main__":
     # if there is a command line image use that
-    if len(sys.argv) != 2:
-        print("Usage: python image_to_svg.py <input_image_path>")
+    if len(sys.argv) != 3:
+        print("Usage: python image_to_svg.py <input_image_path> <method>")
         sys.exit(1)
 
     image_path = sys.argv[1]
-    main(image_path)
+    method = sys.argv[2]
+    main(image_path, method)
