@@ -13,20 +13,18 @@ CORS(app)
 # Configuration
 ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "svg"}
 MAX_FILE_SIZE = 5 * 1024 * 1024  # 5MB
+OUTPUT_FOLDER = "./output/"
 
 def allowed_file(filename):
     """Check if the file has an allowed extension."""
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
-@app.route("/output/stl/<filename>")
-def output_stl(filename):
-    return send_from_directory("output/stl", filename)
+@app.route("/output/<ssid>/<filename>")
+def output_stl(ssid, filename):
+    return send_from_directory(f"output/{ssid}", filename)
 
 
-@app.route("/output/svg/<filename>")
-def output_svg(filename):
-    return send_from_directory("output/svg", filename)
 
 @app.route("/upload", methods=["POST"])
 def upload_file():
@@ -61,12 +59,19 @@ def upload_file():
 def generate_gcode():
     scale = request.form.get("scale", 1)  
 
+    if not request.headers["ssid"]:
+        return jsonify({"success": False, "error": "No session ID"}), 401
+
     if 'svg' not in request.files:
         return jsonify({"success": False, "error": "No SVG file provided"}), 400
 
+    session_id = request.headers["ssid"]
     svg_file = request.files['svg']
     filename = secure_filename(svg_file.filename)
-    output_svg_path = os.path.join("./output/svg", filename)
+    os.makedirs("./output/" + session_id, exist_ok=True)
+
+    output_svg_path = os.path.join(OUTPUT_FOLDER + session_id, filename)
+    print("output", output_svg_path)
     try:
         svg_file.save(output_svg_path)
 
@@ -84,9 +89,9 @@ def generate_gcode():
         ]
 
         subprocess.run(blender_command, capture_output=True, text=True)
-        os.remove("./output/svg/" + filename)
+        os.remove(OUTPUT_FOLDER + session_id + "/" + filename)
         stl_name = filename.split(".")[0] + ".stl"  
-        stl_url = f"http://localhost:5001/output/stl/{stl_name}"
+        stl_url = f"http://localhost:5001/output/{session_id}/{stl_name}"
         return jsonify({"success": True, "stlUrl": stl_url})
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 502

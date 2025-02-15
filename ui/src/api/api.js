@@ -1,6 +1,8 @@
 import axios from "axios";
+import Cookie from "js-cookie";
 
 const API_URL = "http://localhost:5001";
+const session_id = Cookie.get("session_id");
 
 export const uploadImage = async (file, method) => {
   const formData = new FormData();
@@ -11,6 +13,7 @@ export const uploadImage = async (file, method) => {
     const response = await axios.post(API_URL + "/upload", formData, {
       headers: {
         "Content-Type": "multipart/form-data",
+        ssid: session_id,
       },
     });
 
@@ -46,6 +49,7 @@ export const generateStl = async (svgData, scale, stlKey, templateType) => {
       {
         headers: {
           "Content-Type": "multipart/form-data",
+          ssid: session_id,
         },
       }
     );
