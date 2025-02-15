@@ -11,7 +11,7 @@ const ModeExamples = ({ small }) => {
             alt="Uploaded"
             className="display-img"
             style={{
-              width: small ? `30px` : `40px`,
+              width: small ? `40px` : `40px`,
             }}
           />
         </div>
@@ -37,7 +37,7 @@ const ModeExamples = ({ small }) => {
             alt="Uploaded"
             className="display-img"
             style={{
-              width: small ? `86px` : `80px`,
+              width: small ? `75px` : `80px`,
             }}
           />
         </div>
