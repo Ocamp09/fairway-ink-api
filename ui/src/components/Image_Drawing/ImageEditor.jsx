@@ -16,14 +16,7 @@ import { useCanvasScaling } from "../../hooks/useCanvasScaling";
 import { useCanvasEvents } from "../../hooks/useCanvasEvents";
 import { uploadImage } from "../../api/api";
 
-function ImageEditor({
-  setSvgUrl,
-  setSvgData,
-  setShowDesign,
-  setShowScale,
-  paths,
-  setPaths,
-}) {
+function ImageEditor({ setShowDesign, setShowScale, paths, setPaths }) {
   const canvasRef = useRef(null);
 
   const [isLoading, setIsLoading] = useState(false);
@@ -35,7 +28,7 @@ function ImageEditor({
   const [lineWidth, setLineWidth] = useState(5);
   const [fontSize, setFontSize] = useState(80);
 
-  const { imageUrl, templateType, editorMode } = useSession();
+  const { imageUrl, updateSvgData, templateType, editorMode } = useSession();
 
   const lineColor = "#00000";
 
@@ -167,7 +160,6 @@ function ImageEditor({
     }
 
     setIsLoading(true);
-    setSvgUrl(null);
     const centeredCanvas = centerCanvasDrawing(canvasRef.current);
 
     // Export the centered canvas as an image
@@ -178,15 +170,8 @@ function ImageEditor({
       // Call the uploadImage function from api.js
       const response = await uploadImage(blob, templateType);
 
-      // Handle the response
-      const blobSvg = new Blob([response.svgData], {
-        type: "image/svg+xml",
-      });
-
       setIsLoading(false);
-      const url = URL.createObjectURL(blobSvg);
-      setSvgData(response.svgData);
-      setSvgUrl(url);
+      updateSvgData(response.svgData);
       setShowScale(true);
       setShowDesign(false);
     } catch (err) {

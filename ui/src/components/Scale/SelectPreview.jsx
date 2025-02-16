@@ -1,6 +1,8 @@
 import { ReactSVG } from "react-svg";
+import { useSession } from "../../contexts/DesignContext";
 
-const SelectPreview = ({ svgData }) => {
+const SelectPreview = ({ setShowSelected }) => {
+  const { svgData, updateSvgData } = useSession();
   let selected = new Set();
   const selectPath = (e) => {
     const selectedPath = e.target;
@@ -17,9 +19,39 @@ const SelectPreview = ({ svgData }) => {
     }
   };
 
+  const newSelectedSvg = () => {
+    // Parse the original svgData into a DOM object
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(svgData, "image/svg+xml");
+
+    // Create a new SVG element to hold the selected paths
+    const newSvg = doc.createElementNS("http://www.w3.org/2000/svg", "svg");
+    // Optionally copy over any global attributes like width, height, etc.
+    const originalSvg = doc.documentElement;
+    newSvg.setAttribute("width", originalSvg.getAttribute("width"));
+    newSvg.setAttribute("height", originalSvg.getAttribute("height"));
+    newSvg.setAttribute("viewBox", originalSvg.getAttribute("viewBox"));
+
+    // Append selected paths to the new SVG element
+    selected.forEach((path) => {
+      // Clone the selected path to avoid altering the original SVG data
+      const clonedPath = path.cloneNode();
+      newSvg.appendChild(clonedPath);
+    });
+
+    // Serialize the new SVG to a string
+    const updatedSvgData = new XMLSerializer().serializeToString(newSvg);
+
+    // Return the updated SVG string
+    return updatedSvgData;
+  };
+
   const submitSelected = () => {
     // setShowSelected(true);
-    console.log(selected);
+    const newSvg = newSelectedSvg();
+    console.log(newSvg);
+    updateSvgData(newSvg);
+    setShowSelected(true);
   };
 
   return (

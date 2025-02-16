@@ -6,8 +6,6 @@ import ScaleSvg from "./Scale/ScaleSvg";
 import PreviewTab from "./Preview/PreviewTab";
 
 const GolfBallDisplay = () => {
-  const [svgUrl, setSvgUrl] = useState(null);
-  const [svgData, setSvgData] = useState(null);
   const [showDesign, setShowDesign] = useState(true);
   const [showScale, setShowScale] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
@@ -25,8 +23,6 @@ const GolfBallDisplay = () => {
       />
       {showDesign && (
         <ImageEditor
-          setSvgUrl={setSvgUrl}
-          setSvgData={setSvgData}
           setShowDesign={setShowDesign}
           setShowScale={setShowScale}
           showDesign={showDesign}
@@ -36,13 +32,7 @@ const GolfBallDisplay = () => {
       )}
 
       {showScale && (
-        <ScaleSvg
-          svgUrl={svgUrl}
-          svgData={svgData}
-          setSvgData={setSvgData}
-          setShowPreview={setShowPreview}
-          setShowScale={setShowScale}
-        />
+        <ScaleSvg setShowPreview={setShowPreview} setShowScale={setShowScale} />
       )}
       {showPreview && <PreviewTab />}
     </div>

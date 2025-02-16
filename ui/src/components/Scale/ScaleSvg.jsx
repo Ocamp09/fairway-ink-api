@@ -1,15 +1,19 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import ImageScaler from "./ImageScaler";
 import { useSession } from "../../contexts/DesignContext";
 import "./ScaleSvg.css";
 import { generateStl } from "../../api/api";
 import SelectPreview from "./SelectPreview";
 
-const ScaleSvg = ({ svgUrl, svgData, setShowPreview, setShowScale }) => {
+const ScaleSvg = ({ setShowPreview, setShowScale }) => {
   const [scale, setScale] = useState(1);
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
-  const { updateStl, stlKey, updateStlKey, templateType } = useSession();
+  const [showSelected, setShowSelected] = useState(false);
+  const [svgUrl, setSvgUrl] = useState("");
+
+  const { svgData, updateStl, stlKey, updateStlKey, templateType } =
+    useSession();
 
   // Get SVG width and height, scale down to size I want to display
   // Then factor that scale into the query sent
@@ -45,54 +49,62 @@ const ScaleSvg = ({ svgUrl, svgData, setShowPreview, setShowScale }) => {
     }
   };
 
-  const SimplePreview = () => {
-    return (
-      <div className="ball-displays">
-        <div className="golf-template">
-          {svgUrl && templateType !== "custom" && (
-            <img
-              src={svgUrl}
-              alt="Uploaded"
-              className="upload-img"
-              style={{
-                width: `${canvasSizePx}px`, // Set width based on scale
-              }}
-            />
-          )}
-        </div>
-        <div>
-          <p>Life Size</p>
-          <div className="golf-real-size">
-            {svgUrl && templateType !== "custom" && (
+  useEffect(() => {
+    const blobSvg = new Blob([svgData], {
+      type: "image/svg+xml",
+    });
+
+    const url = URL.createObjectURL(blobSvg);
+    setSvgUrl(url);
+  }, [svgData]);
+
+  return (
+    <>
+      <p>Scale the image to the desired size</p>
+      {templateType === "custom" && !showSelected && (
+        <SelectPreview setShowSelected={setShowSelected} />
+      )}
+      {(templateType !== "custom" || showSelected) && (
+        <>
+          <div className="ball-displays">
+            <div className="golf-template">
               <img
                 src={svgUrl}
                 alt="Uploaded"
                 className="upload-img"
                 style={{
-                  width: `${(canvasSizePx * 210) / 500}px`, // Set width based on scale
+                  width: `${canvasSizePx}px`, // Set width based on scale
                 }}
               />
-            )}
+            </div>
+            <div>
+              <p>Life Size</p>
+              <div className="golf-real-size">
+                <img
+                  src={svgUrl}
+                  alt="Uploaded"
+                  className="upload-img"
+                  style={{
+                    width: `${(canvasSizePx * 210) / 500}px`, // Set width based on scale
+                  }}
+                />
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
-    );
-  };
-
-  return (
-    <div>
-      <p>Scale the image to the desired size</p>
-      {templateType !== "custom" && <SimplePreview />}
-      {templateType === "custom" && <SelectPreview svgData={svgData} />}
-
-      <ImageScaler scale={scale} setScale={setScale}></ImageScaler>
-      <form onSubmit={handleSubmit}>
-        <button type="submit" className="submit-button" disabled={isLoading}>
-          {isLoading ? "Processing..." : "3-D Preview"}
-        </button>
-        {error && <p className="file-error-message">{error}</p>}
-      </form>
-    </div>
+          <ImageScaler scale={scale} setScale={setScale}></ImageScaler>
+          <form onSubmit={handleSubmit}>
+            <button
+              type="submit"
+              className="submit-button"
+              disabled={isLoading}
+            >
+              {isLoading ? "Processing..." : "3-D Preview"}
+            </button>
+            {error && <p className="file-error-message">{error}</p>}
+          </form>
+        </>
+      )}
+    </>
   );
 };
 
