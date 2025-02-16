@@ -1,18 +1,18 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import ImageScaler from "./ImageScaler";
 import { useSession } from "../../contexts/DesignContext";
 import "./ScaleSvg.css";
 import { generateStl } from "../../api/api";
+import SelectPreview from "./SelectPreview";
 
 const ScaleSvg = ({ svgUrl, svgData, setShowPreview, setShowScale }) => {
   const [scale, setScale] = useState(1);
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
-
   const { updateStl, stlKey, updateStlKey, templateType } = useSession();
 
-  // get svg width and height, scale down to size I want to display
-  // then factor that scale into the query sent
+  // Get SVG width and height, scale down to size I want to display
+  // Then factor that scale into the query sent
   let canvasSizePx;
   if (templateType === "text") {
     canvasSizePx = 110 * scale * 2.5;
@@ -45,12 +45,11 @@ const ScaleSvg = ({ svgUrl, svgData, setShowPreview, setShowScale }) => {
     }
   };
 
-  return (
-    <div>
-      <p>Scale the image to the desired size</p>
+  const SimplePreview = () => {
+    return (
       <div className="ball-displays">
         <div className="golf-template">
-          {svgUrl && (
+          {svgUrl && templateType !== "custom" && (
             <img
               src={svgUrl}
               alt="Uploaded"
@@ -64,7 +63,7 @@ const ScaleSvg = ({ svgUrl, svgData, setShowPreview, setShowScale }) => {
         <div>
           <p>Life Size</p>
           <div className="golf-real-size">
-            {svgUrl && (
+            {svgUrl && templateType !== "custom" && (
               <img
                 src={svgUrl}
                 alt="Uploaded"
@@ -77,6 +76,15 @@ const ScaleSvg = ({ svgUrl, svgData, setShowPreview, setShowScale }) => {
           </div>
         </div>
       </div>
+    );
+  };
+
+  return (
+    <div>
+      <p>Scale the image to the desired size</p>
+      {templateType !== "custom" && <SimplePreview />}
+      {templateType === "custom" && <SelectPreview svgData={svgData} />}
+
       <ImageScaler scale={scale} setScale={setScale}></ImageScaler>
       <form onSubmit={handleSubmit}>
         <button type="submit" className="submit-button" disabled={isLoading}>
