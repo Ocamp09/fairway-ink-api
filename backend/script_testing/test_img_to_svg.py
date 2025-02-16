@@ -5,7 +5,7 @@ import tempfile
 import os
 import xml.etree.ElementTree as ET    
 from enum import Enum
-from svgpathtools import svg2paths, parse_path  # Add this import
+from svgpathtools import Path, Line, parse_path
 
 class PrintType(Enum):
     SOLID = 1
@@ -79,6 +79,80 @@ def remove_outline(svg_data):
     return svg_data 
 
 
+def bridge_path(path):
+    try:
+        # Parse the path data into a Path object
+        path_obj = parse_path(path.get('d'))
+
+        # Get the bounding box of the path
+        bbox = path_obj.bbox()
+
+        # Calculate the midpoint of the path's height
+        mid_y = (bbox[1] + bbox[3]) / 2
+
+        # Find points where the path crosses the midpoint
+        crossing_points = []
+        for segment in path_obj:
+            if segment.start.imag <= mid_y <= segment.end.imag or segment.end.imag <= mid_y <= segment.start.imag:
+                # Calculate the x-coordinate at the midpoint
+                t = (mid_y - segment.start.imag) / (segment.end.imag - segment.start.imag)
+                x = segment.start.real + t * (segment.end.real - segment.start.real)
+                crossing_points.append((x, mid_y))
+
+        # Sort crossing points by x-coordinate
+        crossing_points.sort()
+
+        # Split the path into two parts at the crossing points
+        if len(crossing_points) >= 2:
+            # Create two new paths
+            path1 = Path()
+            path2 = Path()
+
+            # Add segments to the new paths
+            for segment in path_obj:
+                if segment.end.imag <= mid_y:
+                    path1.append(segment)
+                else:
+                    path2.append(segment)
+
+            # Add bridges (horizontal lines) between the two paths
+            bridge_width = 5  # Adjust the bridge width as needed
+            for i in range(0, len(crossing_points), 2):
+                x1, y1 = crossing_points[i]
+                x2, y2 = crossing_points[i + 1]
+                bridge = Line(complex(x1, y1), complex(x2, y2))
+                path1.append(bridge)
+
+            # Combine the two paths into a single path
+            new_path = path1 + path2
+
+            # Update the path's `d` attribute
+            path.set('d', new_path.d())
+
+        return path
+
+    except Exception as e:
+        print(f"Error adding bridges to path: {e}")
+        return path    
+
+
+def detect_bridge_required(svg_data):
+    root = ET.fromstring(svg_data)
+    paths = root.findall('.//{http://www.w3.org/2000/svg}path')
+
+    for index, path in enumerate(paths):
+        path_d = path.get('d')
+        z_cnt = path_d.count('Z')
+        print(z_cnt)
+
+        if z_cnt > 1:
+            updated_path = bridge_path(path)
+
+
+    new_svg_data = ET.tostring(root, encoding='unicode', method='xml').replace("ns0:", "").replace(":ns0", "")
+    return new_svg_data
+
+
 def image_to_svg(image_path, method=PrintType.SOLID):
     image = Image.open(image_path)
 
@@ -114,7 +188,7 @@ def image_to_svg(image_path, method=PrintType.SOLID):
     if method == PrintType.SOLID:
         svg_data = fill_svg(svg_data)
     elif method == PrintType.CUSTOM:
-        svg_data = remove_outline(svg_data)
+        svg_data= detect_bridge_required(svg_data)
 
     with open("./test.svg", "w") as svg_file:
         svg_file.write(svg_data)
@@ -122,18 +196,14 @@ def image_to_svg(image_path, method=PrintType.SOLID):
     return svg_data
 
 def main(image_path, method):
-    filename = image_path.split("/")[2].split(".")[0]
-    extension =  image_path.split("/")[2].split(".")[1]
-    svg_path = "./output/svg/" + filename + ".svg"
     
     try:
         # Step 1: Convert image to SVG
-        if extension != "svg":
-            if method == "custom":
-                method = PrintType.CUSTOM
-            elif method == "text":
-                method = PrintType.TEXT
-            image_to_svg(image_path, method)
+        if method == "custom":
+            method = PrintType.CUSTOM
+        elif method == "text":
+            method = PrintType.TEXT
+        image_to_svg(image_path, method)
       
     except Exception as e:
         print(f"Error: {e}")
