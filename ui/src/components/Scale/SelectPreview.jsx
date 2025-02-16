@@ -30,7 +30,6 @@ const SelectPreview = ({ setShowSelected }) => {
     const originalSvg = doc.documentElement;
     newSvg.setAttribute("width", originalSvg.getAttribute("width"));
     newSvg.setAttribute("height", originalSvg.getAttribute("height"));
-    newSvg.setAttribute("viewBox", originalSvg.getAttribute("viewBox"));
 
     // Append selected paths to the new SVG element
     selected.forEach((path) => {
