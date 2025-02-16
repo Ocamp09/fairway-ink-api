@@ -28,7 +28,7 @@ const PreviewTab = () => {
 
   return (
     <div className="stl-viewer">
-      <p>3-d Render Preview</p>
+      <p>3-D Render Preview</p>
       {stlUrl && <STLViewer stlUrl={stlUrl} />}
       <div>
         <QuantityDropdown
