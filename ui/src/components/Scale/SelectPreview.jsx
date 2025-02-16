@@ -61,6 +61,7 @@ const SelectPreview = ({ setShowSelected }) => {
           onClick={(e) => selectPath(e)}
         />
       )}
+      <h3>Select curves to keep in design</h3>
 
       <button
         className="submit-button"

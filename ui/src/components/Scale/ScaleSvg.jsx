@@ -60,12 +60,12 @@ const ScaleSvg = ({ setShowPreview, setShowScale }) => {
 
   return (
     <>
-      <p>Scale the image to the desired size</p>
       {templateType === "custom" && !showSelected && (
         <SelectPreview setShowSelected={setShowSelected} />
       )}
       {(templateType !== "custom" || showSelected) && (
         <>
+          <p>Scale the image to the desired size</p>
           <div className="ball-displays">
             <div className="golf-template">
               <img
