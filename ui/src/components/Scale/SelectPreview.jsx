@@ -1,7 +1,7 @@
 import { ReactSVG } from "react-svg";
 import { useSession } from "../../contexts/DesignContext";
 
-const SelectPreview = ({ setShowSelected }) => {
+const SelectPreview = ({ setShowSelected, setPrevSvg }) => {
   const { svgData, updateSvgData } = useSession();
   let selected = new Set();
   const selectPath = (e) => {
@@ -46,9 +46,8 @@ const SelectPreview = ({ setShowSelected }) => {
   };
 
   const submitSelected = () => {
-    // setShowSelected(true);
+    setPrevSvg(svgData);
     const newSvg = newSelectedSvg();
-    console.log(newSvg);
     updateSvgData(newSvg);
     setShowSelected(true);
   };
@@ -62,7 +61,6 @@ const SelectPreview = ({ setShowSelected }) => {
         />
       )}
       <h3>Select curves to keep in design</h3>
-
       <button
         className="submit-button"
         onClick={() => {

@@ -11,9 +11,16 @@ const ScaleSvg = ({ setShowPreview, setShowScale }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [showSelected, setShowSelected] = useState(false);
   const [svgUrl, setSvgUrl] = useState("");
+  const [prevSvg, setPrevSvg] = useState("");
 
-  const { svgData, updateStl, stlKey, updateStlKey, templateType } =
-    useSession();
+  const {
+    svgData,
+    updateSvgData,
+    updateStl,
+    stlKey,
+    updateStlKey,
+    templateType,
+  } = useSession();
 
   // Get SVG width and height, scale down to size I want to display
   // Then factor that scale into the query sent
@@ -23,6 +30,11 @@ const ScaleSvg = ({ setShowPreview, setShowScale }) => {
   } else {
     canvasSizePx = 110 * scale;
   }
+
+  const handleBack = () => {
+    setShowSelected(false);
+    updateSvgData(prevSvg);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -61,7 +73,10 @@ const ScaleSvg = ({ setShowPreview, setShowScale }) => {
   return (
     <>
       {templateType === "custom" && !showSelected && (
-        <SelectPreview setShowSelected={setShowSelected} />
+        <SelectPreview
+          setShowSelected={setShowSelected}
+          setPrevSvg={setPrevSvg}
+        />
       )}
       {(templateType !== "custom" || showSelected) && (
         <>
@@ -93,6 +108,14 @@ const ScaleSvg = ({ setShowPreview, setShowScale }) => {
           </div>
           <ImageScaler scale={scale} setScale={setScale}></ImageScaler>
           <form onSubmit={handleSubmit}>
+            <button
+              className="remove-button"
+              onClick={() => {
+                handleBack();
+              }}
+            >
+              Back to Selector
+            </button>
             <button
               type="submit"
               className="submit-button"
