@@ -11,11 +11,15 @@ export const FileProvider = ({ children }) => {
     sessionStorage.getItem("imageUrl") || null
   );
 
-  const [imageType, setImageType] = useState("");
+  const [imageType, setImageType] = useState(
+    sessionStorage.getItem("imageType") || ""
+  );
 
   const [paths, setPaths] = useState(sessionStorage.getItem("paths") || []);
 
-  const [svgData, setSvgData] = useState("");
+  const [svgData, setSvgData] = useState(
+    sessionStorage.getItem("svgData") || ""
+  );
 
   const [stlUrl, setStlUrl] = useState(
     sessionStorage.getItem("stlUrl") || "default.stl"
