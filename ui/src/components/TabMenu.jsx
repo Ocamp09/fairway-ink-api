@@ -4,48 +4,37 @@ import {
   BsFill2CircleFill,
   BsFill3CircleFill,
 } from "react-icons/bs";
+import { useSession } from "../contexts/DesignContext";
 
-const TabMenu = ({
-  showDesign,
-  setShowDesign,
-  showScale,
-  setShowScale,
-  showPreview,
-  setShowPreview,
-}) => {
+const TabMenu = () => {
+  const { stage, updateStage } = useSession();
   return (
     <div className="tab-menu">
-      <div className={showDesign ? "active" : ""}>
+      <div className={stage === "design" ? "active" : ""}>
         <h3
           onClick={() => {
-            setShowDesign(true);
-            setShowScale(false);
-            setShowPreview(false);
+            updateStage("design");
           }}
         >
           <BsFill1CircleFill size={24} className="tab-number" />
           Design
         </h3>
       </div>
-      <div className={showScale ? "active" : ""}>
+      <div className={stage === "scale" ? "active" : ""}>
         <h3
           onClick={() => {
-            setShowDesign(false);
-            setShowScale(true);
-            setShowPreview(false);
+            updateStage("scale");
           }}
         >
           <BsFill2CircleFill size={24} className="tab-number" />
           Scale
         </h3>
       </div>
-      <div className={showPreview ? "active" : ""}>
+      <div className={stage === "preview" ? "active" : ""}>
         <h3
           className="tab-text"
           onClick={() => {
-            setShowDesign(false);
-            setShowScale(false);
-            setShowPreview(true);
+            updateStage("preview");
           }}
         >
           <BsFill3CircleFill size={24} className="tab-number" />

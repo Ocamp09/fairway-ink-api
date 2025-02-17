@@ -16,7 +16,7 @@ import { useCanvasScaling } from "../../hooks/useCanvasScaling";
 import { useCanvasEvents } from "../../hooks/useCanvasEvents";
 import { uploadImage } from "../../api/api";
 
-function ImageEditor({ setShowDesign, setShowScale, paths, setPaths }) {
+function ImageEditor() {
   const canvasRef = useRef(null);
 
   const [isLoading, setIsLoading] = useState(false);
@@ -28,7 +28,10 @@ function ImageEditor({ setShowDesign, setShowScale, paths, setPaths }) {
   const [lineWidth, setLineWidth] = useState(5);
   const [fontSize, setFontSize] = useState(80);
 
-  const { imageUrl, updateSvgData, templateType, editorMode } = useSession();
+  const [paths, setPaths] = useState([]);
+
+  const { imageUrl, updateStage, updateSvgData, templateType, editorMode } =
+    useSession();
 
   const lineColor = "#00000";
 
@@ -102,27 +105,31 @@ function ImageEditor({ setShowDesign, setShowScale, paths, setPaths }) {
           y = centerY + fontSize + offset - 75;
         }
 
-        setPaths((prevPaths) => [
-          ...prevPaths,
-          {
-            points: [[x, y, 1]],
-            lineColor,
-            width: fontSize,
-            type: "text",
-            text: inputText,
-          },
-        ]);
+        setPaths((prevPaths) => {
+          return [
+            ...prevPaths,
+            {
+              points: [[x, y, 1]],
+              lineColor,
+              width: fontSize,
+              type: "text",
+              text: inputText,
+            },
+          ];
+        });
       }
     } else {
-      setPaths((prevPaths) => [
-        ...prevPaths,
-        {
-          points: [[x, y, pressure]],
-          lineColor,
-          width: lineWidth,
-          type: "draw",
-        },
-      ]);
+      setPaths((prevPaths) => {
+        return [
+          ...prevPaths,
+          {
+            points: [[x, y, pressure]],
+            lineColor,
+            width: lineWidth,
+            type: "draw",
+          },
+        ];
+      });
     }
   };
 
@@ -172,8 +179,7 @@ function ImageEditor({ setShowDesign, setShowScale, paths, setPaths }) {
 
       setIsLoading(false);
       updateSvgData(response.svgData);
-      setShowScale(true);
-      setShowDesign(false);
+      updateStage("scale");
     } catch (err) {
       console.error("Upload error:", err);
       setIsLoading(false);

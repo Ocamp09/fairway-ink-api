@@ -5,7 +5,7 @@ import "./ScaleSvg.css";
 import { generateStl } from "../../api/api";
 import SelectPreview from "./SelectPreview";
 
-const ScaleSvg = ({ setShowPreview, setShowScale }) => {
+const ScaleSvg = () => {
   const [scale, setScale] = useState(1);
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -14,6 +14,7 @@ const ScaleSvg = ({ setShowPreview, setShowScale }) => {
   const [prevSvg, setPrevSvg] = useState("");
 
   const {
+    updateStage,
     svgData,
     updateSvgData,
     updateStl,
@@ -51,8 +52,7 @@ const ScaleSvg = ({ setShowPreview, setShowScale }) => {
 
       updateStl(response.stlUrl);
       updateStlKey();
-      setShowPreview(true);
-      setShowScale(false);
+      updateStage("preview");
     } catch (err) {
       setError("An error occurred while uploading the file, try again later");
       console.error(err);

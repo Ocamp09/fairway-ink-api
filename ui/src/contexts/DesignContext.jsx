@@ -3,11 +3,17 @@ import { createContext, useContext, useState } from "react";
 const DesignContext = createContext();
 
 export const FileProvider = ({ children }) => {
+  const [stage, setStage] = useState(
+    sessionStorage.getItem("stage") || "design"
+  );
+
   const [imageUrl, setImageUrl] = useState(
     sessionStorage.getItem("imageUrl") || null
   );
 
   const [imageType, setImageType] = useState("");
+
+  const [paths, setPaths] = useState(sessionStorage.getItem("paths") || []);
 
   const [svgData, setSvgData] = useState("");
 
@@ -25,6 +31,11 @@ export const FileProvider = ({ children }) => {
     sessionStorage.getItem("editorMode") || "draw"
   );
 
+  const updateStage = (stage) => {
+    sessionStorage.setItem("stage", stage);
+    setStage(stage);
+  };
+
   const updateImageUrl = (newUrl) => {
     sessionStorage.setItem("imageUrl", newUrl);
     setImageUrl(newUrl);
@@ -33,6 +44,12 @@ export const FileProvider = ({ children }) => {
   const updateImageType = (type) => {
     sessionStorage.setItem("imageType", type);
     setImageType(type);
+  };
+
+  const updatePaths = (paths) => {
+    console.log(paths);
+    sessionStorage.setItem("paths", paths);
+    setPaths(paths);
   };
 
   const updateSvgData = (data) => {
@@ -61,10 +78,14 @@ export const FileProvider = ({ children }) => {
   return (
     <DesignContext.Provider
       value={{
+        stage,
+        updateStage,
         imageUrl,
         updateImageUrl,
         imageType,
         updateImageType,
+        paths,
+        updatePaths,
         svgData,
         updateSvgData,
         stlUrl,
