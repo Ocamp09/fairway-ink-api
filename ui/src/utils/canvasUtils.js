@@ -102,8 +102,10 @@ export const drawImage = (
   imageUrl,
   canvasRef,
   setPaths,
-  setReloadPaths
+  setReloadPaths,
+  templateType
 ) => {
+  if (templateType === "text") return;
   if (imageUrl) {
     const img = new Image();
     img.src = imageUrl;

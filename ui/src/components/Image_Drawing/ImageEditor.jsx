@@ -189,7 +189,14 @@ function ImageEditor({ setShowDesign, setShowScale, paths, setPaths }) {
     context.clearRect(0, 0, canvas.width, canvas.height);
     context.scale(canvasScale, canvasScale);
 
-    drawImage(false, imageUrl, canvasRef, setPaths, setReloadPaths);
+    drawImage(
+      false,
+      imageUrl,
+      canvasRef,
+      setPaths,
+      setReloadPaths,
+      templateType
+    );
   }, [imageUrl, drawImage]);
 
   //will only run when paths or lineWidth changes
@@ -199,7 +206,14 @@ function ImageEditor({ setShowDesign, setShowScale, paths, setPaths }) {
 
     if (reloadPaths) {
       context.clearRect(0, 0, canvas.width, canvas.height);
-      drawImage(true, imageUrl, canvasRef, setPaths, setReloadPaths);
+      drawImage(
+        true,
+        imageUrl,
+        canvasRef,
+        setPaths,
+        setReloadPaths,
+        templateType
+      );
     }
     drawPaths();
   }, [paths, lineWidth, drawPaths, reloadPaths]);
@@ -216,6 +230,14 @@ function ImageEditor({ setShowDesign, setShowScale, paths, setPaths }) {
     const context = canvas.getContext("2d");
 
     context.clearRect(0, 0, canvas.width, canvas.height);
+    drawImage(
+      true,
+      imageUrl,
+      canvasRef,
+      setPaths,
+      setReloadPaths,
+      templateType
+    );
     setPaths([]);
   }, [templateType]);
 
