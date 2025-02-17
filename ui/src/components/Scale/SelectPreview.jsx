@@ -20,28 +20,22 @@ const SelectPreview = ({ setShowSelected, setPrevSvg }) => {
   };
 
   const newSelectedSvg = () => {
-    // Parse the original svgData into a DOM object
     const parser = new DOMParser();
     const doc = parser.parseFromString(svgData, "image/svg+xml");
 
-    // Create a new SVG element to hold the selected paths
     const newSvg = doc.createElementNS("http://www.w3.org/2000/svg", "svg");
 
     const originalSvg = doc.documentElement;
     newSvg.setAttribute("width", originalSvg.getAttribute("width"));
     newSvg.setAttribute("height", originalSvg.getAttribute("height"));
 
-    // Append selected paths to the new SVG element
     selected.forEach((path) => {
-      // Clone the selected path to avoid altering the original SVG data
       const clonedPath = path.cloneNode();
       clonedPath.setAttribute("fill", "black");
       newSvg.appendChild(clonedPath);
     });
 
-    // Serialize the new SVG to a string
     const updatedSvgData = new XMLSerializer().serializeToString(newSvg);
-    // Return the updated SVG string
     return updatedSvgData;
   };
 

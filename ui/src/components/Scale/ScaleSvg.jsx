@@ -108,14 +108,16 @@ const ScaleSvg = ({ setShowPreview, setShowScale }) => {
           </div>
           <ImageScaler scale={scale} setScale={setScale}></ImageScaler>
           <form onSubmit={handleSubmit}>
-            <button
-              className="remove-button"
-              onClick={() => {
-                handleBack();
-              }}
-            >
-              Back to Selector
-            </button>
+            {templateType === "custom" && (
+              <button
+                className="remove-button"
+                onClick={() => {
+                  handleBack();
+                }}
+              >
+                Back to Selector
+              </button>
+            )}
             <button
               type="submit"
               className="submit-button"
