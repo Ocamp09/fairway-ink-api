@@ -4,7 +4,7 @@ const ModeExamples = ({ small }) => {
   return (
     <>
       <div className={small ? "mode-item-small" : "mode-item"}>
-        <p className="mode-desc">Solid mode:</p>
+        <p className="mode-desc">Solid template:</p>
         <div className={small ? "ball-display-small" : "ball-display"}>
           <img
             src="/solid.svg"
@@ -17,7 +17,7 @@ const ModeExamples = ({ small }) => {
         </div>
       </div>
       <div className={small ? "mode-item-small" : "mode-item"}>
-        <p className="mode-desc">Text mode:</p>
+        <p className="mode-desc">Text template:</p>
         <div className={small ? "ball-display-small" : "ball-display"}>
           <img
             src="/text.svg"
@@ -30,7 +30,7 @@ const ModeExamples = ({ small }) => {
         </div>
       </div>
       <div className={small ? "mode-item-small" : "mode-item"}>
-        <p className="mode-desc">Custom mode:</p>
+        <p className="mode-desc">Custom template:</p>
         <div className={small ? "ball-display-small" : "ball-display"}>
           <img
             src="/custom.svg"
