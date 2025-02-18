@@ -98,14 +98,6 @@ const Toolbar = ({
   return (
     <>
       <div className="toolbar">
-        <button
-          title="Switch editor mode"
-          onClick={handleText}
-          hidden={templateType == "solid" || templateType === "text"}
-        >
-          {editorMode == "type" && <IoText size={iconSize} />}
-          {editorMode == "draw" && <BiSolidPencil size={iconSize} />}
-        </button>
         {templateType != "text" && (
           <>
             <FileUpload />
@@ -114,7 +106,14 @@ const Toolbar = ({
             </button>
           </>
         )}
-
+        <button
+          title="Switch editor mode"
+          onClick={handleText}
+          hidden={templateType == "solid" || templateType === "text"}
+        >
+          {editorMode == "type" && <IoText size={iconSize} />}
+          {editorMode == "draw" && <BiSolidPencil size={iconSize} />}
+        </button>
         <button title="Undo" onClick={handleUndo} disabled={paths.length === 0}>
           <IoMdUndo size={iconSize} />
         </button>
