@@ -64,6 +64,7 @@
   border-radius: 4px;
   cursor: pointer;
   transition: background-color 0.3s;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
 }
 
 .editor-but:hover {
@@ -72,6 +73,7 @@
 
 .editor-but-active {
   background-color: var(--tool-button);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
 }
 
 .toolbar button:hover {
