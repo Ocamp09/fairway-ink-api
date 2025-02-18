@@ -209,15 +209,18 @@ function ImageEditor() {
 
     context.clearRect(0, 0, canvas.width, canvas.height);
 
-    drawImage(
-      true,
-      imageUrl,
-      canvasRef,
-      setPaths,
-      setReloadPaths,
-      templateType
-    );
-    setPaths([]);
+    if (imageUrl) {
+      drawImage(
+        true,
+        imageUrl,
+        canvasRef,
+        setPaths,
+        setReloadPaths,
+        templateType
+      );
+    } else {
+      drawPaths(canvasRef, uploadedPaths);
+    }
   }, [templateType, stage]);
 
   return (
