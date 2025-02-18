@@ -1,15 +1,14 @@
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import "./ImageEditor.css";
 import Toolbar from "./Toolbar";
-import getStroke from "perfect-freehand";
 import { useSession } from "../../contexts/DesignContext";
 import TypeSelector from "./TypeSelector";
 import ModeExamples from "./ModeExamples";
 import {
   getCoordinates,
-  getSvgPathFromStroke,
   centerCanvasDrawing,
   drawImage,
+  drawPaths,
 } from "../../utils/canvasUtils";
 import { useFontLoader } from "../../hooks/useFontLoader";
 import { useCanvasScaling } from "../../hooks/useCanvasScaling";
@@ -45,42 +44,6 @@ function ImageEditor() {
 
   useFontLoader();
   useCanvasScaling(canvasRef, setCanvasScale);
-
-  const drawPaths = useCallback(() => {
-    if (paths.length !== 0) {
-      paths.forEach((path) => {
-        const canvas = canvasRef.current;
-        const context = canvas.getContext("2d");
-        if (path.type === "text") {
-          writeText(
-            path.text,
-            path.points[0][0],
-            path.points[0][1],
-            path.width
-          );
-        } else {
-          const stroke = getStroke(path.points, {
-            size: path.width,
-            thinning: 0.0,
-            smoothing: 0.0,
-            streamline: 1.0,
-          });
-          const pathData = getSvgPathFromStroke(stroke);
-          const path2D = new Path2D(pathData);
-          context.fillStyle = path.lineColor;
-          context.fill(path2D);
-        }
-      });
-    }
-  }, [paths]);
-
-  const writeText = (text, x, y, pathSize) => {
-    const canvas = canvasRef.current;
-    const context = canvas.getContext("2d");
-
-    context.font = pathSize + "px stencil";
-    context.fillText(text, x, y);
-  };
 
   const handleStartDrawing = (e) => {
     e.preventDefault();
@@ -230,7 +193,7 @@ function ImageEditor() {
         templateType
       );
     }
-    drawPaths();
+    drawPaths(canvasRef, paths);
   }, [paths, lineWidth, drawPaths, reloadPaths]);
 
   useCanvasEvents(
@@ -245,6 +208,7 @@ function ImageEditor() {
     const context = canvas.getContext("2d");
 
     context.clearRect(0, 0, canvas.width, canvas.height);
+
     drawImage(
       true,
       imageUrl,
