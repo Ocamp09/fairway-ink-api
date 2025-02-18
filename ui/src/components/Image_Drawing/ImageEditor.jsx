@@ -30,6 +30,7 @@ function ImageEditor() {
 
   const {
     imageUrl,
+    stage,
     updateStage,
     uploadedPaths,
     updateUploadedPaths,
@@ -253,7 +254,7 @@ function ImageEditor() {
       templateType
     );
     setPaths([]);
-  }, [templateType]);
+  }, [templateType, stage]);
 
   return (
     <div className="designer">
