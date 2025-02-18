@@ -82,10 +82,12 @@ export const FileProvider = ({ children }) => {
   };
 
   const updateTemplateType = (type) => {
+    sessionStorage.setItem("templateType", type);
     setTemplateType(type);
   };
 
   const updateEditorMode = (mode) => {
+    sessionStorage.setItem("editorMode", mode);
     setEditorMode(mode);
   };
 
