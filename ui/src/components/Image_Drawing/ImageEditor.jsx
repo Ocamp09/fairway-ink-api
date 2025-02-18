@@ -175,7 +175,7 @@ function ImageEditor() {
       setReloadPaths,
       templateType
     );
-  }, [imageUrl, drawImage]);
+  }, [imageUrl]);
 
   //will only run when paths or lineWidth changes
   useEffect(() => {
