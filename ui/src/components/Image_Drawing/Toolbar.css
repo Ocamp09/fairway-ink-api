@@ -1,11 +1,29 @@
+.tools {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+}
+
 .toolbar-text {
   color: var(--text);
+}
+
+.tool-top {
+  display: flex;
+  flex-direction: column;
+  background-color: var(--tone);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  border-radius: 5px;
+  padding: 10px;
+  width: 6rem;
+  gap: 5px;
 }
 
 .toolbar {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 5px;
   padding: 10px;
   background-color: var(--tone);
   border-radius: 5px;
@@ -21,15 +39,39 @@
     justify-content: center;
     width: 95%;
   }
+
+  .tool-top {
+    flex-direction: row;
+    width: auto;
+  }
 }
 
-.toolbar button {
+.tools button {
   padding: 8px 8px;
-  background-color: var(--tool-button);
   border: none;
   border-radius: 4px;
   cursor: pointer;
   transition: background-color 0.3s;
+}
+
+.toolbar button {
+  background-color: var(--tool-button);
+}
+
+.editor-but {
+  background-color: var(--tone);
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.editor-but:hover {
+  background-color: var(--tool-button-hover-lighter);
+}
+
+.editor-but-active {
+  background-color: var(--tool-button);
 }
 
 .toolbar button:hover {

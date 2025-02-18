@@ -23,6 +23,7 @@ const Toolbar = ({
 }) => {
   const [undoStack, setUndoStack] = useState([]);
   const [redoStack, setRedoStack] = useState([]);
+  const [screenWidth, setScreenWidth] = useState(window.innerWidth);
 
   const {
     imageUrl,
@@ -35,11 +36,11 @@ const Toolbar = ({
   const iconSize = 28;
 
   const handleText = () => {
-    if (editorMode == "type") {
-      updateEditorMode("draw");
-      return;
-    }
     updateEditorMode("type");
+  };
+
+  const handleDraw = () => {
+    updateEditorMode("draw");
   };
 
   const handleUndo = () => {
@@ -75,6 +76,15 @@ const Toolbar = ({
   };
 
   useEffect(() => {
+    const handleResize = () => {
+      setScreenWidth(window.innerWidth);
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  useEffect(() => {
     setRedoStack([]);
     setUndoStack([]);
   }, [templateType]);
@@ -100,8 +110,35 @@ const Toolbar = ({
     link.click();
   };
 
+  const shouldHideTools =
+    (templateType === "solid" || templateType === "text") && screenWidth < 750;
+
   return (
-    <>
+    <div className="tools">
+      <div className="tool-top" hidden={shouldHideTools}>
+        <button
+          title="Activate drawing mode"
+          onClick={handleDraw}
+          className={editorMode === "draw" ? "editor-but-active" : "editor-but"}
+          hidden={templateType == "text"}
+        >
+          <BiSolidPencil
+            size={iconSize}
+            color={editorMode === "draw" ? "white" : "black"}
+          />
+        </button>
+        <button
+          title="Activate text mode"
+          onClick={handleText}
+          className={editorMode === "type" ? "editor-but-active" : "editor-but"}
+          hidden={templateType == "solid"}
+        >
+          <IoText
+            size={iconSize}
+            color={editorMode === "type" ? "white" : "black"}
+          />
+        </button>
+      </div>
       <div className="toolbar">
         {templateType != "text" && (
           <>
@@ -115,14 +152,6 @@ const Toolbar = ({
             </button>
           </>
         )}
-        <button
-          title="Switch editor mode"
-          onClick={handleText}
-          hidden={templateType == "solid" || templateType === "text"}
-        >
-          {editorMode == "type" && <IoText size={iconSize} />}
-          {editorMode == "draw" && <BiSolidPencil size={iconSize} />}
-        </button>
         <button title="Undo" onClick={handleUndo} disabled={paths.length === 0}>
           <IoMdUndo size={iconSize} />
         </button>
@@ -159,7 +188,7 @@ const Toolbar = ({
           <FiDownload size={iconSize} />
         </button>
       </div>
-    </>
+    </div>
   );
 };
 
