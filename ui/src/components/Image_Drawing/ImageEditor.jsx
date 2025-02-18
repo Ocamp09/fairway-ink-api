@@ -193,8 +193,8 @@ function ImageEditor() {
         templateType
       );
     }
-    drawPaths(canvasRef, paths);
-  }, [paths, lineWidth, drawPaths, reloadPaths]);
+    drawPaths(canvasRef, paths, templateType);
+  }, [paths, lineWidth, reloadPaths]);
 
   useCanvasEvents(
     canvasRef,
@@ -219,7 +219,7 @@ function ImageEditor() {
         templateType
       );
     } else {
-      drawPaths(canvasRef, uploadedPaths);
+      drawPaths(canvasRef, uploadedPaths, templateType);
     }
   }, [templateType, stage]);
 
@@ -234,7 +234,7 @@ function ImageEditor() {
       <div className="modes-top">
         <ModeExamples small={true} />
       </div>
-      <TypeSelector />
+      <TypeSelector paths={paths} />
       <div className="displays">
         <div className="editor">
           <div className="tool">

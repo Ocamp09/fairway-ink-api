@@ -1,21 +1,30 @@
 import "./TypeSelector.css";
 import { useSession } from "../../contexts/DesignContext";
 
-const TypeSelector = () => {
-  const { templateType, updateTemplateType, updateEditorMode } = useSession();
+const TypeSelector = ({ paths }) => {
+  const {
+    updateUploadedPaths,
+    templateType,
+    updateTemplateType,
+    updateEditorMode,
+  } = useSession();
+
   const handleSolid = () => {
     updateTemplateType("solid");
     updateEditorMode("draw");
+    updateUploadedPaths(paths);
   };
 
   const handleText = () => {
     updateTemplateType("text");
     updateEditorMode("type");
+    updateUploadedPaths(paths);
   };
 
   const handleCustom = () => {
     updateTemplateType("custom");
     updateEditorMode("draw");
+    updateUploadedPaths(paths);
   };
 
   return (

@@ -139,11 +139,14 @@ export const drawImage = (
   }
 };
 
-export const drawPaths = (canvasRef, paths) => {
-  if (paths.length !== 0) {
-    paths.forEach((path) => {
-      const canvas = canvasRef.current;
-      const context = canvas.getContext("2d");
+export const drawPaths = (canvasRef, paths, templateType) => {
+  if (paths.length === 0) return; // early exit if there are no paths
+
+  const canvas = canvasRef.current;
+  const context = canvas.getContext("2d");
+
+  paths.forEach((path) => {
+    const drawText = () => {
       if (path.type === "text") {
         writeText(
           canvasRef,
@@ -152,7 +155,11 @@ export const drawPaths = (canvasRef, paths) => {
           path.points[0][1],
           path.width
         );
-      } else {
+      }
+    };
+
+    const drawSolid = () => {
+      if (path.type === "draw") {
         const stroke = getStroke(path.points, {
           size: path.width,
           thinning: 0.0,
@@ -164,8 +171,20 @@ export const drawPaths = (canvasRef, paths) => {
         context.fillStyle = path.lineColor;
         context.fill(path2D);
       }
-    });
-  }
+    };
+
+    // handle drawing logic based on template type
+    if (templateType === "text") {
+      drawText();
+    } else if (templateType === "solid") {
+      drawSolid();
+    } else {
+      drawText();
+      if (path.type !== "text") {
+        drawSolid();
+      }
+    }
+  });
 };
 
 const writeText = (canvasRef, text, x, y, pathSize) => {
