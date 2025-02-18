@@ -1,8 +1,8 @@
 import { ReactSVG } from "react-svg";
 import { useSession } from "../../contexts/DesignContext";
 
-const SelectPreview = ({ setShowSelected, setPrevSvg }) => {
-  const { svgData, updateSvgData } = useSession();
+const SelectPreview = ({ setShowSelected }) => {
+  const { svgData, updateSvgData, updatePrevSvgData } = useSession();
   let selected = new Set();
   const selectPath = (e) => {
     const selectedPath = e.target;
@@ -40,7 +40,7 @@ const SelectPreview = ({ setShowSelected, setPrevSvg }) => {
   };
 
   const submitSelected = () => {
-    setPrevSvg(svgData);
+    updatePrevSvgData(svgData);
     const newSvg = newSelectedSvg();
     updateSvgData(newSvg);
     setShowSelected(true);

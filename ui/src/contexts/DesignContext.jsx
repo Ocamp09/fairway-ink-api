@@ -23,6 +23,10 @@ export const FileProvider = ({ children }) => {
     sessionStorage.getItem("svgData") || ""
   );
 
+  const [prevSvgData, setPrevSvgData] = useState(
+    sessionStorage.getItem("prevSvg") || ""
+  );
+
   const [stlUrl, setStlUrl] = useState(
     sessionStorage.getItem("stlUrl") || "default.stl"
   );
@@ -62,6 +66,11 @@ export const FileProvider = ({ children }) => {
     setSvgData(data);
   };
 
+  const updatePrevSvgData = (prev) => {
+    sessionStorage.setItem("prevScg", prev);
+    setPrevSvgData(prev);
+  };
+
   const updateStl = (stlUrl) => {
     sessionStorage.setItem("stlUrl", stlUrl);
     setStlUrl(stlUrl);
@@ -93,6 +102,8 @@ export const FileProvider = ({ children }) => {
         updateUploadedPaths,
         svgData,
         updateSvgData,
+        prevSvgData,
+        updatePrevSvgData,
         stlUrl,
         updateStl,
         stlKey,

@@ -11,11 +11,11 @@ const ScaleSvg = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [showSelected, setShowSelected] = useState(false);
   const [svgUrl, setSvgUrl] = useState("");
-  const [prevSvg, setPrevSvg] = useState("");
 
   const {
     updateStage,
     svgData,
+    prevSvgData,
     updateSvgData,
     updateStl,
     stlKey,
@@ -34,7 +34,7 @@ const ScaleSvg = () => {
 
   const handleBack = () => {
     setShowSelected(false);
-    updateSvgData(prevSvg);
+    updateSvgData(prevSvgData);
   };
 
   const handleBackDesigner = () => {
@@ -79,7 +79,7 @@ const ScaleSvg = () => {
       {templateType === "custom" && !showSelected && (
         <SelectPreview
           setShowSelected={setShowSelected}
-          setPrevSvg={setPrevSvg}
+          setPrevSvg={updateSvgData}
         />
       )}
       {templateType === "custom" && showSelected && (
@@ -92,7 +92,7 @@ const ScaleSvg = () => {
           Back
         </button>
       )}
-      {templateType === "custom" && !showSelected && (
+      {!showSelected && (
         <button
           className="back-button"
           onClick={() => {

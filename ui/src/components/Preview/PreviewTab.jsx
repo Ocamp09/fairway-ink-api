@@ -12,7 +12,19 @@ const PreviewTab = () => {
   const [error, setError] = useState("");
 
   const { addToCart } = useCart();
-  const { stlUrl, stlKey, templateType } = useSession();
+  const {
+    updateSvgData,
+    prevSvgData,
+    stlUrl,
+    stlKey,
+    templateType,
+    updateStage,
+  } = useSession();
+
+  const handleBack = () => {
+    updateStage("scale");
+    updateSvgData(prevSvgData);
+  };
 
   const handleAddToCart = (event) => {
     event.preventDefault();
@@ -28,6 +40,14 @@ const PreviewTab = () => {
 
   return (
     <div className="stl-viewer">
+      <button
+        className="back-button"
+        onClick={() => {
+          handleBack();
+        }}
+      >
+        Back
+      </button>
       <p>3-D Render Preview</p>
       {stlUrl && <STLViewer stlUrl={stlUrl} />}
       <div>
