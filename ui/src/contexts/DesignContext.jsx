@@ -15,7 +15,9 @@ export const FileProvider = ({ children }) => {
     sessionStorage.getItem("imageType") || ""
   );
 
-  const [paths, setPaths] = useState(sessionStorage.getItem("paths") || []);
+  const [uploadedPaths, setUploadedPaths] = useState(
+    JSON.parse(sessionStorage.getItem("uploadedPaths")) || []
+  );
 
   const [svgData, setSvgData] = useState(
     sessionStorage.getItem("svgData") || ""
@@ -50,10 +52,9 @@ export const FileProvider = ({ children }) => {
     setImageType(type);
   };
 
-  const updatePaths = (paths) => {
-    console.log(paths);
-    sessionStorage.setItem("paths", paths);
-    setPaths(paths);
+  const updateUploadedPaths = (paths) => {
+    sessionStorage.setItem("uploadedPaths", JSON.stringify(paths));
+    setUploadedPaths(paths);
   };
 
   const updateSvgData = (data) => {
@@ -88,8 +89,8 @@ export const FileProvider = ({ children }) => {
         updateImageUrl,
         imageType,
         updateImageType,
-        paths,
-        updatePaths,
+        uploadedPaths,
+        updateUploadedPaths,
         svgData,
         updateSvgData,
         stlUrl,
