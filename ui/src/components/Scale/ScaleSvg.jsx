@@ -5,11 +5,10 @@ import "./ScaleSvg.css";
 import { generateStl } from "../../api/api";
 import SelectPreview from "./SelectPreview";
 
-const ScaleSvg = () => {
+const ScaleSvg = ({ showSelected, setShowSelected }) => {
   const [scale, setScale] = useState(1);
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [showSelected, setShowSelected] = useState(false);
   const [svgUrl, setSvgUrl] = useState("");
 
   const {

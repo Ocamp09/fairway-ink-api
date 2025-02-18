@@ -6,24 +6,17 @@ import { useSession } from "../../contexts/DesignContext";
 import { addToCartApi } from "../../api/api";
 import "./PreviewTab.css";
 
-const PreviewTab = () => {
+const PreviewTab = ({ setShowSelected }) => {
   const [quantity, setQuantity] = useState(1);
   const [isAdded, setIsAdded] = useState(false);
   const [error, setError] = useState("");
 
   const { addToCart } = useCart();
-  const {
-    updateSvgData,
-    prevSvgData,
-    stlUrl,
-    stlKey,
-    templateType,
-    updateStage,
-  } = useSession();
+  const { stlUrl, stlKey, templateType, updateStage } = useSession();
 
   const handleBack = () => {
     updateStage("scale");
-    updateSvgData(prevSvgData);
+    setShowSelected(true);
   };
 
   const handleAddToCart = (event) => {

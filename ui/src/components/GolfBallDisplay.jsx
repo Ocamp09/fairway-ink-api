@@ -1,3 +1,4 @@
+import { useState } from "react";
 import "../components/GolfBallDisplay.css";
 import ImageEditor from "./Image_Drawing/ImageEditor";
 import TabMenu from "./TabMenu";
@@ -7,14 +8,20 @@ import { useSession } from "../contexts/DesignContext";
 
 const GolfBallDisplay = () => {
   const { stage } = useSession();
+  const [showSelected, setShowSelected] = useState(false);
 
   return (
     <div className="golf-ball-display">
       <TabMenu />
       {stage === "design" && <ImageEditor />}
 
-      {stage === "scale" && <ScaleSvg />}
-      {stage === "preview" && <PreviewTab />}
+      {stage === "scale" && (
+        <ScaleSvg
+          showSelected={showSelected}
+          setShowSelected={setShowSelected}
+        />
+      )}
+      {stage === "preview" && <PreviewTab setShowSelected={setShowSelected} />}
     </div>
   );
 };
