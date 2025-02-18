@@ -226,10 +226,13 @@ function ImageEditor() {
   return (
     <div className="designer">
       <p className="desc">
-        {templateType == "text"
-          ? `Click inside the editor and type a message`
-          : ` Upload an image (button or drag and drop), or draw with your mouse to
+        {templateType === "text" &&
+          `Click inside the editor and type a message to get started`}
+        {templateType === "solid" &&
+          ` Upload an image (button or drag and drop), or draw with your mouse to
         get started`}
+        {templateType === "custom" &&
+          `Upload an image (button or drag and drop), or select an editor mode to get started`}
       </p>
       <div className="modes-top">
         <ModeExamples small={true} />
