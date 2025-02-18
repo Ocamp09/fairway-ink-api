@@ -11,7 +11,7 @@ const SelectPreview = ({ setShowSelected }) => {
 
     const fill = selectedPath.getAttribute("fill");
     if (fill == null || fill === "black") {
-      selectedPath.setAttribute("fill", "blue");
+      selectedPath.setAttribute("fill", "red");
       selected.add(selectedPath);
     } else {
       selectedPath.setAttribute("fill", "black");
@@ -19,20 +19,48 @@ const SelectPreview = ({ setShowSelected }) => {
     }
   };
 
-  const newSelectedSvg = (selected) => {
+  // leave this in case of future implementation
+  // const newSelectedSvg = (selected) => {
+  //   const parser = new DOMParser();
+  //   const doc = parser.parseFromString(svgData, "image/svg+xml");
+
+  //   const newSvg = doc.createElementNS("http://www.w3.org/2000/svg", "svg");
+
+  //   const originalSvg = doc.documentElement;
+  //   newSvg.setAttribute("width", originalSvg.getAttribute("width"));
+  //   newSvg.setAttribute("height", originalSvg.getAttribute("height"));
+
+  //   selected.forEach((path) => {
+  //     const clonedPath = path.cloneNode();
+  //     clonedPath.setAttribute("fill", "black");
+  //     newSvg.appendChild(clonedPath);
+  //   });
+
+  //   const updatedSvgData = new XMLSerializer().serializeToString(newSvg);
+  //   return updatedSvgData;
+  // };
+
+  const removeSelectedPaths = (selected) => {
     const parser = new DOMParser();
     const doc = parser.parseFromString(svgData, "image/svg+xml");
+    const originalSvg = doc.documentElement;
+    const paths = doc.querySelectorAll("path");
 
     const newSvg = doc.createElementNS("http://www.w3.org/2000/svg", "svg");
-
-    const originalSvg = doc.documentElement;
     newSvg.setAttribute("width", originalSvg.getAttribute("width"));
     newSvg.setAttribute("height", originalSvg.getAttribute("height"));
 
-    selected.forEach((path) => {
-      const clonedPath = path.cloneNode();
-      clonedPath.setAttribute("fill", "black");
-      newSvg.appendChild(clonedPath);
+    paths.forEach((path) => {
+      var match = false;
+      selected.forEach((selctedPath) => {
+        if (path.getAttribute("d") == selctedPath.getAttribute("d")) {
+          match = true;
+        }
+      });
+      if (!match) {
+        const clonedPath = path.cloneNode();
+        newSvg.appendChild(clonedPath);
+      }
     });
 
     const updatedSvgData = new XMLSerializer().serializeToString(newSvg);
@@ -43,10 +71,9 @@ const SelectPreview = ({ setShowSelected }) => {
     updatePrevSvgData(svgData);
 
     if (selected.size !== 0) {
-      const newSvg = newSelectedSvg(selected);
+      const newSvg = removeSelectedPaths(selected);
       updateSvgData(newSvg);
     }
-
     setShowSelected(true);
   };
 
@@ -58,7 +85,7 @@ const SelectPreview = ({ setShowSelected }) => {
           onClick={(e) => selectPath(e)}
         />
       )}
-      <h3>Select curves to keep in design</h3>
+      <h3>Select any curves to remove from design</h3>
       <button
         className="submit-button"
         onClick={() => {
