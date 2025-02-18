@@ -12,6 +12,8 @@ import DrawTools from "./DrawTools";
 import TextTools from "./TextTools";
 
 const Toolbar = ({
+  paths,
+  setPaths,
   lineWidth,
   setLineWidth,
   setReloadPaths,
@@ -22,14 +24,8 @@ const Toolbar = ({
   const [undoStack, setUndoStack] = useState([]);
   const [redoStack, setRedoStack] = useState([]);
 
-  const {
-    updateImageUrl,
-    paths,
-    updatePaths,
-    templateType,
-    editorMode,
-    updateEditorMode,
-  } = useSession();
+  const { updateImageUrl, templateType, editorMode, updateEditorMode } =
+    useSession();
 
   const iconSize = 28;
 
@@ -46,7 +42,7 @@ const Toolbar = ({
       const lastPath = paths.pop();
       setUndoStack([...undoStack, lastPath]);
       setRedoStack([lastPath, ...redoStack]);
-      updatePaths([...paths]);
+      setPaths([...paths]);
       setReloadPaths(true);
     }
   };
@@ -54,7 +50,7 @@ const Toolbar = ({
   const handleRedo = () => {
     if (redoStack.length > 0) {
       const nextPath = redoStack.shift();
-      updatePaths([...paths, nextPath]);
+      setPaths([...paths, nextPath]);
       setUndoStack([...undoStack, nextPath]);
       setRedoStack([...redoStack]);
       setReloadPaths(true);
@@ -69,7 +65,7 @@ const Toolbar = ({
   const handleClear = () => {
     setUndoStack([...undoStack, ...paths]);
     setRedoStack([]);
-    updatePaths([]);
+    setPaths([]);
     setReloadPaths(true);
   };
 
