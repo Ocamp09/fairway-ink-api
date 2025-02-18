@@ -19,7 +19,7 @@ const SelectPreview = ({ setShowSelected }) => {
     }
   };
 
-  const newSelectedSvg = () => {
+  const newSelectedSvg = (selected) => {
     const parser = new DOMParser();
     const doc = parser.parseFromString(svgData, "image/svg+xml");
 
@@ -41,8 +41,12 @@ const SelectPreview = ({ setShowSelected }) => {
 
   const submitSelected = () => {
     updatePrevSvgData(svgData);
-    const newSvg = newSelectedSvg();
-    updateSvgData(newSvg);
+
+    if (selected.size !== 0) {
+      const newSvg = newSelectedSvg(selected);
+      updateSvgData(newSvg);
+    }
+
     setShowSelected(true);
   };
 
