@@ -28,10 +28,17 @@ function ImageEditor() {
   const [lineWidth, setLineWidth] = useState(5);
   const [fontSize, setFontSize] = useState(80);
 
-  const [paths, setPaths] = useState([]);
+  const {
+    imageUrl,
+    updateStage,
+    uploadedPaths,
+    updateUploadedPaths,
+    updateSvgData,
+    templateType,
+    editorMode,
+  } = useSession();
 
-  const { imageUrl, updateStage, updateSvgData, templateType, editorMode } =
-    useSession();
+  const [paths, setPaths] = useState(uploadedPaths);
 
   const lineColor = "#00000";
 
@@ -180,6 +187,7 @@ function ImageEditor() {
       setIsLoading(false);
       updateSvgData(response.svgData);
       updateStage("scale");
+      updateUploadedPaths(paths);
     } catch (err) {
       console.error("Upload error:", err);
       setIsLoading(false);
