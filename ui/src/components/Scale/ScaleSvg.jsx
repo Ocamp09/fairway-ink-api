@@ -37,6 +37,10 @@ const ScaleSvg = () => {
     updateSvgData(prevSvg);
   };
 
+  const handleBackDesigner = () => {
+    updateStage("design");
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!svgData) {
@@ -71,12 +75,32 @@ const ScaleSvg = () => {
   }, [svgData]);
 
   return (
-    <>
+    <div className="scale-svg">
       {templateType === "custom" && !showSelected && (
         <SelectPreview
           setShowSelected={setShowSelected}
           setPrevSvg={setPrevSvg}
         />
+      )}
+      {templateType === "custom" && showSelected && (
+        <button
+          className="back-button"
+          onClick={() => {
+            handleBack();
+          }}
+        >
+          Back
+        </button>
+      )}
+      {templateType === "custom" && !showSelected && (
+        <button
+          className="back-button"
+          onClick={() => {
+            handleBackDesigner();
+          }}
+        >
+          Back
+        </button>
       )}
       {(templateType !== "custom" || showSelected) && (
         <>
@@ -108,16 +132,6 @@ const ScaleSvg = () => {
           </div>
           <ImageScaler scale={scale} setScale={setScale}></ImageScaler>
           <form onSubmit={handleSubmit}>
-            {templateType === "custom" && (
-              <button
-                className="remove-button"
-                onClick={() => {
-                  handleBack();
-                }}
-              >
-                Back to Selector
-              </button>
-            )}
             <button
               type="submit"
               className="submit-button"
@@ -129,7 +143,7 @@ const ScaleSvg = () => {
           </form>
         </>
       )}
-    </>
+    </div>
   );
 };
 

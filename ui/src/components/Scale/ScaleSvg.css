@@ -1,3 +1,7 @@
+.scale-svg {
+  position: relative;
+}
+
 .ball-displays {
   display: flex;
   flex-direction: row;
@@ -62,4 +66,14 @@
   .golf-template {
     display: none;
   }
+}
+
+.back-button {
+  position: absolute;
+  top: 0;
+  left: 0;
+  border-radius: 5px;
+  background-color: red;
+  justify-content: flex-start;
+  padding: 5px 10px 5px 10px;
 }
