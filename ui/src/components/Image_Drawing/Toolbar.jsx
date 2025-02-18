@@ -24,8 +24,13 @@ const Toolbar = ({
   const [undoStack, setUndoStack] = useState([]);
   const [redoStack, setRedoStack] = useState([]);
 
-  const { updateImageUrl, templateType, editorMode, updateEditorMode } =
-    useSession();
+  const {
+    imageUrl,
+    updateImageUrl,
+    templateType,
+    editorMode,
+    updateEditorMode,
+  } = useSession();
 
   const iconSize = 28;
 
@@ -101,7 +106,11 @@ const Toolbar = ({
         {templateType != "text" && (
           <>
             <FileUpload />
-            <button title="Remove image" onClick={handleRemoveImage}>
+            <button
+              title="Remove image"
+              onClick={handleRemoveImage}
+              disabled={imageUrl !== ""}
+            >
               <RemoveImage />
             </button>
           </>
