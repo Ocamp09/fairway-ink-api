@@ -38,7 +38,7 @@ function ImageEditor() {
     editorMode,
   } = useSession();
 
-  const [paths, setPaths] = useState(uploadedPaths);
+  const [paths, setPaths] = useState([]);
 
   const lineColor = "#00000";
 
@@ -247,7 +247,6 @@ function ImageEditor() {
               canvasRef={canvasRef}
               fontSize={fontSize}
               setFontSize={setFontSize}
-              templateType={templateType}
             ></Toolbar>
           </div>
           <div>
