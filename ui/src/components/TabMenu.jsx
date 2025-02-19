@@ -20,10 +20,10 @@ const TabMenu = () => {
           Design
         </h3>
       </div>
-      <div className={stage === "scale" ? "active" : ""}>
+      <div className={stage === "adjust" ? "active" : ""}>
         <h3
           onClick={() => {
-            updateStage("scale");
+            updateStage("adjust");
           }}
         >
           <BsFill2CircleFill size={24} className="tab-number" />

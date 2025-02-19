@@ -13,9 +13,9 @@ const ScaleSvg = () => {
   const [svgUrl, setSvgUrl] = useState("");
 
   const {
-    scaleStage,
+    adjustStage,
     updateStage,
-    updateScaleStage,
+    updateAdjustStage,
     svgData,
     prevSvgData,
     updateSvgData,
@@ -35,7 +35,7 @@ const ScaleSvg = () => {
   }
 
   const handleBackToTab = () => {
-    updateScaleStage("tab");
+    updateAdjustStage("tab");
     updateSvgData(prevSvgData);
   };
 
@@ -78,12 +78,12 @@ const ScaleSvg = () => {
 
   return (
     <div className="scale-svg">
-      {templateType === "custom" && scaleStage === "remove" && (
+      {templateType === "custom" && adjustStage === "remove" && (
         <SelectPreview setPrevSvg={updateSvgData} />
       )}
-      {templateType === "custom" && scaleStage === "tab" && <TabEditor />}
+      {templateType === "custom" && adjustStage === "tab" && <TabEditor />}
 
-      {scaleStage === "scale" && (
+      {adjustStage === "scale" && (
         <>
           <button
             className="back-button"

@@ -31,7 +31,7 @@ function ImageEditor() {
     imageUrl,
     stage,
     updateStage,
-    updateScaleStage,
+    updateAdjustStage,
     uploadedPaths,
     updateUploadedPaths,
     updateSvgData,
@@ -152,12 +152,12 @@ function ImageEditor() {
       setIsLoading(false);
       updateSvgData(response.svgData);
       if (templateType === "custom") {
-        updateScaleStage("remove");
+        updateAdjustStage("remove");
       } else {
-        updateScaleStage("scale");
+        updateAdjustStage("scale");
       }
 
-      updateStage("scale");
+      updateStage("adjust");
       updateUploadedPaths(paths);
     } catch (err) {
       console.error("Upload error:", err);

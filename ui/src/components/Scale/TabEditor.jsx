@@ -10,7 +10,7 @@ import { uploadImage } from "../../api/api";
 
 const TabEditor = () => {
   const {
-    updateScaleStage,
+    updateAdjustStage,
     svgData,
     prevSvgData,
     updatePrevSvgData,
@@ -28,7 +28,7 @@ const TabEditor = () => {
   const [loading, setLoading] = useState(false);
 
   const handleBackToRemove = () => {
-    updateScaleStage("remove");
+    updateAdjustStage("remove");
     updateSvgData(prevSvgData);
   };
 
@@ -90,7 +90,7 @@ const TabEditor = () => {
 
       setLoading(false);
       updateSvgData(response.svgData);
-      updateScaleStage("scale");
+      updateAdjustStage("scale");
     } catch (err) {
       console.error("Upload error:", err);
       setLoading(false);

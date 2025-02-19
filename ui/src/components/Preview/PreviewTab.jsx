@@ -12,12 +12,12 @@ const PreviewTab = () => {
   const [error, setError] = useState("");
 
   const { addToCart } = useCart();
-  const { updateScaleStage, stlUrl, stlKey, templateType, updateStage } =
+  const { updateAdjustStage, stlUrl, stlKey, templateType, updateStage } =
     useSession();
 
   const handleBack = () => {
-    updateStage("scale");
-    updateScaleStage("scale");
+    updateStage("adjust");
+    updateAdjustStage("scale");
   };
 
   const handleAddToCart = (event) => {

@@ -7,8 +7,8 @@ export const FileProvider = ({ children }) => {
     sessionStorage.getItem("stage") || "design"
   );
 
-  const [scaleStage, setScaleStage] = useState(
-    sessionStorage.getItem("scaleStage") || "scale"
+  const [adjustStage, setAdjustStage] = useState(
+    sessionStorage.getItem("adjustStage") || "scale"
   );
 
   const [imageUrl, setImageUrl] = useState(
@@ -50,9 +50,9 @@ export const FileProvider = ({ children }) => {
     setStage(stage);
   };
 
-  const updateScaleStage = (scaleStage) => {
-    sessionStorage.setItem("scaleStage", scaleStage);
-    setScaleStage(scaleStage);
+  const updateAdjustStage = (adjustStage) => {
+    sessionStorage.setItem("adjustStage", adjustStage);
+    setAdjustStage(adjustStage);
   };
 
   const updateImageUrl = (newUrl) => {
@@ -105,8 +105,8 @@ export const FileProvider = ({ children }) => {
       value={{
         stage,
         updateStage,
-        scaleStage,
-        updateScaleStage,
+        adjustStage,
+        updateAdjustStage,
         imageUrl,
         updateImageUrl,
         imageType,

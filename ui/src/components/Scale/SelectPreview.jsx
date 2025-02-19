@@ -4,8 +4,8 @@ import { useSession } from "../../contexts/DesignContext";
 const SelectPreview = () => {
   const {
     updateStage,
-    scaleStage,
-    updateScaleStage,
+    adjustStage,
+    updateAdjustStage,
     svgData,
     updateSvgData,
     updatePrevSvgData,
@@ -69,7 +69,7 @@ const SelectPreview = () => {
       const newSvg = removeSelectedPaths(selected);
       updateSvgData(newSvg);
     }
-    updateScaleStage("tab");
+    updateAdjustStage("tab");
   };
 
   return (
@@ -83,7 +83,7 @@ const SelectPreview = () => {
         Back
       </button>
       <h3>Select any curves to remove from design</h3>
-      {svgData && scaleStage === "remove" && (
+      {svgData && adjustStage === "remove" && (
         <ReactSVG
           src={`data:image/svg+xml;utf8,${encodeURIComponent(svgData)}`}
           onClick={(e) => selectPath(e)}

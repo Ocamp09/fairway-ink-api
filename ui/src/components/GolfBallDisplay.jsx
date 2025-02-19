@@ -14,7 +14,7 @@ const GolfBallDisplay = () => {
       <TabMenu />
       {stage === "design" && <ImageEditor />}
 
-      {stage === "scale" && <ScaleSvg />}
+      {stage === "adjust" && <ScaleSvg />}
       {stage === "preview" && <PreviewTab />}
     </div>
   );
