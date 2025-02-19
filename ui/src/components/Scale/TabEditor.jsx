@@ -9,8 +9,14 @@ import {
 import { uploadImage } from "../../api/api";
 
 const TabEditor = () => {
-  const { updateScaleStage, svgData, updateSvgData, templateType } =
-    useSession();
+  const {
+    updateScaleStage,
+    svgData,
+    prevSvgData,
+    updatePrevSvgData,
+    updateSvgData,
+    templateType,
+  } = useSession();
 
   const canvasRef = useRef();
 
@@ -20,6 +26,12 @@ const TabEditor = () => {
 
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  const handleBackToRemove = () => {
+    updateScaleStage("remove");
+    updateSvgData(prevSvgData);
+  };
+
   // Handle mouse down (start drawing)
   const handleMouseDown = (e) => {
     e.preventDefault();
@@ -59,6 +71,7 @@ const TabEditor = () => {
 
   const submitTabs = async () => {
     setError("");
+    updatePrevSvgData(svgData);
 
     if (paths.lengths === 0) {
       alert(
@@ -77,7 +90,7 @@ const TabEditor = () => {
 
       setLoading(false);
       updateSvgData(response.svgData);
-      updateScaleStage("remove");
+      updateScaleStage("scale");
     } catch (err) {
       console.error("Upload error:", err);
       setLoading(false);
@@ -123,6 +136,14 @@ const TabEditor = () => {
 
   return (
     <>
+      <button
+        className="back-button"
+        onClick={() => {
+          handleBackToRemove();
+        }}
+      >
+        Back
+      </button>
       <h3>Add tabs for printing</h3>
       <canvas
         ref={canvasRef}

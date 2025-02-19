@@ -6,7 +6,7 @@ import { generateStl } from "../../api/api";
 import SelectPreview from "./SelectPreview";
 import TabEditor from "./TabEditor";
 
-const ScaleSvg = ({ showSelected, setShowSelected }) => {
+const ScaleSvg = () => {
   const [scale, setScale] = useState(1);
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -15,6 +15,7 @@ const ScaleSvg = ({ showSelected, setShowSelected }) => {
   const {
     scaleStage,
     updateStage,
+    updateScaleStage,
     svgData,
     prevSvgData,
     updateSvgData,
@@ -33,12 +34,12 @@ const ScaleSvg = ({ showSelected, setShowSelected }) => {
     canvasSizePx = 110 * scale;
   }
 
-  const handleBack = () => {
-    setShowSelected(false);
+  const handleBackToTab = () => {
+    updateScaleStage("tab");
     updateSvgData(prevSvgData);
   };
 
-  const handleBackDesigner = () => {
+  const handleBackToDesigner = () => {
     updateStage("design");
   };
 
@@ -77,35 +78,25 @@ const ScaleSvg = ({ showSelected, setShowSelected }) => {
 
   return (
     <div className="scale-svg">
-      {templateType === "custom" && scaleStage === "tab" && <TabEditor />}
       {templateType === "custom" && scaleStage === "remove" && (
-        <SelectPreview
-          setShowSelected={setShowSelected}
-          setPrevSvg={updateSvgData}
-        />
+        <SelectPreview setPrevSvg={updateSvgData} />
       )}
-      {templateType === "custom" && scaleStage === "scale" && (
-        <button
-          className="back-button"
-          onClick={() => {
-            handleBack();
-          }}
-        >
-          Back
-        </button>
-      )}
-      {!showSelected && (
-        <button
-          className="back-button"
-          onClick={() => {
-            handleBackDesigner();
-          }}
-        >
-          Back
-        </button>
-      )}
-      {(templateType !== "custom" || showSelected) && (
+      {templateType === "custom" && scaleStage === "tab" && <TabEditor />}
+
+      {scaleStage === "scale" && (
         <>
+          <button
+            className="back-button"
+            onClick={() => {
+              if (templateType !== "custom") {
+                handleBackToDesigner();
+              } else {
+                handleBackToTab();
+              }
+            }}
+          >
+            Back
+          </button>
           <p>Scale the image to the desired size</p>
           <div className="ball-displays">
             <div className="golf-template">

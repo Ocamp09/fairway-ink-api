@@ -151,10 +151,14 @@ function ImageEditor() {
 
       setIsLoading(false);
       updateSvgData(response.svgData);
+      if (templateType === "custom") {
+        updateScaleStage("remove");
+      } else {
+        updateScaleStage("scale");
+      }
+
       updateStage("scale");
       updateUploadedPaths(paths);
-
-      if (templateType === "custom") updateScaleStage("tab");
     } catch (err) {
       console.error("Upload error:", err);
       setIsLoading(false);

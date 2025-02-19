@@ -8,20 +8,14 @@ import { useSession } from "../contexts/DesignContext";
 
 const GolfBallDisplay = () => {
   const { stage } = useSession();
-  const [showSelected, setShowSelected] = useState(false);
 
   return (
     <div className="golf-ball-display">
       <TabMenu />
       {stage === "design" && <ImageEditor />}
 
-      {stage === "scale" && (
-        <ScaleSvg
-          showSelected={showSelected}
-          setShowSelected={setShowSelected}
-        />
-      )}
-      {stage === "preview" && <PreviewTab setShowSelected={setShowSelected} />}
+      {stage === "scale" && <ScaleSvg />}
+      {stage === "preview" && <PreviewTab />}
     </div>
   );
 };

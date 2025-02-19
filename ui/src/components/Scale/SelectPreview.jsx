@@ -1,8 +1,9 @@
 import { ReactSVG } from "react-svg";
 import { useSession } from "../../contexts/DesignContext";
 
-const SelectPreview = ({ setShowSelected }) => {
+const SelectPreview = () => {
   const {
+    updateStage,
     scaleStage,
     updateScaleStage,
     svgData,
@@ -56,6 +57,10 @@ const SelectPreview = ({ setShowSelected }) => {
     return updatedSvgData;
   };
 
+  const handleBackToDesigner = () => {
+    updateStage("design");
+  };
+
   // Existing submitSelected function
   const submitSelected = () => {
     updatePrevSvgData(svgData);
@@ -64,12 +69,19 @@ const SelectPreview = ({ setShowSelected }) => {
       const newSvg = removeSelectedPaths(selected);
       updateSvgData(newSvg);
     }
-    updateScaleStage("scale");
-    setShowSelected(true);
+    updateScaleStage("tab");
   };
 
   return (
     <div>
+      <button
+        className="back-button"
+        onClick={() => {
+          handleBackToDesigner();
+        }}
+      >
+        Back
+      </button>
       <h3>Select any curves to remove from design</h3>
       {svgData && scaleStage === "remove" && (
         <ReactSVG
@@ -83,7 +95,7 @@ const SelectPreview = ({ setShowSelected }) => {
           submitSelected();
         }}
       >
-        Proceed to Scale Image
+        Remove selected items
       </button>
     </div>
   );
