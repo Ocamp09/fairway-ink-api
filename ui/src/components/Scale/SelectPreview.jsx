@@ -1,9 +1,15 @@
 import { ReactSVG } from "react-svg";
 import { useSession } from "../../contexts/DesignContext";
+import { useEffect, useRef } from "react";
+import { drawImage } from "../../utils/canvasUtils";
 
 const SelectPreview = ({ setShowSelected }) => {
   const { svgData, updateSvgData, updatePrevSvgData } = useSession();
+
+  const canvasRef = useRef();
+
   let selected = new Set();
+
   const selectPath = (e) => {
     const selectedPath = e.target;
 
@@ -77,15 +83,25 @@ const SelectPreview = ({ setShowSelected }) => {
     setShowSelected(true);
   };
 
+  useEffect(() => {
+    const placeholder = () => {};
+    const svgBlob = new Blob([svgData], { type: "image/svg+xml" });
+    const url = URL.createObjectURL(svgBlob);
+
+    drawImage(false, url, canvasRef, placeholder, placeholder, "solid");
+  });
+
   return (
     <div>
+      <h3>Add tabs for printing</h3>
+      <canvas ref={canvasRef} width={500} height={500} className="canvas" />
+      <h3>Select any curves to remove from design</h3>
       {svgData && (
         <ReactSVG
           src={`data:image/svg+xml;utf8,${encodeURIComponent(svgData)}`} // Pass SVG data
           onClick={(e) => selectPath(e)}
         />
       )}
-      <h3>Select any curves to remove from design</h3>
       <button
         className="submit-button"
         onClick={() => {
