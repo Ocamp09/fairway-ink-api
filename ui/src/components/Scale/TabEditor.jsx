@@ -145,12 +145,12 @@ const TabEditor = () => {
       >
         Back
       </button>
-      <h3>Add tabs for printing</h3>
+      <p>Add tabs for printing</p>
       <canvas
         ref={canvasRef}
         width={500}
         height={500}
-        className="canvas"
+        className="canvas tab-canvas"
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}

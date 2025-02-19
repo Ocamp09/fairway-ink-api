@@ -84,7 +84,7 @@ const ScaleSvg = () => {
       {templateType === "custom" && adjustStage === "tab" && <TabEditor />}
 
       {adjustStage === "scale" && (
-        <>
+        <div className="scale">
           <button
             className="back-button"
             onClick={() => {
@@ -109,18 +109,16 @@ const ScaleSvg = () => {
                 }}
               />
             </div>
-            <div>
-              <p>Life Size</p>
-              <div className="golf-real-size">
-                <img
-                  src={svgUrl}
-                  alt="Uploaded"
-                  className="upload-img"
-                  style={{
-                    width: `${(canvasSizePx * 210) / 500}px`, // Set width based on scale
-                  }}
-                />
-              </div>
+            <p>Life Size</p>
+            <div className="golf-real-size">
+              <img
+                src={svgUrl}
+                alt="Uploaded"
+                className="upload-img"
+                style={{
+                  width: `${(canvasSizePx * 210) / 500}px`, // Set width based on scale
+                }}
+              />
             </div>
           </div>
           <ImageScaler scale={scale} setScale={setScale}></ImageScaler>
@@ -134,7 +132,7 @@ const ScaleSvg = () => {
             </button>
             {error && <p className="file-error-message">{error}</p>}
           </form>
-        </>
+        </div>
       )}
     </div>
   );

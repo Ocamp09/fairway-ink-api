@@ -3,6 +3,11 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
+  align-items: center;
+}
+
+.tab-canvas {
+  margin-top: 15px;
 }
 
 .tab button {

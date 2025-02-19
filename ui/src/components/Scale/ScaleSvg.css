@@ -66,6 +66,20 @@
   .golf-template {
     display: none;
   }
+
+  .scale-svg {
+    width: 90%;
+  }
+
+  .scale-svg p {
+    width: 60%;
+  }
+
+  .scale {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
 }
 
 .back-button {
