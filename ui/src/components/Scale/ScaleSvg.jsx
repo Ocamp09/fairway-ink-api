@@ -4,6 +4,7 @@ import { useSession } from "../../contexts/DesignContext";
 import "./ScaleSvg.css";
 import { generateStl } from "../../api/api";
 import SelectPreview from "./SelectPreview";
+import TabEditor from "./TabEditor";
 
 const ScaleSvg = ({ showSelected, setShowSelected }) => {
   const [scale, setScale] = useState(1);
@@ -76,7 +77,8 @@ const ScaleSvg = ({ showSelected, setShowSelected }) => {
 
   return (
     <div className="scale-svg">
-      {templateType === "custom" && scaleStage !== "scale" && (
+      {templateType === "custom" && scaleStage === "tab" && <TabEditor />}
+      {templateType === "custom" && scaleStage === "remove" && (
         <SelectPreview
           setShowSelected={setShowSelected}
           setPrevSvg={updateSvgData}
