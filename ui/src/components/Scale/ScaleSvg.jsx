@@ -12,6 +12,7 @@ const ScaleSvg = ({ showSelected, setShowSelected }) => {
   const [svgUrl, setSvgUrl] = useState("");
 
   const {
+    scaleStage,
     updateStage,
     svgData,
     prevSvgData,
@@ -75,13 +76,13 @@ const ScaleSvg = ({ showSelected, setShowSelected }) => {
 
   return (
     <div className="scale-svg">
-      {templateType === "custom" && !showSelected && (
+      {templateType === "custom" && scaleStage !== "scale" && (
         <SelectPreview
           setShowSelected={setShowSelected}
           setPrevSvg={updateSvgData}
         />
       )}
-      {templateType === "custom" && showSelected && (
+      {templateType === "custom" && scaleStage === "scale" && (
         <button
           className="back-button"
           onClick={() => {

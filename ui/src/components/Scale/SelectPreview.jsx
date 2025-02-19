@@ -10,8 +10,14 @@ import {
 import { uploadImage } from "../../api/api";
 
 const SelectPreview = ({ setShowSelected }) => {
-  const { svgData, updateSvgData, updatePrevSvgData, templateType } =
-    useSession();
+  const {
+    scaleStage,
+    updateScaleStage,
+    svgData,
+    updateSvgData,
+    updatePrevSvgData,
+    templateType,
+  } = useSession();
 
   const canvasRef = useRef();
 
@@ -125,6 +131,7 @@ const SelectPreview = ({ setShowSelected }) => {
 
       setLoading(false);
       updateSvgData(response.svgData);
+      updateScaleStage("remove");
     } catch (err) {
       console.error("Upload error:", err);
       setLoading(false);
@@ -140,6 +147,7 @@ const SelectPreview = ({ setShowSelected }) => {
       const newSvg = removeSelectedPaths(selected);
       updateSvgData(newSvg);
     }
+    updateScaleStage("scale");
     setShowSelected(true);
   };
 
@@ -181,28 +189,32 @@ const SelectPreview = ({ setShowSelected }) => {
 
   return (
     <div>
-      <h3>Add tabs for printing</h3>
-      <canvas
-        ref={canvasRef}
-        width={500}
-        height={500}
-        className="canvas"
-        onMouseDown={handleMouseDown}
-        onMouseMove={handleMouseMove}
-        onMouseUp={handleMouseUp}
-      />
-      <button
-        className="submit-button"
-        onClick={() => {
-          submitTabs();
-        }}
-      >
-        {!loading && "Add tabs"}
-        {loading && "Loading"}
-      </button>
-      {error && <p className="file-error-message">{error}</p>}
+      {scaleStage === "tab" && (
+        <>
+          <h3>Add tabs for printing</h3>
+          <canvas
+            ref={canvasRef}
+            width={500}
+            height={500}
+            className="canvas"
+            onMouseDown={handleMouseDown}
+            onMouseMove={handleMouseMove}
+            onMouseUp={handleMouseUp}
+          />
+          <button
+            className="submit-button"
+            onClick={() => {
+              submitTabs();
+            }}
+          >
+            {!loading && "Add tabs"}
+            {loading && "Loading"}
+          </button>
+          {error && <p className="file-error-message">{error}</p>}
+        </>
+      )}
       <h3>Select any curves to remove from design</h3>
-      {svgData && (
+      {svgData && scaleStage === "remove" && (
         <ReactSVG
           src={`data:image/svg+xml;utf8,${encodeURIComponent(svgData)}`}
           onClick={(e) => selectPath(e)}

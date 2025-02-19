@@ -31,6 +31,7 @@ function ImageEditor() {
     imageUrl,
     stage,
     updateStage,
+    updateScaleStage,
     uploadedPaths,
     updateUploadedPaths,
     updateSvgData,
@@ -152,6 +153,8 @@ function ImageEditor() {
       updateSvgData(response.svgData);
       updateStage("scale");
       updateUploadedPaths(paths);
+
+      if (templateType === "custom") updateScaleStage("tab");
     } catch (err) {
       console.error("Upload error:", err);
       setIsLoading(false);
