@@ -109,16 +109,18 @@ const ScaleSvg = () => {
                 }}
               />
             </div>
-            <p>Life Size</p>
-            <div className="golf-real-size">
-              <img
-                src={svgUrl}
-                alt="Uploaded"
-                className="upload-img"
-                style={{
-                  width: `${(canvasSizePx * 210) / 500}px`, // Set width based on scale
-                }}
-              />
+            <div className="life-size">
+              <p>Life Size</p>
+              <div className="golf-real-size">
+                <img
+                  src={svgUrl}
+                  alt="Uploaded"
+                  className="upload-img"
+                  style={{
+                    width: `${(canvasSizePx * 210) / 500}px`, // Set width based on scale
+                  }}
+                />
+              </div>
             </div>
           </div>
           <ImageScaler scale={scale} setScale={setScale}></ImageScaler>

@@ -80,6 +80,12 @@
     flex-direction: column;
     align-items: center;
   }
+
+  .life-size {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
 }
 
 .back-button {
