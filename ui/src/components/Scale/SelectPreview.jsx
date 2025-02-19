@@ -1,5 +1,6 @@
 import { ReactSVG } from "react-svg";
 import { useSession } from "../../contexts/DesignContext";
+import "./SelectPreview.css";
 
 const SelectPreview = () => {
   const {
@@ -73,9 +74,9 @@ const SelectPreview = () => {
   };
 
   return (
-    <div>
+    <div className="select">
       <button
-        className="back-button"
+        className="back-button preview-back-button"
         onClick={() => {
           handleBackToDesigner();
         }}

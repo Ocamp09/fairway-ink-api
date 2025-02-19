@@ -7,6 +7,7 @@ import {
   centerCanvasDrawing,
 } from "../../utils/canvasUtils";
 import { uploadImage } from "../../api/api";
+import "./TabEditor.css";
 
 const TabEditor = () => {
   const {
@@ -135,7 +136,7 @@ const TabEditor = () => {
   // }, [currPath]);
 
   return (
-    <>
+    <div className="tab">
       <button
         className="back-button"
         onClick={() => {
@@ -164,7 +165,7 @@ const TabEditor = () => {
         {loading && "Loading"}
       </button>
       {error && <p className="file-error-message">{error}</p>}
-    </>
+    </div>
   );
 };
 
