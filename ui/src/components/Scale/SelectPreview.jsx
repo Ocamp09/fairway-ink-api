@@ -1,16 +1,26 @@
 import { ReactSVG } from "react-svg";
 import { useSession } from "../../contexts/DesignContext";
 import { useEffect, useRef, useState } from "react";
-import { drawImage, drawLine, getCoordinates } from "../../utils/canvasUtils";
+import {
+  drawImage,
+  drawLine,
+  getCoordinates,
+  centerCanvasDrawing,
+} from "../../utils/canvasUtils";
+import { uploadImage } from "../../api/api";
 
 const SelectPreview = ({ setShowSelected }) => {
-  const { svgData, updateSvgData, updatePrevSvgData } = useSession();
+  const { svgData, updateSvgData, updatePrevSvgData, templateType } =
+    useSession();
 
   const canvasRef = useRef();
 
   const [paths, setPaths] = useState([]);
   const [currPath, setCurrPath] = useState([]);
   const [isDrawing, setIsDrawing] = useState(false);
+
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   let selected = new Set();
 
@@ -95,6 +105,33 @@ const SelectPreview = ({ setShowSelected }) => {
     return updatedSvgData;
   };
 
+  const submitTabs = async () => {
+    setError("");
+
+    if (paths.lengths === 0) {
+      alert(
+        "We have detected unprintable surfaces and you have uploaded no tabs. This could lead to unintended printing errors."
+      );
+    }
+
+    setLoading(true);
+    const centeredCanvas = centerCanvasDrawing(canvasRef.current);
+    const dataURL = centeredCanvas.toDataURL("image/png");
+    const blob = await fetch(dataURL).then((r) => r.blob());
+
+    try {
+      // Call the uploadImage function from api.js
+      const response = await uploadImage(blob, templateType);
+
+      setLoading(false);
+      updateSvgData(response.svgData);
+    } catch (err) {
+      console.error("Upload error:", err);
+      setLoading(false);
+      setError("Unable to connect to the server, try again later");
+    }
+  };
+
   // Existing submitSelected function
   const submitSelected = () => {
     updatePrevSvgData(svgData);
@@ -154,6 +191,16 @@ const SelectPreview = ({ setShowSelected }) => {
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
       />
+      <button
+        className="submit-button"
+        onClick={() => {
+          submitTabs();
+        }}
+      >
+        {!loading && "Add tabs"}
+        {loading && "Loading"}
+      </button>
+      {error && <p className="file-error-message">{error}</p>}
       <h3>Select any curves to remove from design</h3>
       {svgData && (
         <ReactSVG
