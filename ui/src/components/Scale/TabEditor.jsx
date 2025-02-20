@@ -23,7 +23,7 @@ const TabEditor = () => {
   const canvasRef = useRef();
 
   const [paths, setPaths] = useState([]);
-  const [currPath, setCurrPath] = useState([]);
+  const [currPath, setCurrPath] = useState(null);
   const [isDrawing, setIsDrawing] = useState(false);
 
   const [error, setError] = useState("");
@@ -43,7 +43,8 @@ const TabEditor = () => {
     if (!coords) return;
     var { x, y } = coords;
     setCurrPath({
-      points: [[x - 5, y]],
+      start: [x - 5, y],
+      end: [x - 5, y],
       type: "line",
     });
   };
@@ -57,10 +58,10 @@ const TabEditor = () => {
     if (!coords) return;
     var { x, y } = coords;
 
-    const updateEnd = [x, y];
-    let updatedPath = currPath;
-    updatedPath.points[1] = updateEnd;
-    setCurrPath(updatedPath);
+    setCurrPath((prevPath) => ({
+      ...prevPath,
+      end: [x, y],
+    }));
   };
 
   // Handle mouse up (finish drawing)
@@ -112,29 +113,24 @@ const TabEditor = () => {
   }, [svgData]);
 
   useEffect(() => {
+    if (!paths) return;
     paths.forEach((path) => {
-      if (path.type === "line" && path.points.length >= 2) {
-        const startX = path.points[0][0];
-        const startY = path.points[0][1];
-        const endX = path.points[path.points.length - 1][0];
-        const endY = path.points[path.points.length - 1][1];
+      if (path.type === "line") {
+        const startX = path.start[0];
+        const startY = path.start[1];
+        const endX = path.end[0];
+        const endY = path.end[1];
         drawLine(canvasRef, startX, startY, endX, endY);
       }
     });
   }, [paths]);
 
-  // useEffect(() => {
-  //   console.log(currPath);
-  //   if (currPath.points[0] && currPath.points[1] && canvasRef.current) {
-  //     console.log(currPath.points[1]);
-  //     const startX = currPath.points[0][0];
-  //     const startY = currPath.points[0][1];
-  //     const endX = currPath.points[1][0];
-  //     const endY = currPath.points[1][1];
-
-  //     drawLine(canvasRef, startX, startY, endX, endY);
-  //   }
-  // }, [currPath]);
+  useEffect(() => {
+    if (currPath) {
+      const { start, end } = currPath;
+      drawLine(canvasRef, start[0], start[1], end[0], end[1]);
+    }
+  }, [currPath]);
 
   return (
     <div className="tab-main">
