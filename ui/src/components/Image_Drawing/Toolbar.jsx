@@ -3,13 +3,13 @@ import "./Toolbar.css";
 import FileUpload from "./FileUpload";
 import { FiDownload } from "react-icons/fi";
 import { FaDeleteLeft } from "react-icons/fa6";
-import { IoMdUndo, IoMdRedo } from "react-icons/io";
 import { IoText } from "react-icons/io5";
 import { BiSolidPencil } from "react-icons/bi";
 import RemoveImage from "./RemoveImage";
 import { useSession } from "../../contexts/DesignContext";
 import DrawTools from "./DrawTools";
 import TextTools from "./TextTools";
+import UndoRedo from "./UndoRedo";
 
 const Toolbar = ({
   paths,
@@ -21,8 +21,6 @@ const Toolbar = ({
   fontSize,
   setFontSize,
 }) => {
-  const [undoStack, setUndoStack] = useState([]);
-  const [redoStack, setRedoStack] = useState([]);
   const [screenWidth, setScreenWidth] = useState(window.innerWidth);
 
   const {
@@ -41,26 +39,6 @@ const Toolbar = ({
 
   const handleDraw = () => {
     updateEditorMode("draw");
-  };
-
-  const handleUndo = () => {
-    if (paths.length > 0) {
-      const lastPath = paths.pop();
-      setUndoStack([...undoStack, lastPath]);
-      setRedoStack([lastPath, ...redoStack]);
-      setPaths([...paths]);
-      setReloadPaths(true);
-    }
-  };
-
-  const handleRedo = () => {
-    if (redoStack.length > 0) {
-      const nextPath = redoStack.shift();
-      setPaths([...paths, nextPath]);
-      setUndoStack([...undoStack, nextPath]);
-      setRedoStack([...redoStack]);
-      setReloadPaths(true);
-    }
   };
 
   const handleRemoveImage = () => {
@@ -83,11 +61,6 @@ const Toolbar = ({
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
-
-  useEffect(() => {
-    setRedoStack([]);
-    setUndoStack([]);
-  }, [templateType]);
 
   const saveCanvas = () => {
     const canvas = canvasRef.current;
@@ -152,16 +125,12 @@ const Toolbar = ({
             </button>
           </>
         )}
-        <button title="Undo" onClick={handleUndo} disabled={paths.length === 0}>
-          <IoMdUndo size={iconSize} />
-        </button>
-        <button
-          title="Redo"
-          onClick={handleRedo}
-          disabled={redoStack.length === 0}
-        >
-          <IoMdRedo size={iconSize} />
-        </button>
+        <UndoRedo
+          paths={paths}
+          setPaths={setPaths}
+          iconSize={iconSize}
+          setReloadPaths={setReloadPaths}
+        />
         <button
           title="Delete drawings"
           onClick={handleClear}
