@@ -6,6 +6,7 @@ import {
   getCoordinates,
   centerCanvasDrawing,
 } from "../../utils/canvasUtils";
+import InfoPane from "./InfoPane";
 import { uploadImage } from "../../api/api";
 import "./TabEditor.css";
 
@@ -136,7 +137,7 @@ const TabEditor = () => {
   // }, [currPath]);
 
   return (
-    <div className="tab">
+    <div className="tab-main">
       <button
         className="back-button"
         onClick={() => {
@@ -146,15 +147,18 @@ const TabEditor = () => {
         Back
       </button>
       <p>Add tabs for printing</p>
-      <canvas
-        ref={canvasRef}
-        width={500}
-        height={500}
-        className="canvas tab-canvas"
-        onMouseDown={handleMouseDown}
-        onMouseMove={handleMouseMove}
-        onMouseUp={handleMouseUp}
-      />
+      <div className="tab">
+        <canvas
+          ref={canvasRef}
+          width={500}
+          height={500}
+          className="canvas tab-canvas"
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
+        />
+        <InfoPane warnText="Indicates un-printable code, click and draw bridges across yellow items to white areas for printing" />
+      </div>
       <button
         className="submit-button"
         onClick={() => {
