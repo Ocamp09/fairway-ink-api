@@ -9,6 +9,7 @@ import {
 import InfoPane from "./InfoPane";
 import { uploadImage } from "../../api/api";
 import "./TabEditor.css";
+import UndoRedo from "../Image_Drawing/UndoRedo";
 
 const TabEditor = () => {
   const {
@@ -22,9 +23,12 @@ const TabEditor = () => {
 
   const canvasRef = useRef();
 
+  const [reloadPaths, setReloadPaths] = useState(false);
   const [paths, setPaths] = useState([]);
   const [currPath, setCurrPath] = useState(null);
   const [isDrawing, setIsDrawing] = useState(false);
+  const [undoStack, setUndoStack] = useState([]);
+  const [redoStack, setRedoStack] = useState([]);
 
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -144,6 +148,18 @@ const TabEditor = () => {
       </button>
       <p>Add tabs for printing</p>
       <div className="tab">
+        <div>
+          {/* <UndoRedo
+            paths={paths}
+            setPaths={setPaths}
+            iconSize={28}
+            setReloadPaths={setReloadPaths}
+            undoStack={undoStack}
+            setUndoStack={setUndoStack}
+            redoStack={redoStack}
+            setRedoStack={setRedoStack}
+          /> */}
+        </div>
         <canvas
           ref={canvasRef}
           width={500}
