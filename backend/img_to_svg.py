@@ -55,7 +55,7 @@ def flag_problematic(svg_data):
         # of unprintable code)
         z_cnt = path_d.count('Z')
         if z_cnt > 1:
-            paths[index].set("fill", "#EED202")
+            paths[index].set("fill", "blue")
 
     new_svg_data = ET.tostring(root, encoding='unicode', method='xml').replace("ns0:", "").replace(":ns0", "")
     return new_svg_data
