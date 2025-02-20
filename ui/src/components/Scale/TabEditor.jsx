@@ -51,8 +51,8 @@ const TabEditor = () => {
     if (!coords) return;
     var { x, y } = coords;
     setCurrPath({
-      start: [x - 5, y],
-      end: [x - 5, y],
+      start: [x, y],
+      end: [x, y],
       width: lineWidth,
       type: "line",
     });
