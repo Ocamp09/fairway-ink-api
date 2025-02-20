@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { ReactSVG } from "react-svg";
 import { useSession } from "../../contexts/DesignContext";
 import "./SelectPreview.css";
@@ -12,6 +13,8 @@ const SelectPreview = () => {
     updatePrevSvgData,
   } = useSession();
 
+  const [currData, setCurrData] = useState(svgData);
+
   let selected = new Set();
 
   // Existing selectPath function
@@ -21,11 +24,22 @@ const SelectPreview = () => {
     if (e.target.localName !== "path") return;
 
     const fill = selectedPath.getAttribute("fill");
-    if (fill == null || fill === "black") {
+    // if the fill color is the warning color set the opacity for resetting
+    if (fill === "#EED202") {
+      selectedPath.setAttribute("fill-opacity", 1);
+    }
+
+    // if the fill color is not red, set red, else set back to original color
+    if (fill == null || fill !== "red") {
       selectedPath.setAttribute("fill", "red");
       selected.add(selectedPath);
     } else {
-      selectedPath.setAttribute("fill", "black");
+      // if we set the fill-opacity set back to warning color, else black
+      if (selectedPath.getAttribute("fill-opacity") === "1") {
+        selectedPath.setAttribute("fill", "#EED202");
+      } else {
+        selectedPath.setAttribute("fill", "black");
+      }
       selected.delete(selectedPath);
     }
   };
@@ -33,7 +47,7 @@ const SelectPreview = () => {
   // Existing removeSelectedPaths function
   const removeSelectedPaths = (selected) => {
     const parser = new DOMParser();
-    const doc = parser.parseFromString(svgData, "image/svg+xml");
+    const doc = parser.parseFromString(currData, "image/svg+xml");
     const originalSvg = doc.documentElement;
     const paths = doc.querySelectorAll("path");
 
@@ -84,7 +98,7 @@ const SelectPreview = () => {
         Back
       </button>
       <h3>Select any curves to remove from design</h3>
-      {svgData && adjustStage === "remove" && (
+      {currData && adjustStage === "remove" && (
         <ReactSVG
           src={`data:image/svg+xml;utf8,${encodeURIComponent(svgData)}`}
           onClick={(e) => selectPath(e)}
