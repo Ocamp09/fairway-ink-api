@@ -1,9 +1,20 @@
-.select {
+.select-preview {
   position: relative;
   display: flex;
   flex-direction: column;
 }
 
+.select {
+  display: flex;
+  align-items: center;
+}
+
 .preview-back-button {
   top: 50px;
+}
+
+@media screen and (max-width: 700px) {
+  .select {
+    flex-direction: column;
+  }
 }

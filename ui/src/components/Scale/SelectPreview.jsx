@@ -1,5 +1,6 @@
 import { ReactSVG } from "react-svg";
 import { useSession } from "../../contexts/DesignContext";
+import InfoPane from "./InfoPane";
 import "./SelectPreview.css";
 
 const SelectPreview = () => {
@@ -21,11 +22,22 @@ const SelectPreview = () => {
     if (e.target.localName !== "path") return;
 
     const fill = selectedPath.getAttribute("fill");
-    if (fill == null || fill === "black") {
+    // if the fill color is the warning color set the opacity for resetting
+    if (fill === "#EED202") {
+      selectedPath.setAttribute("fill-opacity", 1);
+    }
+
+    // if the fill color is not red, set red, else set back to original color
+    if (fill == null || fill !== "red") {
       selectedPath.setAttribute("fill", "red");
       selected.add(selectedPath);
     } else {
-      selectedPath.setAttribute("fill", "black");
+      // if we set the fill-opacity set back to warning color, else black
+      if (selectedPath.getAttribute("fill-opacity") === "1") {
+        selectedPath.setAttribute("fill", "#EED202");
+      } else {
+        selectedPath.setAttribute("fill", "black");
+      }
       selected.delete(selectedPath);
     }
   };
@@ -74,7 +86,7 @@ const SelectPreview = () => {
   };
 
   return (
-    <div className="select">
+    <div className="select-preview">
       <button
         className="back-button preview-back-button"
         onClick={() => {
@@ -84,12 +96,18 @@ const SelectPreview = () => {
         Back
       </button>
       <h3>Select any curves to remove from design</h3>
-      {svgData && adjustStage === "remove" && (
-        <ReactSVG
-          src={`data:image/svg+xml;utf8,${encodeURIComponent(svgData)}`}
-          onClick={(e) => selectPath(e)}
+      <div className="select">
+        {svgData && adjustStage === "remove" && (
+          <ReactSVG
+            src={`data:image/svg+xml;utf8,${encodeURIComponent(svgData)}`}
+            onClick={(e) => selectPath(e)}
+          />
+        )}
+        <InfoPane
+          warnText="May be problematic to print, remove or create tabs"
+          redText="Items to be removed from design"
         />
-      )}
+      </div>
       <button
         className="submit-button"
         onClick={() => {

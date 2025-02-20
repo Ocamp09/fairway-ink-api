@@ -1,9 +1,23 @@
-.tab {
+.tab-main {
   position: relative;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
+}
+
+.tab {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+}
+
+@media screen and (max-width: 700px) {
+  .tab {
+    flex-direction: column;
+  }
 }
 
 .tab-canvas {

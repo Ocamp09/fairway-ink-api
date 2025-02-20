@@ -44,38 +44,21 @@ def fill_svg(svg_data):
     except Exception as e:
         print(f"Error processing SVG: {e}")
 
-
-def remove_outline(svg_data):
+def flag_problematic(svg_data):
     root = ET.fromstring(svg_data)
     paths = root.findall('.//{http://www.w3.org/2000/svg}path')
 
-    if len(paths) < 2:
-        return svg_data  # No outline to remove if there's only one path
+    for index, path in enumerate(paths):
+        path_d = path.get('d')
+        
+        # count the number of Z's in SVG data (more than 1 could be sign
+        # of unprintable code)
+        z_cnt = path_d.count('Z')
+        if z_cnt > 1:
+            paths[index].set("fill", "#EED202")
 
-    # Parse the first path's `d` attribute into a Path object
-    outline_path_d = paths[0].get('d')
-    outline_path = parse_path(outline_path_d)
-    outline_bbox = outline_path.bbox()  # Get the bounding box of the first path
-
-    # Check if the first path is an outline by comparing its bounding box with others
-    is_outline = True
-    for path_element in paths[1:]:
-        path_d = path_element.get('d')
-        if path_d:
-            path = parse_path(path_d)
-            path_bbox = path.bbox()
-            if (outline_bbox[0] <= path_bbox[0] and outline_bbox[1] <= path_bbox[1] and
-                    outline_bbox[2] >= path_bbox[2] and outline_bbox[3] >= path_bbox[3]):
-                is_outline = True
-                break
-
-    # If the first path is an outline, remove it
-    if is_outline:
-        root.remove(paths[0])  # Remove the first path
-        new_svg_data = ET.tostring(root, encoding='unicode', method='xml').replace("ns0:", "").replace(":ns0", "")
-        return new_svg_data
-
-    return svg_data
+    new_svg_data = ET.tostring(root, encoding='unicode', method='xml').replace("ns0:", "").replace(":ns0", "")
+    return new_svg_data
 
 
 def image_to_svg(image_path, method=PrintType.SOLID):
@@ -110,11 +93,10 @@ def image_to_svg(image_path, method=PrintType.SOLID):
     svg_data = trace(temp_image_path, blackAndWhite=True)
     os.remove(temp_image_path)
 
-    print(method)
     if method == PrintType.SOLID:
         svg_data = fill_svg(svg_data)
-    # elif method == PrintType.CUSTOM:
-    #     svg_data = remove_outline(svg_data)
+    elif method == PrintType.CUSTOM:
+        svg_data = flag_problematic(svg_data)
 
     with open("./output/svg/recent.svg", "w") as svg_file:
          svg_file.write(svg_data)
