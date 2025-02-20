@@ -112,11 +112,25 @@ const TabEditor = () => {
     const url = URL.createObjectURL(svgBlob);
 
     if (canvasRef.current) {
-      drawImage(false, url, canvasRef, placeholder, placeholder, "solid");
+      drawImage(false, url, canvasRef, placeholder, setReloadPaths, "solid");
     }
   }, [svgData]);
 
   useEffect(() => {
+    const canvas = canvasRef.current;
+    const context = canvas.getContext("2d");
+
+    if (reloadPaths) {
+      context.clearRect(0, 0, canvas.width, canvas.height);
+      const placeholder = () => {};
+      const svgBlob = new Blob([svgData], { type: "image/svg+xml" });
+      const url = URL.createObjectURL(svgBlob);
+
+      if (canvasRef.current) {
+        drawImage(false, url, canvasRef, placeholder, setReloadPaths, "solid");
+      }
+    }
+
     if (!paths) return;
     paths.forEach((path) => {
       if (path.type === "line") {
@@ -127,7 +141,7 @@ const TabEditor = () => {
         drawLine(canvasRef, startX, startY, endX, endY);
       }
     });
-  }, [paths]);
+  }, [paths, reloadPaths]);
 
   useEffect(() => {
     if (currPath) {
@@ -148,8 +162,8 @@ const TabEditor = () => {
       </button>
       <p>Add tabs for printing</p>
       <div className="tab">
-        <div>
-          {/* <UndoRedo
+        <div className="toolbar tools">
+          <UndoRedo
             paths={paths}
             setPaths={setPaths}
             iconSize={28}
@@ -158,7 +172,7 @@ const TabEditor = () => {
             setUndoStack={setUndoStack}
             redoStack={redoStack}
             setRedoStack={setRedoStack}
-          /> */}
+          />
         </div>
         <canvas
           ref={canvasRef}
