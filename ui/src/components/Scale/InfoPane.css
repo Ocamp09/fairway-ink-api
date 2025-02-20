@@ -1,0 +1,28 @@
+.info-main {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background-color: var(--tone);
+  border-radius: 5px;
+  width: 10rem;
+  padding: 1rem 5px 5px 5px;
+}
+
+.info-main p {
+  width: 85%;
+}
+
+.warning {
+  background-color: var(--warning);
+  width: 85%;
+  height: 1rem;
+  border-radius: 5px;
+}
+
+.remove {
+  background-color: red;
+  width: 85%;
+  border-radius: 5px;
+  height: 1rem;
+}

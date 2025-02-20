@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { ReactSVG } from "react-svg";
 import { useSession } from "../../contexts/DesignContext";
+import InfoPane from "./InfoPane";
 import "./SelectPreview.css";
 
 const SelectPreview = () => {
@@ -88,7 +89,7 @@ const SelectPreview = () => {
   };
 
   return (
-    <div className="select">
+    <div className="select-preview">
       <button
         className="back-button preview-back-button"
         onClick={() => {
@@ -98,12 +99,18 @@ const SelectPreview = () => {
         Back
       </button>
       <h3>Select any curves to remove from design</h3>
-      {currData && adjustStage === "remove" && (
-        <ReactSVG
-          src={`data:image/svg+xml;utf8,${encodeURIComponent(svgData)}`}
-          onClick={(e) => selectPath(e)}
+      <div className="select">
+        {currData && adjustStage === "remove" && (
+          <ReactSVG
+            src={`data:image/svg+xml;utf8,${encodeURIComponent(svgData)}`}
+            onClick={(e) => selectPath(e)}
+          />
+        )}
+        <InfoPane
+          warnText="May be problematic to print, remove or create tabs"
+          redText="Items to be removed from design"
         />
-      )}
+      </div>
       <button
         className="submit-button"
         onClick={() => {
