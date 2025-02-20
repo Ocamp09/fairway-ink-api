@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { ReactSVG } from "react-svg";
 import { useSession } from "../../contexts/DesignContext";
 import InfoPane from "./InfoPane";
@@ -13,8 +12,6 @@ const SelectPreview = () => {
     updateSvgData,
     updatePrevSvgData,
   } = useSession();
-
-  const [currData, setCurrData] = useState(svgData);
 
   let selected = new Set();
 
@@ -48,7 +45,7 @@ const SelectPreview = () => {
   // Existing removeSelectedPaths function
   const removeSelectedPaths = (selected) => {
     const parser = new DOMParser();
-    const doc = parser.parseFromString(currData, "image/svg+xml");
+    const doc = parser.parseFromString(svgData, "image/svg+xml");
     const originalSvg = doc.documentElement;
     const paths = doc.querySelectorAll("path");
 
@@ -100,7 +97,7 @@ const SelectPreview = () => {
       </button>
       <h3>Select any curves to remove from design</h3>
       <div className="select">
-        {currData && adjustStage === "remove" && (
+        {svgData && adjustStage === "remove" && (
           <ReactSVG
             src={`data:image/svg+xml;utf8,${encodeURIComponent(svgData)}`}
             onClick={(e) => selectPath(e)}
