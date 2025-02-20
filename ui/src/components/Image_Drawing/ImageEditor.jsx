@@ -1,29 +1,21 @@
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import "./ImageEditor.css";
 import Toolbar from "./Toolbar";
-import getStroke from "perfect-freehand";
 import { useSession } from "../../contexts/DesignContext";
 import TypeSelector from "./TypeSelector";
 import ModeExamples from "./ModeExamples";
 import {
   getCoordinates,
-  getSvgPathFromStroke,
   centerCanvasDrawing,
   drawImage,
+  drawPaths,
 } from "../../utils/canvasUtils";
 import { useFontLoader } from "../../hooks/useFontLoader";
 import { useCanvasScaling } from "../../hooks/useCanvasScaling";
 import { useCanvasEvents } from "../../hooks/useCanvasEvents";
 import { uploadImage } from "../../api/api";
 
-function ImageEditor({
-  setSvgUrl,
-  setSvgData,
-  setShowDesign,
-  setShowScale,
-  paths,
-  setPaths,
-}) {
+function ImageEditor() {
   const canvasRef = useRef(null);
 
   const [isLoading, setIsLoading] = useState(false);
@@ -35,48 +27,24 @@ function ImageEditor({
   const [lineWidth, setLineWidth] = useState(5);
   const [fontSize, setFontSize] = useState(80);
 
-  const { imageUrl, templateType, editorMode } = useSession();
+  const {
+    imageUrl,
+    stage,
+    updateStage,
+    updateAdjustStage,
+    uploadedPaths,
+    updateUploadedPaths,
+    updateSvgData,
+    templateType,
+    editorMode,
+  } = useSession();
+
+  const [paths, setPaths] = useState([]);
 
   const lineColor = "#00000";
 
   useFontLoader();
   useCanvasScaling(canvasRef, setCanvasScale);
-
-  const drawPaths = useCallback(() => {
-    if (paths.length !== 0) {
-      paths.forEach((path) => {
-        const canvas = canvasRef.current;
-        const context = canvas.getContext("2d");
-        if (path.type === "text") {
-          writeText(
-            path.text,
-            path.points[0][0],
-            path.points[0][1],
-            path.width
-          );
-        } else {
-          const stroke = getStroke(path.points, {
-            size: path.width,
-            thinning: 0.0,
-            smoothing: 0.0,
-            streamline: 1.0,
-          });
-          const pathData = getSvgPathFromStroke(stroke);
-          const path2D = new Path2D(pathData);
-          context.fillStyle = path.lineColor;
-          context.fill(path2D);
-        }
-      });
-    }
-  }, [paths]);
-
-  const writeText = (text, x, y, pathSize) => {
-    const canvas = canvasRef.current;
-    const context = canvas.getContext("2d");
-
-    context.font = pathSize + "px stencil";
-    context.fillText(text, x, y);
-  };
 
   const handleStartDrawing = (e) => {
     e.preventDefault();
@@ -109,27 +77,31 @@ function ImageEditor({
           y = centerY + fontSize + offset - 75;
         }
 
-        setPaths((prevPaths) => [
-          ...prevPaths,
-          {
-            points: [[x, y, 1]],
-            lineColor,
-            width: fontSize,
-            type: "text",
-            text: inputText,
-          },
-        ]);
+        setPaths((prevPaths) => {
+          return [
+            ...prevPaths,
+            {
+              points: [[x, y, 1]],
+              lineColor,
+              width: fontSize,
+              type: "text",
+              text: inputText,
+            },
+          ];
+        });
       }
     } else {
-      setPaths((prevPaths) => [
-        ...prevPaths,
-        {
-          points: [[x, y, pressure]],
-          lineColor,
-          width: lineWidth,
-          type: "draw",
-        },
-      ]);
+      setPaths((prevPaths) => {
+        return [
+          ...prevPaths,
+          {
+            points: [[x, y, pressure]],
+            lineColor,
+            width: lineWidth,
+            type: "draw",
+          },
+        ];
+      });
     }
   };
 
@@ -167,7 +139,6 @@ function ImageEditor({
     }
 
     setIsLoading(true);
-    setSvgUrl(null);
     const centeredCanvas = centerCanvasDrawing(canvasRef.current);
 
     // Export the centered canvas as an image
@@ -178,17 +149,16 @@ function ImageEditor({
       // Call the uploadImage function from api.js
       const response = await uploadImage(blob, templateType);
 
-      // Handle the response
-      const blobSvg = new Blob([response.svgData], {
-        type: "image/svg+xml",
-      });
-
       setIsLoading(false);
-      const url = URL.createObjectURL(blobSvg);
-      setSvgData(response.svgData);
-      setSvgUrl(url);
-      setShowScale(true);
-      setShowDesign(false);
+      updateSvgData(response.svgData);
+      if (templateType === "custom") {
+        updateAdjustStage("remove");
+      } else {
+        updateAdjustStage("scale");
+      }
+
+      updateStage("adjust");
+      updateUploadedPaths(paths);
     } catch (err) {
       console.error("Upload error:", err);
       setIsLoading(false);
@@ -204,8 +174,15 @@ function ImageEditor({
     context.clearRect(0, 0, canvas.width, canvas.height);
     context.scale(canvasScale, canvasScale);
 
-    drawImage(false, imageUrl, canvasRef, setPaths, setReloadPaths);
-  }, [imageUrl, drawImage]);
+    drawImage(
+      false,
+      imageUrl,
+      canvasRef,
+      setPaths,
+      setReloadPaths,
+      templateType
+    );
+  }, [imageUrl]);
 
   //will only run when paths or lineWidth changes
   useEffect(() => {
@@ -214,10 +191,17 @@ function ImageEditor({
 
     if (reloadPaths) {
       context.clearRect(0, 0, canvas.width, canvas.height);
-      drawImage(true, imageUrl, canvasRef, setPaths, setReloadPaths);
+      drawImage(
+        true,
+        imageUrl,
+        canvasRef,
+        setPaths,
+        setReloadPaths,
+        templateType
+      );
     }
-    drawPaths();
-  }, [paths, lineWidth, drawPaths, reloadPaths]);
+    drawPaths(canvasRef, paths, templateType);
+  }, [paths, lineWidth, reloadPaths]);
 
   useCanvasEvents(
     canvasRef,
@@ -231,21 +215,36 @@ function ImageEditor({
     const context = canvas.getContext("2d");
 
     context.clearRect(0, 0, canvas.width, canvas.height);
-    setPaths([]);
-  }, [templateType]);
+
+    if (imageUrl) {
+      drawImage(
+        true,
+        imageUrl,
+        canvasRef,
+        setPaths,
+        setReloadPaths,
+        templateType
+      );
+    } else {
+      drawPaths(canvasRef, uploadedPaths, templateType);
+    }
+  }, [templateType, stage]);
 
   return (
     <div className="designer">
       <p className="desc">
-        {templateType == "text"
-          ? `Click inside the editor and type a message`
-          : ` Upload an image (button or drag and drop), or draw with your mouse to
+        {templateType === "text" &&
+          `Click inside the editor and type a message to get started`}
+        {templateType === "solid" &&
+          ` Upload an image (button or drag and drop), or draw with your mouse to
         get started`}
+        {templateType === "custom" &&
+          `Upload an image (button or drag and drop), or select an editor mode to get started`}
       </p>
       <div className="modes-top">
         <ModeExamples small={true} />
       </div>
-      <TypeSelector />
+      <TypeSelector paths={paths} />
       <div className="displays">
         <div className="editor">
           <div className="tool">
@@ -258,7 +257,6 @@ function ImageEditor({
               canvasRef={canvasRef}
               fontSize={fontSize}
               setFontSize={setFontSize}
-              templateType={templateType}
             ></Toolbar>
           </div>
           <div>

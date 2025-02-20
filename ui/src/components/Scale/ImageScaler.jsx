@@ -13,7 +13,7 @@ const ImageScaler = ({ scale, setScale }) => {
           type="range"
           id="scale"
           min="0.1"
-          max="4"
+          max="10"
           step="0.1"
           value={scale}
           onChange={handleScaleChange}

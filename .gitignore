@@ -2,6 +2,7 @@
 *.stl
 *.png
 *.jpg
+*.jpeg
 *.gcode
 !default.stl
 .DS_Store

@@ -23,14 +23,24 @@ const Toolbar = ({
 }) => {
   const [undoStack, setUndoStack] = useState([]);
   const [redoStack, setRedoStack] = useState([]);
+  const [screenWidth, setScreenWidth] = useState(window.innerWidth);
 
-  const { updateImageUrl, templateType, editorMode, updateEditorMode } =
-    useSession();
+  const {
+    imageUrl,
+    updateImageUrl,
+    templateType,
+    editorMode,
+    updateEditorMode,
+  } = useSession();
 
   const iconSize = 28;
 
   const handleText = () => {
     updateEditorMode("type");
+  };
+
+  const handleDraw = () => {
+    updateEditorMode("draw");
   };
 
   const handleUndo = () => {
@@ -66,6 +76,15 @@ const Toolbar = ({
   };
 
   useEffect(() => {
+    const handleResize = () => {
+      setScreenWidth(window.innerWidth);
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  useEffect(() => {
     setRedoStack([]);
     setUndoStack([]);
   }, [templateType]);
@@ -91,26 +110,48 @@ const Toolbar = ({
     link.click();
   };
 
+  const shouldHideTools =
+    (templateType === "solid" || templateType === "text") && screenWidth < 750;
+
   return (
-    <>
-      <div className="toolbar">
+    <div className="tools">
+      <div className="tool-top" hidden={shouldHideTools}>
         <button
-          title="Switch editor mode"
-          onClick={handleText}
-          hidden={templateType == "solid" || "text"}
+          title="Activate drawing mode"
+          onClick={handleDraw}
+          className={editorMode === "draw" ? "editor-but-active" : "editor-but"}
+          hidden={templateType == "text"}
         >
-          {editorMode == "type" && <IoText size={iconSize} />}
-          {editorMode == "draw" && <BiSolidPencil size={iconSize} />}
+          <BiSolidPencil
+            size={iconSize}
+            color={editorMode === "draw" ? "white" : "black"}
+          />
         </button>
+        <button
+          title="Activate text mode"
+          onClick={handleText}
+          className={editorMode === "type" ? "editor-but-active" : "editor-but"}
+          hidden={templateType == "solid"}
+        >
+          <IoText
+            size={iconSize}
+            color={editorMode === "type" ? "white" : "black"}
+          />
+        </button>
+      </div>
+      <div className="toolbar">
         {templateType != "text" && (
           <>
             <FileUpload />
-            <button title="Remove image" onClick={handleRemoveImage}>
+            <button
+              title="Remove image"
+              onClick={handleRemoveImage}
+              disabled={!imageUrl}
+            >
               <RemoveImage />
             </button>
           </>
         )}
-
         <button title="Undo" onClick={handleUndo} disabled={paths.length === 0}>
           <IoMdUndo size={iconSize} />
         </button>
@@ -135,18 +176,19 @@ const Toolbar = ({
             iconSize={iconSize}
           />
         )}
-        {editorMode == "type" && templateType == "text" && (
-          <TextTools
-            fontSize={fontSize}
-            setFontSize={setFontSize}
-            iconSize={iconSize}
-          />
-        )}
+        {editorMode == "type" &&
+          (templateType === "text" || templateType === "custom") && (
+            <TextTools
+              fontSize={fontSize}
+              setFontSize={setFontSize}
+              iconSize={iconSize}
+            />
+          )}
         <button title="Download drawings" onClick={saveCanvas}>
           <FiDownload size={iconSize} />
         </button>
       </div>
-    </>
+    </div>
   );
 };
 

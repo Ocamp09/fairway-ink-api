@@ -1,3 +1,5 @@
+import getStroke from "perfect-freehand";
+
 export const getSvgPathFromStroke = (stroke) => {
   if (!stroke.length) return "";
 
@@ -102,8 +104,10 @@ export const drawImage = (
   imageUrl,
   canvasRef,
   setPaths,
-  setReloadPaths
+  setReloadPaths,
+  templateType
 ) => {
+  if (templateType === "text") return;
   if (imageUrl) {
     const img = new Image();
     img.src = imageUrl;
@@ -129,7 +133,77 @@ export const drawImage = (
       if (!edit) setPaths([]);
 
       context.drawImage(img, x, y, scaledWidth, scaledHeight);
+
       setReloadPaths(false);
     };
   }
+};
+
+export const drawPaths = (canvasRef, paths, templateType) => {
+  if (paths.length === 0) return; // early exit if there are no paths
+
+  const canvas = canvasRef.current;
+  const context = canvas.getContext("2d");
+
+  paths.forEach((path) => {
+    const drawText = () => {
+      if (path.type === "text") {
+        writeText(
+          canvasRef,
+          path.text,
+          path.points[0][0],
+          path.points[0][1],
+          path.width
+        );
+      }
+    };
+
+    const drawSolid = () => {
+      if (path.type === "draw") {
+        const stroke = getStroke(path.points, {
+          size: path.width,
+          thinning: 0.0,
+          smoothing: 0.0,
+          streamline: 1.0,
+        });
+        const pathData = getSvgPathFromStroke(stroke);
+        const path2D = new Path2D(pathData);
+        context.fillStyle = path.lineColor;
+        context.fill(path2D);
+      }
+    };
+
+    // handle drawing logic based on template type
+    if (templateType === "text") {
+      drawText();
+    } else if (templateType === "solid") {
+      drawSolid();
+    } else {
+      drawText();
+      if (path.type !== "text") {
+        drawSolid();
+      }
+    }
+  });
+};
+
+const writeText = (canvasRef, text, x, y, pathSize) => {
+  const canvas = canvasRef.current;
+  const context = canvas.getContext("2d");
+
+  context.font = pathSize + "px stencil";
+  context.fillText(text, x, y);
+};
+
+export const drawLine = (canvasRef, startX, startY, endX, endY, width = 7) => {
+  const canvas = canvasRef.current;
+  const ctx = canvas.getContext("2d");
+
+  // Draw the line as a white rectangle
+  ctx.beginPath();
+  ctx.moveTo(startX, startY);
+  ctx.lineTo(endX, endY);
+  ctx.lineWidth = width;
+  ctx.strokeStyle = "white";
+  ctx.stroke();
 };

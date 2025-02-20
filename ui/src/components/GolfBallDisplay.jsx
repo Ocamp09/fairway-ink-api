@@ -1,50 +1,21 @@
-import "../components/GolfBallDisplay.css";
 import { useState } from "react";
+import "../components/GolfBallDisplay.css";
 import ImageEditor from "./Image_Drawing/ImageEditor";
 import TabMenu from "./TabMenu";
 import ScaleSvg from "./Scale/ScaleSvg";
 import PreviewTab from "./Preview/PreviewTab";
+import { useSession } from "../contexts/DesignContext";
 
 const GolfBallDisplay = () => {
-  const [svgUrl, setSvgUrl] = useState(null);
-  const [svgData, setSvgData] = useState(null);
-  const [showDesign, setShowDesign] = useState(true);
-  const [showScale, setShowScale] = useState(false);
-  const [showPreview, setShowPreview] = useState(false);
-  const [paths, setPaths] = useState([]);
+  const { stage } = useSession();
 
   return (
     <div className="golf-ball-display">
-      <TabMenu
-        showDesign={showDesign}
-        setShowDesign={setShowDesign}
-        showScale={showScale}
-        setShowScale={setShowScale}
-        showPreview={showPreview}
-        setShowPreview={setShowPreview}
-      />
-      {showDesign && (
-        <ImageEditor
-          setSvgUrl={setSvgUrl}
-          setSvgData={setSvgData}
-          setShowDesign={setShowDesign}
-          setShowScale={setShowScale}
-          showDesign={showDesign}
-          paths={paths}
-          setPaths={setPaths}
-        />
-      )}
+      <TabMenu />
+      {stage === "design" && <ImageEditor />}
 
-      {showScale && (
-        <ScaleSvg
-          svgUrl={svgUrl}
-          svgData={svgData}
-          setSvgData={setSvgData}
-          setShowPreview={setShowPreview}
-          setShowScale={setShowScale}
-        />
-      )}
-      {showPreview && <PreviewTab />}
+      {stage === "adjust" && <ScaleSvg />}
+      {stage === "preview" && <PreviewTab />}
     </div>
   );
 };

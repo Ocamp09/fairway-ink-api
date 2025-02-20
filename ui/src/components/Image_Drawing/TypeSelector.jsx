@@ -1,21 +1,30 @@
 import "./TypeSelector.css";
 import { useSession } from "../../contexts/DesignContext";
 
-const TypeSelector = () => {
-  const { templateType, updateTemplateType, updateEditorMode } = useSession();
+const TypeSelector = ({ paths }) => {
+  const {
+    updateUploadedPaths,
+    templateType,
+    updateTemplateType,
+    updateEditorMode,
+  } = useSession();
+
   const handleSolid = () => {
     updateTemplateType("solid");
     updateEditorMode("draw");
+    updateUploadedPaths(paths);
   };
 
   const handleText = () => {
     updateTemplateType("text");
     updateEditorMode("type");
+    updateUploadedPaths(paths);
   };
 
-  const handleMulti = () => {
-    updateTemplateType("multi");
+  const handleCustom = () => {
+    updateTemplateType("custom");
     updateEditorMode("draw");
+    updateUploadedPaths(paths);
   };
 
   return (
@@ -32,12 +41,12 @@ const TypeSelector = () => {
       >
         Text Only
       </button>
-      {/* <button
-        className={templateType === "multi" ? "active" : ""}
-        onClick={handleMulti}
+      <button
+        className={templateType === "custom" ? "active" : ""}
+        onClick={handleCustom}
       >
-        Multi-Color Mode
-      </button> */}
+        Custom
+      </button>
     </div>
   );
 };

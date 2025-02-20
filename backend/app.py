@@ -3,8 +3,6 @@ from flask_cors import CORS  # Import CORS
 import os
 import subprocess
 from werkzeug.utils import secure_filename
-import pathlib
-import sys
 import img_to_svg
 import platform
 
@@ -13,27 +11,21 @@ app = Flask(__name__)
 CORS(app)
 
 # Configuration
-UPLOAD_FOLDER = "uploads"
 ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "svg"}
 MAX_FILE_SIZE = 5 * 1024 * 1024  # 5MB
-app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
+OUTPUT_FOLDER = "./output/"
 
-# Ensure the upload folder exists
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+cart_items = {}
 
 def allowed_file(filename):
     """Check if the file has an allowed extension."""
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
-@app.route("/output/stl/<filename>")
-def output_stl(filename):
-    return send_from_directory("output/stl", filename)
+@app.route("/output/<ssid>/<filename>")
+def output_stl(ssid, filename):
+    return send_from_directory(f"output/{ssid}", filename)
 
-
-@app.route("/output/svg/<filename>")
-def output_svg(filename):
-    return send_from_directory("output/svg", filename)
 
 @app.route("/upload", methods=["POST"])
 def upload_file():
@@ -53,21 +45,12 @@ def upload_file():
     file.seek(0)  # Reset file pointer after reading
 
     method = request.form.get("method", img_to_svg.PrintType.SOLID)  
-    if method == "multi":
-        method = img_to_svg.PrintType.MULTI
+    if method == "custom":
+        method = img_to_svg.PrintType.CUSTOM
     elif method == "text":
         method = img_to_svg.PrintType.TEXT
     else:
         method = img_to_svg.PrintType.SOLID
-    
-
-    # Save the file securely
-    filename = secure_filename(file.filename)
-    file_path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
-    file.save(file_path)
-
-    dir_path = pathlib.Path.cwd()
-    script_path = dir_path / "img_to_svg.py"
 
     svg_data = img_to_svg.image_to_svg(file, method=method)
     return jsonify({"success": True, "svgData": svg_data})
@@ -77,12 +60,31 @@ def upload_file():
 def generate_gcode():
     scale = request.form.get("scale", 1)  
 
+    if not request.headers["ssid"]:
+        return jsonify({"success": False, "error": "No session ID"}), 401
+
     if 'svg' not in request.files:
         return jsonify({"success": False, "error": "No SVG file provided"}), 400
 
+    session_id = request.headers["ssid"]
     svg_file = request.files['svg']
     filename = secure_filename(svg_file.filename)
-    output_svg_path = os.path.join("./output/svg", filename)
+
+    # remove the previous STL file if not saved to cart
+    if request.headers["stlKey"]:
+        key = request.headers["stlKey"]
+        if int(key) > 0:
+            stripped = filename.find("g")
+            prevKey = int(key) - 1
+            prevFile = str(prevKey) + filename[stripped::].replace("svg", "stl")
+            print(os.path.exists("./output/" + session_id + "/" + prevFile), "./output/" + session_id + "/" + prevFile)
+            print(cart_items)
+            # if os.path.exists(prevFile) and prevFile not in cart_items[session_id]:
+            #     os.remove(OUTPUT_FOLDER + session_id + "/" + prevFile)
+
+    os.makedirs("./output/" + session_id, exist_ok=True)
+
+    output_svg_path = os.path.join(OUTPUT_FOLDER + session_id, filename)
     try:
         svg_file.save(output_svg_path)
 
@@ -100,12 +102,28 @@ def generate_gcode():
         ]
 
         subprocess.run(blender_command, capture_output=True, text=True)
-        os.remove("./output/svg/" + filename)
+
+        os.remove(OUTPUT_FOLDER + session_id + "/" + filename)
         stl_name = filename.split(".")[0] + ".stl"  
-        stl_url = f"http://localhost:5001/output/stl/{stl_name}"
+        stl_url = f"http://localhost:5001/output/{session_id}/{stl_name}"
         return jsonify({"success": True, "stlUrl": stl_url})
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 502
+    
+
+@app.route("/cart", methods=["POST"])
+def add_to_cart():
+    session_id = request.headers["ssid"]
+    filename = request.form.get("filename")
+
+    if session_id not in cart_items:
+        cart_items[session_id] = set()
+
+    cart_items[session_id].add(filename)
+    print(cart_items)
+
+    return jsonify({"success": True})
+
     
 
 if __name__ == "__main__":

@@ -1,6 +1,8 @@
 import axios from "axios";
+import Cookie from "js-cookie";
 
 const API_URL = "http://localhost:5001";
+const session_id = Cookie.get("session_id");
 
 export const uploadImage = async (file, method) => {
   const formData = new FormData();
@@ -11,6 +13,7 @@ export const uploadImage = async (file, method) => {
     const response = await axios.post(API_URL + "/upload", formData, {
       headers: {
         "Content-Type": "multipart/form-data",
+        ssid: session_id,
       },
     });
 
@@ -30,7 +33,7 @@ export const generateStl = async (svgData, scale, stlKey, templateType) => {
   formData.append(
     "svg",
     new Blob([svgData], { type: "image/svg+xml" }),
-    "golfball" + stlKey + ".svg"
+    stlKey + "golfball" + ".svg"
   );
 
   if (templateType === "text") {
@@ -46,6 +49,8 @@ export const generateStl = async (svgData, scale, stlKey, templateType) => {
       {
         headers: {
           "Content-Type": "multipart/form-data",
+          ssid: session_id,
+          stlKey: stlKey,
         },
       }
     );
@@ -55,6 +60,23 @@ export const generateStl = async (svgData, scale, stlKey, templateType) => {
     }
   } catch (error) {
     console.error("Upload error:", error);
+    throw error;
+  }
+};
+
+export const addToCartApi = (stlUrl) => {
+  const formData = new FormData();
+  formData.append("filename", stlUrl);
+
+  try {
+    axios.post(API_URL + "/cart", formData, {
+      headers: {
+        "Content-Type": "text/plain",
+        ssid: session_id,
+      },
+    });
+  } catch (error) {
+    console.log("Err adding to cart: ", error);
     throw error;
   }
 };

@@ -3,6 +3,7 @@ import STLViewer from "../3D-View/STLViewer";
 import QuantityDropdown from "./QuantityDropdown";
 import { useCart } from "../../contexts/CartContext";
 import { useSession } from "../../contexts/DesignContext";
+import { addToCartApi } from "../../api/api";
 import "./PreviewTab.css";
 
 const PreviewTab = () => {
@@ -11,7 +12,13 @@ const PreviewTab = () => {
   const [error, setError] = useState("");
 
   const { addToCart } = useCart();
-  const { stlUrl, stlKey, templateType } = useSession();
+  const { updateAdjustStage, stlUrl, stlKey, templateType, updateStage } =
+    useSession();
+
+  const handleBack = () => {
+    updateStage("adjust");
+    updateAdjustStage("scale");
+  };
 
   const handleAddToCart = (event) => {
     event.preventDefault();
@@ -20,14 +27,22 @@ const PreviewTab = () => {
       setError("No custom design uploaded");
       return;
     }
-
+    addToCartApi(stlUrl);
     addToCart(stlKey, stlUrl, quantity, templateType);
     setIsAdded(true);
   };
 
   return (
     <div className="stl-viewer">
-      <p>3-d Render Preview</p>
+      <button
+        className="back-button"
+        onClick={() => {
+          handleBack();
+        }}
+      >
+        Back
+      </button>
+      <p>3-D Render Preview</p>
       {stlUrl && <STLViewer stlUrl={stlUrl} />}
       <div>
         <QuantityDropdown
