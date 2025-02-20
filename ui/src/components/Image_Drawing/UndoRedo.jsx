@@ -2,10 +2,16 @@ import { useState, useEffect } from "react";
 import { IoMdUndo, IoMdRedo } from "react-icons/io";
 import { useSession } from "../../contexts/DesignContext";
 
-const UndoRedo = ({ paths, setPaths, iconSize, setReloadPaths }) => {
-  const [undoStack, setUndoStack] = useState([]);
-  const [redoStack, setRedoStack] = useState([]);
-
+const UndoRedo = ({
+  paths,
+  setPaths,
+  iconSize,
+  setReloadPaths,
+  undoStack,
+  setUndoStack,
+  redoStack,
+  setRedoStack,
+}) => {
   const { templateType } = useSession();
 
   const handleUndo = () => {

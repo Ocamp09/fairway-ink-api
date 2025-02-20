@@ -22,7 +22,8 @@ const Toolbar = ({
   setFontSize,
 }) => {
   const [screenWidth, setScreenWidth] = useState(window.innerWidth);
-
+  const [undoStack, setUndoStack] = useState([]);
+  const [redoStack, setRedoStack] = useState([]);
   const {
     imageUrl,
     updateImageUrl,
@@ -130,6 +131,10 @@ const Toolbar = ({
           setPaths={setPaths}
           iconSize={iconSize}
           setReloadPaths={setReloadPaths}
+          undoStack={undoStack}
+          setUndoStack={setUndoStack}
+          redoStack={redoStack}
+          setRedoStack={setRedoStack}
         />
         <button
           title="Delete drawings"
