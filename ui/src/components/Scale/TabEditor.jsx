@@ -10,6 +10,7 @@ import InfoPane from "./InfoPane";
 import { uploadImage } from "../../api/api";
 import "./TabEditor.css";
 import UndoRedo from "../Image_Drawing/UndoRedo";
+import DrawTools from "../Image_Drawing/DrawTools";
 
 const TabEditor = () => {
   const {
@@ -29,9 +30,12 @@ const TabEditor = () => {
   const [isDrawing, setIsDrawing] = useState(false);
   const [undoStack, setUndoStack] = useState([]);
   const [redoStack, setRedoStack] = useState([]);
+  const [lineWidth, setLineWidth] = useState(8);
 
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  const iconSize = 28;
 
   const handleBackToRemove = () => {
     updateAdjustStage("remove");
@@ -49,6 +53,7 @@ const TabEditor = () => {
     setCurrPath({
       start: [x - 5, y],
       end: [x - 5, y],
+      width: lineWidth,
       type: "line",
     });
   };
@@ -138,7 +143,7 @@ const TabEditor = () => {
         const startY = path.start[1];
         const endX = path.end[0];
         const endY = path.end[1];
-        drawLine(canvasRef, startX, startY, endX, endY);
+        drawLine(canvasRef, startX, startY, endX, endY, path.width);
       }
     });
   }, [paths, reloadPaths]);
@@ -146,7 +151,7 @@ const TabEditor = () => {
   useEffect(() => {
     if (currPath) {
       const { start, end } = currPath;
-      drawLine(canvasRef, start[0], start[1], end[0], end[1]);
+      drawLine(canvasRef, start[0], start[1], end[0], end[1], currPath.width);
     }
   }, [currPath]);
 
@@ -172,6 +177,11 @@ const TabEditor = () => {
             setUndoStack={setUndoStack}
             redoStack={redoStack}
             setRedoStack={setRedoStack}
+          />
+          <DrawTools
+            iconSize={iconSize}
+            lineWidth={lineWidth}
+            setLineWidth={setLineWidth}
           />
         </div>
         <canvas
