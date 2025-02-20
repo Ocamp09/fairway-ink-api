@@ -157,7 +157,7 @@ const TabEditor = () => {
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
         />
-        <InfoPane warnText="Indicates un-printable code, click and draw bridges across yellow items to white areas for printing" />
+        <InfoPane warnText="Indicates un-printable areas, click and draw bridges across yellow items to white areas for printing" />
       </div>
       <button
         className="submit-button"
