@@ -140,10 +140,33 @@ function ImageEditor() {
     }
 
     setIsLoading(true);
-    const centeredCanvas = centerCanvasDrawing(canvasRef.current);
 
-    // Export the centered canvas as an image
-    const dataURL = centeredCanvas.toDataURL("image/png");
+    // Create a temporary canvas to combine the image and drawings
+    const tempCanvas = document.createElement("canvas");
+    tempCanvas.width = 500;
+    tempCanvas.height = 500;
+    const tempCtx = tempCanvas.getContext("2d");
+
+    // Fill the background with white
+    tempCtx.fillStyle = "white";
+    tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+
+    if (templateType !== "text") {
+      // Draw the image canvas onto the temporary canvas
+      tempCtx.drawImage(imgCanvasRef.current, 0, 0);
+    }
+
+    let dataURL;
+    if (imageUrl != "null") {
+      // Draw the drawing canvas onto the temporary canvas
+      tempCtx.drawImage(canvasRef.current, 0, 0);
+      dataURL = tempCanvas.toDataURL("image/png");
+    } else {
+      // Center the combined canvas content
+      const centeredCanvas = centerCanvasDrawing(canvasRef.current);
+      dataURL = centeredCanvas.toDataURL("image/png");
+    }
+
     const blob = await fetch(dataURL).then((r) => r.blob());
 
     try {
@@ -224,9 +247,8 @@ function ImageEditor() {
         setReloadPaths,
         templateType
       );
-    } else {
-      drawPaths(canvasRef, uploadedPaths, templateType);
     }
+    setPaths([]);
   }, [templateType, stage]);
 
   return (
@@ -264,6 +286,7 @@ function ImageEditor() {
               width={500}
               height={500}
               className="img-canvas"
+              hidden={templateType === "text"}
             />
             <canvas
               ref={canvasRef}
