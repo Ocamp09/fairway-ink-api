@@ -1,10 +1,12 @@
 import React, { useState } from "react";
 import { useCart } from "../../contexts/CartContext";
 import STLViewer from "../3D-View/STLViewer";
+import Checkout from "./Checkout";
 import "./ViewCartPopup.css";
 
 const ViewCartPopup = ({ isOpen, setIsOpen }) => {
   const { cartItems, removeFromCart, updateQuantity } = useCart();
+  const [isCheckout, setIsCheckout] = useState(false);
 
   let total = 0.0;
 
@@ -15,7 +17,11 @@ const ViewCartPopup = ({ isOpen, setIsOpen }) => {
 
   const getPrice = (item) => {
     if (item.type === "solid" || item.type === "text") {
-      const price = 4.99;
+      const price = 5.99;
+      total += price * item.quantity;
+      return price * item.quantity;
+    } else {
+      const price = 7.99;
       total += price * item.quantity;
       return price * item.quantity;
     }
@@ -23,6 +29,8 @@ const ViewCartPopup = ({ isOpen, setIsOpen }) => {
   };
 
   const handleCheckout = () => {
+    // open the checkout here
+    setIsCheckout(true);
     console.log("checkout");
   };
 
@@ -87,11 +95,12 @@ const ViewCartPopup = ({ isOpen, setIsOpen }) => {
           </ul>
         )}
         <div className="checkout">
-          <h3>Cart Total: ${total.toFixed(2)}</h3>
+          {/* <h3>Cart Total: ${total.toFixed(2)}</h3> */}
           <button onClick={handleCheckout} className="checkout-button">
             Checkout
           </button>
         </div>
+        {isCheckout && <Checkout cartTotal={total.toFixed(2)} />}
       </div>
     </div>
   );
