@@ -17,6 +17,7 @@ import { uploadImage } from "../../api/api";
 
 function ImageEditor() {
   const canvasRef = useRef(null);
+  const imgCanvasRef = useRef(null);
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
@@ -177,7 +178,7 @@ function ImageEditor() {
     drawImage(
       false,
       imageUrl,
-      canvasRef,
+      imgCanvasRef,
       setPaths,
       setReloadPaths,
       templateType
@@ -186,19 +187,17 @@ function ImageEditor() {
 
   //will only run when paths or lineWidth changes
   useEffect(() => {
-    const canvas = canvasRef.current;
-    const context = canvas.getContext("2d");
+    if (!imageUrl && reloadPaths) {
+      const canvas = imgCanvasRef.current;
+      const context = canvas.getContext("2d");
+      context.clearRect(0, 0, canvas.width, canvas.height);
+    }
 
     if (reloadPaths) {
+      const canvas = canvasRef.current;
+      const context = canvas.getContext("2d");
       context.clearRect(0, 0, canvas.width, canvas.height);
-      drawImage(
-        true,
-        imageUrl,
-        canvasRef,
-        setPaths,
-        setReloadPaths,
-        templateType
-      );
+      setReloadPaths(false);
     }
     drawPaths(canvasRef, paths, templateType);
   }, [paths, lineWidth, reloadPaths]);
@@ -220,7 +219,7 @@ function ImageEditor() {
       drawImage(
         true,
         imageUrl,
-        canvasRef,
+        imgCanvasRef,
         setPaths,
         setReloadPaths,
         templateType
@@ -259,12 +258,18 @@ function ImageEditor() {
               setFontSize={setFontSize}
             ></Toolbar>
           </div>
-          <div>
+          <div className="canvas-container">
+            <canvas
+              ref={imgCanvasRef}
+              width={500}
+              height={500}
+              className="img-canvas"
+            />
             <canvas
               ref={canvasRef}
               width={500}
               height={500}
-              className="canvas"
+              className="drawing-canvas"
               onMouseDown={handleStartDrawing}
               onMouseMove={handleMoveDrawing}
               onMouseUp={handleStopDrawing}
