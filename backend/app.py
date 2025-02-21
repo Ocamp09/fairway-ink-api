@@ -169,6 +169,7 @@ def create_payment():
         intent = stripe.PaymentIntent.create(
             amount=amount,
             currency='usd',
+            payment_method_types=['card']
         )
 
         return jsonify({
