@@ -35,6 +35,9 @@ def calculate_order_amount(items):
                 price += TEXT_PRICE
             case "custom":
                 price += CUSTOM_PRICE
+            case _:
+                return -1
+
 
     return round(price, 2)
 
@@ -149,6 +152,9 @@ def add_to_cart():
 
 @app.route('/create-payment-intent', methods=['POST'])
 def create_payment():
+    amount = calculate_order_amount(data['items'])
+    if amount <= 0:
+        return jsonify({"success": False, "error": str(e) + " invalid amount"}), 502
     try:
         data = json.loads(request.data)
         # Create a PaymentIntent with the order amount and currency
