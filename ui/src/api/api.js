@@ -1,10 +1,24 @@
 import axios from "axios";
-import Cookie from "js-cookie";
+import Cookies from "js-cookie";
+import { v4 as uuidv4 } from "uuid";
 
 const API_URL = "http://localhost:5001";
-const session_id = Cookie.get("session_id");
+
+const get_ssid = () => {
+  let sessionId = Cookies.get("session_id");
+
+  if (!sessionId) {
+    sessionId = uuidv4();
+    Cookies.set("session_id", sessionId, { expires: 1 }); // Expires in 1 day
+  }
+
+  return sessionId;
+};
 
 export const uploadImage = async (file, method) => {
+  const session_id = get_ssid();
+  console.log(session_id);
+
   const formData = new FormData();
   formData.append("file", file, "fairway_ink_drawing.png");
   formData.append("method", method);
@@ -29,6 +43,8 @@ export const uploadImage = async (file, method) => {
 };
 
 export const generateStl = async (svgData, scale, stlKey, templateType) => {
+  const session_id = get_ssid();
+
   const formData = new FormData();
   formData.append(
     "svg",
@@ -65,6 +81,8 @@ export const generateStl = async (svgData, scale, stlKey, templateType) => {
 };
 
 export const addToCartApi = (stlUrl) => {
+  const session_id = get_ssid();
+
   const formData = new FormData();
   formData.append("filename", stlUrl);
 
@@ -82,6 +100,8 @@ export const addToCartApi = (stlUrl) => {
 };
 
 export const getPaymentIntent = async () => {
+  const session_id = get_ssid();
+
   const formData = new FormData();
   formData.append("cart", localStorage.getItem("cart"));
 
