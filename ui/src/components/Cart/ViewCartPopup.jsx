@@ -87,7 +87,7 @@ const ViewCartPopup = ({ isOpen, setIsOpen }) => {
           </ul>
         )}
         <div className="checkout">
-          <h3>Cart Total: ${total}</h3>
+          <h3>Cart Total: ${total.toFixed(2)}</h3>
           <button onClick={handleCheckout} className="checkout-button">
             Checkout
           </button>
