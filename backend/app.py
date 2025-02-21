@@ -5,7 +5,11 @@ import subprocess
 from werkzeug.utils import secure_filename
 import img_to_svg
 import platform
+import json
+import stripe
 
+# stripe secret API key (test)
+stripe.api_key = 'sk_test_51Qs6WuACPDsvvNfxayxO5fGAKEh7GSTbYPooWZ6qwxfe1S6st8SzE5utVWlzShFWrVoSiLNEvy1n30ZG7sWAJPNd00TSAreBRT'
 
 app = Flask(__name__)
 CORS(app)
@@ -15,7 +19,28 @@ ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "svg"}
 MAX_FILE_SIZE = 5 * 1024 * 1024  # 5MB
 OUTPUT_FOLDER = "./output/"
 
+CUSTOM_PRICE = 799
+SOLID_PRICE = 599
+TEXT_PRICE = 599
+
 cart_items = {}
+
+def calculate_order_amount(items):
+    price = 0
+    for item in items:
+        match item['type']:
+            case "solid":
+                price += SOLID_PRICE
+            case "text": 
+                price += TEXT_PRICE
+            case "custom":
+                price += CUSTOM_PRICE
+            case _:
+                return -1
+
+
+    return price
+
 
 def allowed_file(filename):
     """Check if the file has an allowed extension."""
@@ -124,6 +149,34 @@ def add_to_cart():
 
     return jsonify({"success": True})
 
+
+@app.route('/create-payment-intent', methods=['POST'])
+def create_payment():
+    cart = request.form.get("cart", 1)  
+    amount = calculate_order_amount(json.loads(cart))
+
+    if amount <= 0:
+        return jsonify({"success": False, "error": str(e) + " invalid amount"}), 502
+    
+    try:
+        cart = request.form.get("cart", 1)  
+        amount = calculate_order_amount(json.loads(cart))
+
+        if amount <= 0:
+            return jsonify({"success": False, "error": str(e) + " invalid amount"}), 502
+    
+        # Create a PaymentIntent with the order amount and currency
+        intent = stripe.PaymentIntent.create(
+            amount=amount,
+            currency='usd',
+            payment_method_types=['card']
+        )
+
+        return jsonify({
+            'clientSecret': intent['client_secret']
+        })
+    except Exception as e:
+        return jsonify(error="ERROR"), 403
     
 
 if __name__ == "__main__":

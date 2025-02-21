@@ -11,3 +11,4 @@
 !/ui/public/*.jpg
 !/ui/public/*.png
 venv/
+*.env
