@@ -11,14 +11,14 @@ const Header = ({ cartPopup, setCartPopup }) => {
       <div className="header">
         <div className="header-items">
           <div className="header-start">
-            <img
-              src="/logo.svg"
-              width="80"
-              height="70"
-              className="d-inline-block align-top"
-              alt="React Bootstrap logo"
-            />
-            <span className="home-name">Fairway Ink</span>
+            <span>
+              <img
+                src="/logo_full.png"
+                height={40}
+                className="d-inline-block align-top"
+                alt="React Bootstrap logo"
+              />
+            </span>
           </div>
           <div className="header-nav">
             {/* <button className="nav-item">Start Designing</button>
