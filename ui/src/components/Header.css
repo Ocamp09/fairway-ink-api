@@ -61,6 +61,12 @@
   outline: none;
 }
 
+@media screen and (max-width: 1350px) {
+  .header-start {
+    margin-left: 2rem;
+  }
+}
+
 @media screen and (max-width: 750px) {
   .header-nav {
     display: none;
@@ -81,6 +87,11 @@
   }
   .header-start {
     width: 75%;
+    margin-left: 0.5rem;
+  }
+
+  .header-start img {
+    height: 30px;
   }
 }
 
