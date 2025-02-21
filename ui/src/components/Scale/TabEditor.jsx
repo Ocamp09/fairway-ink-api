@@ -23,6 +23,7 @@ const TabEditor = () => {
   } = useSession();
 
   const canvasRef = useRef();
+  const imgCanvasRef = useRef();
 
   const [reloadPaths, setReloadPaths] = useState(false);
   const [paths, setPaths] = useState([]);
@@ -79,6 +80,7 @@ const TabEditor = () => {
     setPaths((prevPaths) => {
       return [...prevPaths, currPath];
     });
+    setCurrPath(null);
   };
 
   const submitTabs = async () => {
@@ -92,8 +94,21 @@ const TabEditor = () => {
     }
 
     setLoading(true);
-    const centeredCanvas = centerCanvasDrawing(canvasRef.current);
-    const dataURL = centeredCanvas.toDataURL("image/png");
+
+    // Create a temporary canvas to combine the image and drawings
+    const tempCanvas = document.createElement("canvas");
+    tempCanvas.width = 500;
+    tempCanvas.height = 500;
+    const tempCtx = tempCanvas.getContext("2d");
+
+    // Fill the background with white
+    tempCtx.fillStyle = "white";
+    tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+
+    tempCtx.drawImage(imgCanvasRef.current, 0, 0);
+    tempCtx.drawImage(canvasRef.current, 0, 0);
+
+    const dataURL = tempCanvas.toDataURL("image/png");
     const blob = await fetch(dataURL).then((r) => r.blob());
 
     try {
@@ -117,24 +132,14 @@ const TabEditor = () => {
     const url = URL.createObjectURL(svgBlob);
 
     if (canvasRef.current) {
-      drawImage(false, url, canvasRef, placeholder, setReloadPaths, "solid");
+      drawImage(false, url, imgCanvasRef, placeholder, setReloadPaths, "solid");
     }
   }, [svgData]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
     const context = canvas.getContext("2d");
-
-    if (reloadPaths) {
-      context.clearRect(0, 0, canvas.width, canvas.height);
-      const placeholder = () => {};
-      const svgBlob = new Blob([svgData], { type: "image/svg+xml" });
-      const url = URL.createObjectURL(svgBlob);
-
-      if (canvasRef.current) {
-        drawImage(false, url, canvasRef, placeholder, setReloadPaths, "solid");
-      }
-    }
+    context.clearRect(0, 0, canvas.width, canvas.height);
 
     if (!paths) return;
     paths.forEach((path) => {
@@ -146,14 +151,12 @@ const TabEditor = () => {
         drawLine(canvasRef, startX, startY, endX, endY, path.width);
       }
     });
-  }, [paths, reloadPaths]);
 
-  useEffect(() => {
     if (currPath) {
       const { start, end } = currPath;
       drawLine(canvasRef, start[0], start[1], end[0], end[1], currPath.width);
     }
-  }, [currPath]);
+  }, [currPath, paths, reloadPaths]);
 
   return (
     <div className="tab-main">
@@ -184,15 +187,23 @@ const TabEditor = () => {
             setLineWidth={setLineWidth}
           />
         </div>
-        <canvas
-          ref={canvasRef}
-          width={500}
-          height={500}
-          className="canvas tab-canvas"
-          onMouseDown={handleMouseDown}
-          onMouseMove={handleMouseMove}
-          onMouseUp={handleMouseUp}
-        />
+        <div className="canvas-container">
+          <canvas
+            ref={imgCanvasRef}
+            width={500}
+            height={500}
+            className="img-canvas"
+          />
+          <canvas
+            ref={canvasRef}
+            width={500}
+            height={500}
+            className="drawing-canvas"
+            onMouseDown={handleMouseDown}
+            onMouseMove={handleMouseMove}
+            onMouseUp={handleMouseUp}
+          />
+        </div>
         <InfoPane warnText="Indicates un-printable areas, click and draw bridges across yellow items to white areas for printing" />
       </div>
       <button
