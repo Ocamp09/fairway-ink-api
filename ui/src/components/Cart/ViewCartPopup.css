@@ -12,16 +12,18 @@
 }
 
 .view-cart-popup {
+  display: flex;
+  flex-direction: column;
   background-color: var(--background);
   padding: 20px;
   border-radius: 8px;
   max-width: 800px;
-  max-height: 90vh;
+  max-height: 95vh;
   overflow-y: auto;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
   position: relative;
   width: 800px;
-  height: 90vh;
+  height: 95vh;
 }
 
 .close-button {
@@ -39,6 +41,8 @@
   list-style: none;
   padding: 0;
   height: 85%;
+  flex-grow: 1;
+  overflow-y: auto;
 }
 
 .cart-item {
