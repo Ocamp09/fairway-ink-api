@@ -9,6 +9,8 @@ import {
 import InfoPane from "./InfoPane";
 import { uploadImage } from "../../api/api";
 import "./TabEditor.css";
+import UndoRedo from "../Image_Drawing/UndoRedo";
+import DrawTools from "../Image_Drawing/DrawTools";
 
 const TabEditor = () => {
   const {
@@ -22,12 +24,18 @@ const TabEditor = () => {
 
   const canvasRef = useRef();
 
+  const [reloadPaths, setReloadPaths] = useState(false);
   const [paths, setPaths] = useState([]);
-  const [currPath, setCurrPath] = useState([]);
+  const [currPath, setCurrPath] = useState(null);
   const [isDrawing, setIsDrawing] = useState(false);
+  const [undoStack, setUndoStack] = useState([]);
+  const [redoStack, setRedoStack] = useState([]);
+  const [lineWidth, setLineWidth] = useState(8);
 
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  const iconSize = 28;
 
   const handleBackToRemove = () => {
     updateAdjustStage("remove");
@@ -43,7 +51,9 @@ const TabEditor = () => {
     if (!coords) return;
     var { x, y } = coords;
     setCurrPath({
-      points: [[x - 5, y]],
+      start: [x, y],
+      end: [x, y],
+      width: lineWidth,
       type: "line",
     });
   };
@@ -57,10 +67,10 @@ const TabEditor = () => {
     if (!coords) return;
     var { x, y } = coords;
 
-    const updateEnd = [x, y];
-    let updatedPath = currPath;
-    updatedPath.points[1] = updateEnd;
-    setCurrPath(updatedPath);
+    setCurrPath((prevPath) => ({
+      ...prevPath,
+      end: [x, y],
+    }));
   };
 
   // Handle mouse up (finish drawing)
@@ -107,34 +117,43 @@ const TabEditor = () => {
     const url = URL.createObjectURL(svgBlob);
 
     if (canvasRef.current) {
-      drawImage(false, url, canvasRef, placeholder, placeholder, "solid");
+      drawImage(false, url, canvasRef, placeholder, setReloadPaths, "solid");
     }
   }, [svgData]);
 
   useEffect(() => {
+    const canvas = canvasRef.current;
+    const context = canvas.getContext("2d");
+
+    if (reloadPaths) {
+      context.clearRect(0, 0, canvas.width, canvas.height);
+      const placeholder = () => {};
+      const svgBlob = new Blob([svgData], { type: "image/svg+xml" });
+      const url = URL.createObjectURL(svgBlob);
+
+      if (canvasRef.current) {
+        drawImage(false, url, canvasRef, placeholder, setReloadPaths, "solid");
+      }
+    }
+
+    if (!paths) return;
     paths.forEach((path) => {
-      if (path.type === "line" && path.points.length >= 2) {
-        const startX = path.points[0][0];
-        const startY = path.points[0][1];
-        const endX = path.points[path.points.length - 1][0];
-        const endY = path.points[path.points.length - 1][1];
-        drawLine(canvasRef, startX, startY, endX, endY);
+      if (path.type === "line") {
+        const startX = path.start[0];
+        const startY = path.start[1];
+        const endX = path.end[0];
+        const endY = path.end[1];
+        drawLine(canvasRef, startX, startY, endX, endY, path.width);
       }
     });
-  }, [paths]);
+  }, [paths, reloadPaths]);
 
-  // useEffect(() => {
-  //   console.log(currPath);
-  //   if (currPath.points[0] && currPath.points[1] && canvasRef.current) {
-  //     console.log(currPath.points[1]);
-  //     const startX = currPath.points[0][0];
-  //     const startY = currPath.points[0][1];
-  //     const endX = currPath.points[1][0];
-  //     const endY = currPath.points[1][1];
-
-  //     drawLine(canvasRef, startX, startY, endX, endY);
-  //   }
-  // }, [currPath]);
+  useEffect(() => {
+    if (currPath) {
+      const { start, end } = currPath;
+      drawLine(canvasRef, start[0], start[1], end[0], end[1], currPath.width);
+    }
+  }, [currPath]);
 
   return (
     <div className="tab-main">
@@ -148,6 +167,23 @@ const TabEditor = () => {
       </button>
       <p>Add tabs for printing</p>
       <div className="tab">
+        <div className="toolbar tools">
+          <UndoRedo
+            paths={paths}
+            setPaths={setPaths}
+            iconSize={28}
+            setReloadPaths={setReloadPaths}
+            undoStack={undoStack}
+            setUndoStack={setUndoStack}
+            redoStack={redoStack}
+            setRedoStack={setRedoStack}
+          />
+          <DrawTools
+            iconSize={iconSize}
+            lineWidth={lineWidth}
+            setLineWidth={setLineWidth}
+          />
+        </div>
         <canvas
           ref={canvasRef}
           width={500}

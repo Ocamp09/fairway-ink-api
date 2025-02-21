@@ -24,6 +24,10 @@
   margin-top: 15px;
 }
 
-.tab button {
+.tools {
   width: auto;
+}
+
+.tools button {
+  width: 100%;
 }

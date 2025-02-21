@@ -197,13 +197,13 @@ const writeText = (canvasRef, text, x, y, pathSize) => {
 
 export const drawLine = (canvasRef, startX, startY, endX, endY, width = 7) => {
   const canvas = canvasRef.current;
-  const ctx = canvas.getContext("2d");
+  const context = canvas.getContext("2d");
 
   // Draw the line as a white rectangle
-  ctx.beginPath();
-  ctx.moveTo(startX, startY);
-  ctx.lineTo(endX, endY);
-  ctx.lineWidth = width;
-  ctx.strokeStyle = "white";
-  ctx.stroke();
+  context.beginPath();
+  context.moveTo(startX, startY);
+  context.lineTo(endX, endY);
+  context.lineWidth = width;
+  context.strokeStyle = "white";
+  context.stroke();
 };
