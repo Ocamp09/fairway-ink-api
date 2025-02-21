@@ -19,16 +19,16 @@ ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "svg"}
 MAX_FILE_SIZE = 5 * 1024 * 1024  # 5MB
 OUTPUT_FOLDER = "./output/"
 
-CUSTOM_PRICE = 7.99
-SOLID_PRICE = 5.99
-TEXT_PRICE = 5.99
+CUSTOM_PRICE = 799
+SOLID_PRICE = 599
+TEXT_PRICE = 599
 
 cart_items = {}
 
 def calculate_order_amount(items):
-    price = 0.00
+    price = 0
     for item in items:
-        match item:
+        match item['type']:
             case "solid":
                 price += SOLID_PRICE
             case "text": 
@@ -39,7 +39,7 @@ def calculate_order_amount(items):
                 return -1
 
 
-    return round(price, 2)
+    return price
 
 
 def allowed_file(filename):
@@ -152,25 +152,30 @@ def add_to_cart():
 
 @app.route('/create-payment-intent', methods=['POST'])
 def create_payment():
-    amount = calculate_order_amount(data['items'])
+    cart = request.form.get("cart", 1)  
+    amount = calculate_order_amount(json.loads(cart))
+
     if amount <= 0:
         return jsonify({"success": False, "error": str(e) + " invalid amount"}), 502
+    
     try:
-        data = json.loads(request.data)
+        cart = request.form.get("cart", 1)  
+        amount = calculate_order_amount(json.loads(cart))
+
+        if amount <= 0:
+            return jsonify({"success": False, "error": str(e) + " invalid amount"}), 502
+    
         # Create a PaymentIntent with the order amount and currency
         intent = stripe.PaymentIntent.create(
-            amount=calculate_order_amount(data['items']),
+            amount=amount,
             currency='usd',
-            # In the latest version of the API, specifying the `automatic_payment_methods` parameter is optional because Stripe enables its functionality by default.
-            automatic_payment_methods={
-                'enabled': True,
-            },
         )
+
         return jsonify({
             'clientSecret': intent['client_secret']
         })
     except Exception as e:
-        return jsonify(error=str(e)), 403
+        return jsonify(error="ERROR"), 403
     
 
 if __name__ == "__main__":
