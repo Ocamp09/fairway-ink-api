@@ -5,7 +5,11 @@ import subprocess
 from werkzeug.utils import secure_filename
 import img_to_svg
 import platform
+import json
+import stripe
 
+# stripe secret API key (test)
+stripe.api_key = 'sk_test_51Qs6WuACPDsvvNfxayxO5fGAKEh7GSTbYPooWZ6qwxfe1S6st8SzE5utVWlzShFWrVoSiLNEvy1n30ZG7sWAJPNd00TSAreBRT'
 
 app = Flask(__name__)
 CORS(app)
@@ -15,7 +19,25 @@ ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "svg"}
 MAX_FILE_SIZE = 5 * 1024 * 1024  # 5MB
 OUTPUT_FOLDER = "./output/"
 
+CUSTOM_PRICE = 7.99
+SOLID_PRICE = 5.99
+TEXT_PRICE = 5.99
+
 cart_items = {}
+
+def calculate_order_amount(items):
+    price = 0.00
+    for item in items:
+        match item:
+            case "solid":
+                price += SOLID_PRICE
+            case "text": 
+                price += TEXT_PRICE
+            case "custom":
+                price += CUSTOM_PRICE
+
+    return round(price, 2)
+
 
 def allowed_file(filename):
     """Check if the file has an allowed extension."""
@@ -124,6 +146,25 @@ def add_to_cart():
 
     return jsonify({"success": True})
 
+
+@app.route('/create-payment-intent', methods=['POST'])
+def create_payment():
+    try:
+        data = json.loads(request.data)
+        # Create a PaymentIntent with the order amount and currency
+        intent = stripe.PaymentIntent.create(
+            amount=calculate_order_amount(data['items']),
+            currency='usd',
+            # In the latest version of the API, specifying the `automatic_payment_methods` parameter is optional because Stripe enables its functionality by default.
+            automatic_payment_methods={
+                'enabled': True,
+            },
+        )
+        return jsonify({
+            'clientSecret': intent['client_secret']
+        })
+    except Exception as e:
+        return jsonify(error=str(e)), 403
     
 
 if __name__ == "__main__":
