@@ -55,7 +55,7 @@ const ViewCartPopup = ({ isOpen, setIsOpen }) => {
           >
             Back
           </button>
-          <Checkout cartTotal={total} />
+          <Checkout cartTotal={total.toFixed(2)} />
         </div>
       </div>
     );
@@ -110,7 +110,7 @@ const ViewCartPopup = ({ isOpen, setIsOpen }) => {
                       </button>
                     </div>
 
-                    <p>Item Total: ${getPrice(item)}</p>
+                    <p>Item Total: ${getPrice(item).toFixed(2)}</p>
                   </div>
                 </li>
               ))}
