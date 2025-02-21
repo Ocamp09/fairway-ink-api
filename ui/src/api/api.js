@@ -80,3 +80,25 @@ export const addToCartApi = (stlUrl) => {
     throw error;
   }
 };
+
+export const getPaymentIntent = async () => {
+  const formData = new FormData();
+  formData.append("cart", localStorage.getItem("cart"));
+
+  try {
+    const response = await axios.post(
+      API_URL + "/create-payment-intent",
+      formData,
+      {
+        headers: {
+          "Content-Type": "multi-part/form-data",
+        },
+      }
+    );
+
+    return response.data.clientSecret;
+  } catch (error) {
+    console.log("Error getting payment intent: ", error);
+    throw error;
+  }
+};
