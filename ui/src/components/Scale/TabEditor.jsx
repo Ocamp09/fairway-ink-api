@@ -167,7 +167,7 @@ const TabEditor = () => {
       </button>
       <p>Add tabs for printing</p>
       <div className="tab">
-        <div className="toolbar tools">
+        <div className="toolbar tools buts">
           <UndoRedo
             paths={paths}
             setPaths={setPaths}
