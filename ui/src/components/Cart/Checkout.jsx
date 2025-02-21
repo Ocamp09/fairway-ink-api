@@ -3,6 +3,7 @@ import { Elements } from "@stripe/react-stripe-js";
 import { loadStripe } from "@stripe/stripe-js";
 import { getPaymentIntent } from "../../api/api";
 import CheckoutForm from "./CheckoutForm";
+import "./Checkout.css";
 
 const stripePromise = loadStripe(
   "pk_test_51Qs6WuACPDsvvNfxem8wieeIWOMf7FDRdwepMv7kSRJ9h80oegevnSUyxwEhyq7BbCU5KEwjxdOFptaDUFyeo7s400o1D8zBSi"
@@ -10,32 +11,41 @@ const stripePromise = loadStripe(
 
 const Checkout = ({ cartTotal }) => {
   const [clientSecret, setClientSecret] = useState("");
+  const [loading, setLoading] = useState(true); // Add a loading state
 
   useEffect(() => {
     const fetchClientSecret = async () => {
       try {
-        // Call your API to create a payment intent with the cart total
         const secret = await getPaymentIntent(cartTotal);
-        console.log(secret);
-        setClientSecret(secret); // Assuming the API returns the clientSecret
+        console.log("sec", secret);
+        setClientSecret(secret);
       } catch (error) {
         console.error("Error fetching client secret", error);
+      } finally {
+        setLoading(false); // Set loading to false regardless of success/failure
       }
     };
+
+    console.log(cartTotal); // This will now log
 
     if (cartTotal > 0) {
       fetchClientSecret();
     }
-  }, []);
+  }, [cartTotal]); // Add cartTotal as a dependency
+
+  if (loading) {
+    // Check the loading state
+    return <div>Loading...</div>;
+  }
 
   if (!clientSecret) {
-    return <div>Loading...</div>;
+    // This check is now redundant because of the loading state
+    return <div>Error loading payment information.</div>; // More helpful error
   }
 
   const appearance = {
     theme: "stripe",
   };
-  // Enable the skeleton loader UI for optimal loading.
   const loader = "auto";
 
   return (
@@ -44,6 +54,7 @@ const Checkout = ({ cartTotal }) => {
         stripe={stripePromise}
         options={{ clientSecret, appearance, loader }}
       >
+        <h3>Checkout Total: ${cartTotal}</h3>
         <CheckoutForm />
       </Elements>
     </div>
