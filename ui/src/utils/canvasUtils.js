@@ -215,7 +215,6 @@ const writeText = (canvasRef, text, x, y, pathSize, templateType) => {
 
   context.font = pathSize + "px stencil";
 
-  console.log(templateType);
   if (templateType === "text") {
     context.textAlign = "center";
   }
