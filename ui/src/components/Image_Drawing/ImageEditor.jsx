@@ -77,6 +77,19 @@ function ImageEditor() {
               updatedPaths[index] = { ...updatedPaths[index], selected: true };
               return updatedPaths;
             });
+          } else {
+            if (path.selected === true) {
+              setPaths((prevPaths) => {
+                const updatedPaths = [...prevPaths];
+                updatedPaths[index] = {
+                  ...updatedPaths[index],
+                  selected: false,
+                };
+                return updatedPaths;
+              });
+
+              setReloadPaths(true);
+            }
           }
         }
       });
