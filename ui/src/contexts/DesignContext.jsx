@@ -12,7 +12,7 @@ export const FileProvider = ({ children }) => {
   );
 
   const [imageUrl, setImageUrl] = useState(
-    sessionStorage.getItem("imageUrl") || null
+    localStorage.getItem("imageUrl") || null
   );
 
   const [imageType, setImageType] = useState(
@@ -56,7 +56,7 @@ export const FileProvider = ({ children }) => {
   };
 
   const updateImageUrl = (newUrl) => {
-    sessionStorage.setItem("imageUrl", newUrl);
+    localStorage.setItem("imageUrl", newUrl);
     setImageUrl(newUrl);
   };
 

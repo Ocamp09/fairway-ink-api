@@ -35,15 +35,26 @@
   display: none;
 }
 
-.canvas {
+.canvas-container {
+  position: relative;
   width: 500px;
   height: 500px;
   border-radius: 10%;
   border: 2px solid black;
-  position: relative;
-  margin: 0 auto;
-  overflow: hidden;
   background-color: var(--background);
+}
+
+.img-canvas,
+.drawing-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.drawing-canvas {
+  pointer-events: all;
 }
 
 .submit-button {

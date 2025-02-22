@@ -19,8 +19,6 @@ function App() {
     Cookies.set("session_id", sessionId, { expires: 1 }); // Expires in 1 day
   }
 
-  console.log(sessionId);
-
   return (
     <>
       <FileProvider>

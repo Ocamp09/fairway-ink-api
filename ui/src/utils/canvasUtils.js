@@ -153,8 +153,24 @@ export const drawPaths = (canvasRef, paths, templateType) => {
           path.text,
           path.points[0][0],
           path.points[0][1],
-          path.width
+          path.width,
+          path.templateType
         );
+
+        // Draw bounding box for selected text
+        if (path.selected) {
+          const textWidth = context.measureText(path.text).width;
+          const textHeight = path.width; // Height of the text
+
+          context.strokeStyle = "black"; // Border color
+          context.lineWidth = 1; // Border width
+          context.strokeRect(
+            path.bbox.x1 - 5,
+            path.bbox.y2 - 5,
+            textWidth + 10,
+            textHeight
+          );
+        }
       }
     };
 
@@ -187,11 +203,15 @@ export const drawPaths = (canvasRef, paths, templateType) => {
   });
 };
 
-const writeText = (canvasRef, text, x, y, pathSize) => {
+const writeText = (canvasRef, text, x, y, pathSize, templateType) => {
   const canvas = canvasRef.current;
   const context = canvas.getContext("2d");
 
   context.font = pathSize + "px stencil";
+
+  if (templateType === "text") {
+    context.textAlign = "center";
+  }
   context.fillText(text, x, y);
 };
 
@@ -206,4 +226,20 @@ export const drawLine = (canvasRef, startX, startY, endX, endY, width = 7) => {
   context.lineWidth = width;
   context.strokeStyle = "white";
   context.stroke();
+};
+
+export const calculateBbox = (x, y, textMetrics) => {
+  const leftRightOffset = textMetrics.width / 2;
+
+  const bbox = {
+    x1: x - leftRightOffset,
+    y1: y - textMetrics.actualBoundingBoxDescent,
+    x2: x + leftRightOffset,
+    y2:
+      y -
+      textMetrics.actualBoundingBoxAscent -
+      textMetrics.actualBoundingBoxDescent,
+  };
+
+  return bbox;
 };

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import "./Toolbar.css";
 import FileUpload from "./FileUpload";
 import { FiDownload } from "react-icons/fi";
+import { FaRegHandPaper } from "react-icons/fa";
 import { FaDeleteLeft } from "react-icons/fa6";
 import { IoText } from "react-icons/io5";
 import { BiSolidPencil } from "react-icons/bi";
@@ -40,6 +41,10 @@ const Toolbar = ({
 
   const handleDraw = () => {
     updateEditorMode("draw");
+  };
+
+  const handleSelect = () => {
+    updateEditorMode("select");
   };
 
   const handleRemoveImage = () => {
@@ -110,6 +115,21 @@ const Toolbar = ({
           <IoText
             size={iconSize}
             color={editorMode === "type" ? "white" : "black"}
+          />
+        </button>
+        <button
+          title="Activate select mode"
+          onClick={handleSelect}
+          className={
+            editorMode === "select" && templateType === "text"
+              ? "editor-but-active"
+              : "editor-but"
+          }
+          hidden={templateType === "solid" || templateType === "custom"}
+        >
+          <FaRegHandPaper
+            size={iconSize}
+            color={editorMode === "select" ? "white" : "black"}
           />
         </button>
       </div>
