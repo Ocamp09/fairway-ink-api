@@ -158,7 +158,8 @@ export const drawPaths = (
           path.text,
           path.points[0][0],
           path.points[0][1],
-          path.width
+          path.width,
+          path.templateType
         );
 
         // Draw bounding box for selected text
@@ -208,15 +209,17 @@ export const drawPaths = (
   });
 };
 
-const writeText = (canvasRef, text, x, y, pathSize) => {
+const writeText = (canvasRef, text, x, y, pathSize, templateType) => {
   const canvas = canvasRef.current;
   const context = canvas.getContext("2d");
 
   context.font = pathSize + "px stencil";
 
-  // Adjust y for baseline
-  const baselineOffset = pathSize * 0.8; // 80% of font size
-  context.fillText(text, x, y + baselineOffset);
+  console.log(templateType);
+  if (templateType === "text") {
+    context.textAlign = "center";
+  }
+  context.fillText(text, x, y);
 };
 
 export const drawLine = (canvasRef, startX, startY, endX, endY, width = 7) => {
