@@ -64,6 +64,8 @@ function ImageEditor() {
         if (path.type === "text") {
           // get the bounding box for text selection
           const boundingBox = path.bbox;
+          console.log("select bbox", boundingBox);
+
           // Check if the click is within the bounding box
           if (
             x >= boundingBox.x1 &&
@@ -117,15 +119,24 @@ function ImageEditor() {
 
           x = centerX;
           y = centerY + textHeight / 2 + offset;
+
+          console.log("write coords", x, y);
+          console.log(textMetrics);
         }
 
-        // Calculate the bounding box for text selection
+        const leftRightOffset = textMetrics.width / 2;
+
         const bbox = {
-          x1: x - textMetrics.actualBoundingBoxLeft,
+          x1: x - leftRightOffset,
           y1: y - textMetrics.actualBoundingBoxDescent,
-          x2: x + textMetrics.actualBoundingBoxRight,
-          y2: y - textMetrics.actualBoundingBoxAscent,
+          x2: x + leftRightOffset,
+          y2:
+            y -
+            textMetrics.actualBoundingBoxAscent -
+            textMetrics.actualBoundingBoxDescent,
         };
+
+        console.log("write bbox", bbox);
 
         setPaths((prevPaths) => {
           return [
