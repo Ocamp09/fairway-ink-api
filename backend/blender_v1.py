@@ -30,23 +30,6 @@ def delete_bottom():
     bpy.ops.object.mode_set(mode='EDIT')
     bpy.ops.mesh.delete(type='VERT')
     bpy.ops.object.mode_set(mode='OBJECT')
-
-
-# method that generates a semi-sphere with the SVG cut out
-def add_semi_sphere(cut_mesh_name
-) -> None:
-    # create the sphere
-    bpy.ops.mesh.primitive_uv_sphere_add(radius=21.4)
-    
-    # Add Solidify modifier for thickness
-    bpy.ops.object.modifier_add(type='SOLIDIFY')
-    bpy.context.object.modifiers["Solidify"].thickness = -1.2
-    delete_bottom() 
-    
-    # Add Boolean modifier to cut out the SVG shape
-    bpy.ops.object.modifier_add(type='BOOLEAN')
-    bpy.context.object.modifiers["Boolean"].object = bpy.data.objects[cut_mesh_name]
-    bpy.context.object.modifiers["Boolean"].solver = 'FAST'
     
 
 # convert the curves to meshes so they can be adjusted    
@@ -76,6 +59,7 @@ def main():
 
     dir_path = pathlib.Path.cwd()
     image_path = dir_path / in_file
+    stl_path = dir_path / "output" / "stl" / "default.stl"
 
     if image_path.exists(): 
         # Get list of objects before importing
@@ -132,7 +116,14 @@ def main():
         bpy.ops.object.convert(target='MESH')
 
         # create the object to be exported as STL
-        add_semi_sphere(cut_object)
+        # import stl
+        bpy.ops.wm.stl_import(filepath=str(stl_path))
+        bpy.ops.object.origin_set(type='GEOMETRY_ORIGIN', center='MEDIAN')
+        
+        # cut imported curve out of STL
+        bpy.ops.object.modifier_add(type='BOOLEAN')
+        bpy.context.object.modifiers["Boolean"].object = bpy.data.objects[cut_object]
+        bpy.context.object.modifiers["Boolean"].solver = 'FAST'    
 
         # Hide the SVG object
         o = C.scene.objects[ cut_object ]
