@@ -12,3 +12,4 @@
 !/ui/public/*.png
 venv/
 *.env
+*.blend1
