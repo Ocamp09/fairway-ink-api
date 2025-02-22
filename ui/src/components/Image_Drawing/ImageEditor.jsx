@@ -65,25 +65,17 @@ function ImageEditor() {
     if (editorMode === "select") {
       paths.forEach((path, index) => {
         if (path.type === "text") {
-          const textX = path.points[0][0];
-          const textY = path.points[0][1];
-          const textMeasure = context.measureText(path.text);
-
-          // Calculate the bounding box for text selection
-          const boundingBox = {
-            x: textX - textMeasure.actualBoundingBoxLeft,
-            y: textY - textMeasure.actualBoundingBoxDescent,
-            x2: textX + textMeasure.actualBoundingBoxRight,
-            y2: textY - textMeasure.actualBoundingBoxAscent,
-          };
+          // get the bounding box for text selection
+          const boundingBox = path.bbox;
 
           // Check if the click is within the bounding box
           if (
-            x >= boundingBox.x &&
+            x >= boundingBox.x1 &&
             x <= boundingBox.x2 &&
             y >= boundingBox.y2 &&
-            y <= boundingBox.y
+            y <= boundingBox.y1
           ) {
+            console.log("match");
             setSelectedPathIndex(index); // Select the text
           }
         } else if (path.type === "draw") {
@@ -108,15 +100,15 @@ function ImageEditor() {
     if (editorMode === "type") {
       var inputText = prompt("Enter text: ");
       if (inputText) {
-        if (templateType === "text") {
-          context.font = fontSize + "px stencil";
+        context.font = fontSize + "px stencil";
+        const textMetrics = context.measureText(inputText);
 
+        if (templateType === "text") {
           var offset = 0;
           paths.forEach((path) => {
             offset += path.width;
           });
 
-          const textMetrics = context.measureText(inputText);
           const textHeight =
             textMetrics.actualBoundingBoxAscent +
             textMetrics.actualBoundingBoxDescent;
@@ -128,6 +120,14 @@ function ImageEditor() {
           y = centerY + textHeight / 2 + offset;
         }
 
+        // Calculate the bounding box for text selection
+        const bbox = {
+          x1: x - textMetrics.actualBoundingBoxLeft,
+          y1: y - textMetrics.actualBoundingBoxDescent,
+          x2: x + textMetrics.actualBoundingBoxRight,
+          y2: y - textMetrics.actualBoundingBoxAscent,
+        };
+
         setPaths((prevPaths) => {
           return [
             ...prevPaths,
@@ -138,6 +138,8 @@ function ImageEditor() {
               type: "text",
               text: inputText,
               templateType: templateType,
+              selected: false,
+              bbox: bbox,
             },
           ];
         });
