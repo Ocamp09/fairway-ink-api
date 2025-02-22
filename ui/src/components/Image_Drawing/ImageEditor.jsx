@@ -4,11 +4,13 @@ import Toolbar from "./Toolbar";
 import { useSession } from "../../contexts/DesignContext";
 import TypeSelector from "./TypeSelector";
 import ModeExamples from "./ModeExamples";
+import getStroke from "perfect-freehand";
 import {
   getCoordinates,
   centerCanvasDrawing,
   drawImage,
   drawPaths,
+  getSvgPathFromStroke,
 } from "../../utils/canvasUtils";
 import { useFontLoader } from "../../hooks/useFontLoader";
 import { useCanvasScaling } from "../../hooks/useCanvasScaling";
@@ -27,6 +29,8 @@ function ImageEditor() {
   const [canvasScale, setCanvasScale] = useState(1);
   const [lineWidth, setLineWidth] = useState(5);
   const [fontSize, setFontSize] = useState(80);
+
+  const [selectedPathIndex, setSelectedPathIndex] = useState(null); // Track selected path
 
   const {
     imageUrl,
@@ -55,12 +59,61 @@ function ImageEditor() {
     setIsDrawing(true);
     var { x, y, pressure } = coords;
 
+    const canvas = canvasRef.current;
+    const context = canvas.getContext("2d");
+
+    if (editorMode === "select") {
+      paths.forEach((path, index) => {
+        if (path.type === "text") {
+          const textX = path.points[0][0];
+          const textY = path.points[0][1];
+          const textWidth = context.measureText(path.text).width;
+
+          // Calculate text height and baseline offset
+          const textHeight = fontSize; // Approximate height of the text
+          const baselineOffset = fontSize * 0.8; // Adjust for baseline (80% of font size)
+
+          // Calculate the bounding box for text selection
+          const boundingBox = {
+            x: textX - 50,
+            y: textY - baselineOffset + 20, // Adjust for baseline
+            width: textWidth - 28,
+            height: textHeight - 40,
+          };
+          console.log(boundingBox, x, y);
+          // Check if the click is within the bounding box
+          if (
+            x >= boundingBox.x &&
+            x <= boundingBox.x + boundingBox.width &&
+            y >= boundingBox.y &&
+            y <= boundingBox.y + boundingBox.height
+          ) {
+            console.log("match");
+            setSelectedPathIndex(index); // Select the text
+          }
+        } else if (path.type === "draw") {
+          // Check if the user clicked on a drawn path
+          const stroke = getStroke(path.points, {
+            size: path.width,
+            thinning: 0.0,
+            smoothing: 0.0,
+            streamline: 1.0,
+          });
+          const pathData = getSvgPathFromStroke(stroke);
+          const path2D = new Path2D(pathData);
+
+          if (context.isPointInPath(path2D, x, y)) {
+            setSelectedPathIndex(index); // Select the path
+          }
+        }
+      });
+      return;
+    }
+
     if (editorMode === "type") {
       var inputText = prompt("Enter text: ");
       if (inputText) {
         if (templateType === "text") {
-          const canvas = canvasRef.current;
-          const context = canvas.getContext("2d");
           context.font = fontSize + "px stencil";
 
           var offset = 0;
@@ -74,8 +127,8 @@ function ImageEditor() {
           const centerX = canvas.width / 2;
           const centerY = canvas.height / 2;
 
-          x = centerX - textWidth / 2;
-          y = centerY + fontSize + offset - 75;
+          x = centerX - textWidth / 4;
+          y = centerY + fontSize + offset - 100;
         }
 
         setPaths((prevPaths) => {
