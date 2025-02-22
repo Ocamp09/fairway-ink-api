@@ -247,6 +247,7 @@ function ImageEditor() {
       return new Promise((resolve) => setTimeout(resolve, ms));
     }
     await sleep(1);
+
     // Create a temporary canvas to combine the image and drawings
     const tempCanvas = document.createElement("canvas");
     tempCanvas.width = 500;
@@ -263,7 +264,7 @@ function ImageEditor() {
     }
 
     let dataURL;
-    if (imageUrl != "null") {
+    if (imageUrl === "") {
       // Draw the drawing canvas onto the temporary canvas
       tempCtx.drawImage(canvasRef.current, 0, 0);
       dataURL = tempCanvas.toDataURL("image/png");

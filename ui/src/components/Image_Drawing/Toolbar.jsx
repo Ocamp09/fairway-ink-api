@@ -48,7 +48,7 @@ const Toolbar = ({
   };
 
   const handleRemoveImage = () => {
-    updateImageUrl(null);
+    updateImageUrl("");
     setReloadPaths(true);
   };
 
