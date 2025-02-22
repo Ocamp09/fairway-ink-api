@@ -383,6 +383,7 @@ function ImageEditor() {
               lineWidth={lineWidth}
               setLineWidth={setLineWidth}
               setReloadPaths={setReloadPaths}
+              imgCanvasRef={imgCanvasRef}
               canvasRef={canvasRef}
               fontSize={fontSize}
               setFontSize={setFontSize}
