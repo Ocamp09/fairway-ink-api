@@ -235,6 +235,18 @@ function ImageEditor() {
 
     setIsLoading(true);
 
+    const updatedPaths = paths.map((path) => ({
+      ...path,
+      selected: false,
+    }));
+    setPaths(updatedPaths);
+    setReloadPaths(true);
+
+    // pause for the paths to reload
+    function sleep(ms) {
+      return new Promise((resolve) => setTimeout(resolve, ms));
+    }
+    await sleep(1);
     // Create a temporary canvas to combine the image and drawings
     const tempCanvas = document.createElement("canvas");
     tempCanvas.width = 500;
