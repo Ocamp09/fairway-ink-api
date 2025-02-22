@@ -122,13 +122,15 @@ function ImageEditor() {
           });
 
           const textMetrics = context.measureText(inputText);
-          const textWidth = textMetrics.width;
+          const textHeight =
+            textMetrics.actualBoundingBoxAscent +
+            textMetrics.actualBoundingBoxDescent;
 
           const centerX = canvas.width / 2;
-          const centerY = canvas.height / 2;
+          const centerY = canvas.height / 2 - 150;
 
-          x = centerX - textWidth / 4;
-          y = centerY + fontSize + offset - 100;
+          x = centerX;
+          y = centerY + textHeight / 2 + offset;
         }
 
         setPaths((prevPaths) => {
@@ -140,6 +142,7 @@ function ImageEditor() {
               width: fontSize,
               type: "text",
               text: inputText,
+              templateType: templateType,
             },
           ];
         });
