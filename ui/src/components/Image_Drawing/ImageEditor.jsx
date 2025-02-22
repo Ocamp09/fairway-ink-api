@@ -10,7 +10,6 @@ import {
   centerCanvasDrawing,
   drawImage,
   drawPaths,
-  getSvgPathFromStroke,
 } from "../../utils/canvasUtils";
 import { useFontLoader } from "../../hooks/useFontLoader";
 import { useCanvasScaling } from "../../hooks/useCanvasScaling";
@@ -29,8 +28,6 @@ function ImageEditor() {
   const [canvasScale, setCanvasScale] = useState(1);
   const [lineWidth, setLineWidth] = useState(5);
   const [fontSize, setFontSize] = useState(80);
-
-  const [selectedPathIndex, setSelectedPathIndex] = useState(null); // Track selected path
 
   const {
     imageUrl,
@@ -67,7 +64,6 @@ function ImageEditor() {
         if (path.type === "text") {
           // get the bounding box for text selection
           const boundingBox = path.bbox;
-
           // Check if the click is within the bounding box
           if (
             x >= boundingBox.x1 &&
@@ -76,21 +72,11 @@ function ImageEditor() {
             y <= boundingBox.y1
           ) {
             console.log("match");
-            setSelectedPathIndex(index); // Select the text
-          }
-        } else if (path.type === "draw") {
-          // Check if the user clicked on a drawn path
-          const stroke = getStroke(path.points, {
-            size: path.width,
-            thinning: 0.0,
-            smoothing: 0.0,
-            streamline: 1.0,
-          });
-          const pathData = getSvgPathFromStroke(stroke);
-          const path2D = new Path2D(pathData);
-
-          if (context.isPointInPath(path2D, x, y)) {
-            setSelectedPathIndex(index); // Select the path
+            setPaths((prevPaths) => {
+              const updatedPaths = [...prevPaths];
+              updatedPaths[index] = { ...updatedPaths[index], selected: true };
+              return updatedPaths;
+            });
           }
         }
       });

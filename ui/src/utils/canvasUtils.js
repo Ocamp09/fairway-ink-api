@@ -139,18 +139,13 @@ export const drawImage = (
   }
 };
 
-export const drawPaths = (
-  canvasRef,
-  paths,
-  templateType,
-  selectedPathIndex
-) => {
+export const drawPaths = (canvasRef, paths, templateType) => {
   if (paths.length === 0) return; // early exit if there are no paths
 
   const canvas = canvasRef.current;
   const context = canvas.getContext("2d");
 
-  paths.forEach((path, index) => {
+  paths.forEach((path) => {
     const drawText = () => {
       if (path.type === "text") {
         writeText(
@@ -163,17 +158,16 @@ export const drawPaths = (
         );
 
         // Draw bounding box for selected text
-        if (index === selectedPathIndex) {
+        if (path.selected) {
           const textWidth = context.measureText(path.text).width;
           const textHeight = path.width; // Height of the text
-          const baselineOffset = path.width * 0.8; // Adjust for baseline
 
           context.strokeStyle = "blue"; // Border color
           context.lineWidth = 2; // Border width
           context.strokeRect(
-            path.points[0][0],
-            path.points[0][1] - baselineOffset, // Adjust for baseline
-            textWidth,
+            path.bbox.x1 - 5,
+            path.bbox.y2 - 5,
+            textWidth + 10,
             textHeight
           );
         }
