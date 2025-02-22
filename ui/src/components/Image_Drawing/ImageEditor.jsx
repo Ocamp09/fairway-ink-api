@@ -264,7 +264,8 @@ function ImageEditor() {
     }
 
     let dataURL;
-    if (imageUrl === "") {
+
+    if (imageUrl !== "") {
       // Draw the drawing canvas onto the temporary canvas
       tempCtx.drawImage(canvasRef.current, 0, 0);
       dataURL = tempCanvas.toDataURL("image/png");
