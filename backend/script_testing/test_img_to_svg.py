@@ -5,7 +5,7 @@ import tempfile
 import os
 import xml.etree.ElementTree as ET    
 from enum import Enum
-from svgpathtools import Path, Line, parse_path
+from svgpathtools import parse_path, Path, Line
 
 class PrintType(Enum):
     SOLID = 1
@@ -45,112 +45,81 @@ def fill_svg(svg_data):
     except Exception as e:
         print(f"Error processing SVG: {e}")
 
-
-def remove_outline(svg_data):
-    root = ET.fromstring(svg_data)
-    paths = root.findall('.//{http://www.w3.org/2000/svg}path')
-
-    if len(paths) < 2:
-        return svg_data  # No outline to remove if there's only one path
-
-    # Parse the first path's `d` attribute into a Path object
-    outline_path_d = paths[0].get('d')
-    outline_path = parse_path(outline_path_d)
-    outline_bbox = outline_path.bbox()  # Get the bounding box of the first path
-
-    # Check if the first path is an outline by comparing its bounding box with others
-    is_outline = True
-    for path_element in paths[1:]:
-        path_d = path_element.get('d')
-        if path_d:
-            path = parse_path(path_d)
-            path_bbox = path.bbox()
-            if (outline_bbox[0] <= path_bbox[0] and outline_bbox[1] <= path_bbox[1] and
-                    outline_bbox[2] >= path_bbox[2] and outline_bbox[3] >= path_bbox[3]):
-                is_outline = True
-                break
-
-    # If the first path is an outline, remove it
-    if is_outline:
-        root.remove(paths[0])  # Remove the first path
-        new_svg_data = ET.tostring(root, encoding='unicode', method='xml').replace("ns0:", "").replace(":ns0", "")
-        return new_svg_data
-
-    return svg_data 
-
-
-def bridge_path(path):
-    try:
-        # Parse the path data into a Path object
-        path_obj = parse_path(path.get('d'))
-
-        # Get the bounding box of the path
-        bbox = path_obj.bbox()
-
-        # Calculate the midpoint of the path's height
-        mid_y = (bbox[1] + bbox[3]) / 2
-
-        # Find points where the path crosses the midpoint
-        crossing_points = []
-        for segment in path_obj:
-            if segment.start.imag <= mid_y <= segment.end.imag or segment.end.imag <= mid_y <= segment.start.imag:
-                # Calculate the x-coordinate at the midpoint
-                t = (mid_y - segment.start.imag) / (segment.end.imag - segment.start.imag)
-                x = segment.start.real + t * (segment.end.real - segment.start.real)
-                crossing_points.append((x, mid_y))
-
-        # Sort crossing points by x-coordinate
-        crossing_points.sort()
-
-        # Split the path into two parts at the crossing points
-        if len(crossing_points) >= 2:
-            # Create two new paths
-            path1 = Path()
-            path2 = Path()
-
-            # Add segments to the new paths
-            for segment in path_obj:
-                if segment.end.imag <= mid_y:
-                    path1.append(segment)
-                else:
-                    path2.append(segment)
-
-            # Add bridges (horizontal lines) between the two paths
-            bridge_width = 5  # Adjust the bridge width as needed
-            for i in range(0, len(crossing_points), 2):
-                x1, y1 = crossing_points[i]
-                x2, y2 = crossing_points[i + 1]
-                bridge = Line(complex(x1, y1), complex(x2, y2))
-                path1.append(bridge)
-
-            # Combine the two paths into a single path
-            new_path = path1 + path2
-
-            # Update the path's `d` attribute
-            path.set('d', new_path.d())
-
-        return path
-
-    except Exception as e:
-        print(f"Error adding bridges to path: {e}")
-        return path    
-
-
-def detect_bridge_required(svg_data):
+def flag_problematic(svg_data):
     root = ET.fromstring(svg_data)
     paths = root.findall('.//{http://www.w3.org/2000/svg}path')
 
     for index, path in enumerate(paths):
         path_d = path.get('d')
+        
+        # count the number of Z's in SVG data (more than 1 could be sign
+        # of unprintable code)
         z_cnt = path_d.count('Z')
-        print(z_cnt)
-
         if z_cnt > 1:
-            updated_path = bridge_path(path)
-
+            paths[index].set("fill", "blue")
 
     new_svg_data = ET.tostring(root, encoding='unicode', method='xml').replace("ns0:", "").replace(":ns0", "")
     return new_svg_data
+
+
+def center_svg_content(svg_data):
+    try:
+        # Parse the SVG data
+        root = ET.fromstring(svg_data)
+        paths = root.findall('.//{http://www.w3.org/2000/svg}path')
+
+        if paths:
+            # Get the bounding box of all the paths combined
+            min_x, min_y, max_x, max_y = 0, 0, 0, 0
+            for path in paths:
+                d_value = path.get('d')
+                if d_value:
+                    # Get the bounding box for the path using svgpathtools
+                    parsed_path = parse_path(d_value)
+                    path_bbox = parsed_path.bbox()  # bbox returns (min_x, min_y, max_x, max_y)
+
+                    # Update the overall bounding box
+                    min_x = min(min_x, path_bbox[0])
+                    min_y = min(min_y, path_bbox[1])
+                    max_x = max(max_x, path_bbox[2])
+                    max_y = max(max_y, path_bbox[3])
+
+            # Calculate the center of the SVG and the center of the bounding box
+            svg_width = float(root.get('width', '500'))  # Default width of 500 if not present
+            svg_height = float(root.get('height', '500'))  # Default height of 500 if not present
+
+            bbox_center_x = (min_x + max_x) / 2
+            bbox_center_y = (min_y + max_y) / 2
+
+            svg_center_x = svg_width / 2
+            svg_center_y = svg_height / 2
+
+            # Calculate the translation offsets
+            offset_x = svg_center_x - bbox_center_x
+            offset_y = svg_center_y - bbox_center_y
+
+            # Apply the translation to all paths' d attributes
+            for path in paths:
+                current_d = path.get('d')
+                if current_d:
+                    # Translate the path coordinates by the offset
+                    # We add the translation directly to the 'd' attribute
+                    path.set("transform", "translate({0}, {1})".format(str(offset_x), str(offset_y)))
+
+            # Create a new SVG string with the centered paths
+            new_svg_data = ET.tostring(root, encoding='unicode', method='xml').replace("ns0:", "").replace(":ns0", "")
+            return new_svg_data
+
+        else:
+            print("No paths found in the SVG.")
+            return svg_data
+
+    except ET.ParseError as e:
+        print(f"Error parsing SVG: {e}")
+        return svg_data
+    except Exception as e:
+        print(f"Error processing SVG: {e}")
+        return svg_data
 
 
 def image_to_svg(image_path, method=PrintType.SOLID):
@@ -188,11 +157,14 @@ def image_to_svg(image_path, method=PrintType.SOLID):
     if method == PrintType.SOLID:
         svg_data = fill_svg(svg_data)
     elif method == PrintType.CUSTOM:
-        svg_data= detect_bridge_required(svg_data)
+        svg_data = flag_problematic(svg_data)
 
-    with open("./test.svg", "w") as svg_file:
-        svg_file.write(svg_data)
+    svg_data = center_svg_content(svg_data)
 
+    with open("./recent.svg", "w") as svg_file:
+         svg_file.write(svg_data)
+
+    print(svg_data)
     return svg_data
 
 def main(image_path, method):
