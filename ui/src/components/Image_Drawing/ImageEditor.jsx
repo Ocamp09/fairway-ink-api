@@ -67,28 +67,23 @@ function ImageEditor() {
         if (path.type === "text") {
           const textX = path.points[0][0];
           const textY = path.points[0][1];
-          const textWidth = context.measureText(path.text).width;
-
-          // Calculate text height and baseline offset
-          const textHeight = fontSize; // Approximate height of the text
-          const baselineOffset = fontSize * 0.8; // Adjust for baseline (80% of font size)
+          const textMeasure = context.measureText(path.text);
 
           // Calculate the bounding box for text selection
           const boundingBox = {
-            x: textX - 50,
-            y: textY - baselineOffset + 20, // Adjust for baseline
-            width: textWidth - 28,
-            height: textHeight - 40,
+            x: textX - textMeasure.actualBoundingBoxLeft,
+            y: textY - textMeasure.actualBoundingBoxDescent,
+            x2: textX + textMeasure.actualBoundingBoxRight,
+            y2: textY - textMeasure.actualBoundingBoxAscent,
           };
-          console.log(boundingBox, x, y);
+
           // Check if the click is within the bounding box
           if (
             x >= boundingBox.x &&
-            x <= boundingBox.x + boundingBox.width &&
-            y >= boundingBox.y &&
-            y <= boundingBox.y + boundingBox.height
+            x <= boundingBox.x2 &&
+            y >= boundingBox.y2 &&
+            y <= boundingBox.y
           ) {
-            console.log("match");
             setSelectedPathIndex(index); // Select the text
           }
         } else if (path.type === "draw") {
