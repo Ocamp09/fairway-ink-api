@@ -140,7 +140,7 @@ const Toolbar = ({
             <button
               title="Remove image"
               onClick={handleRemoveImage}
-              disabled={!imageUrl}
+              disabled={imageUrl === ""}
             >
               <RemoveImage />
             </button>
