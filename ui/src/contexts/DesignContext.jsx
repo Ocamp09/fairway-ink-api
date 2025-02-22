@@ -12,7 +12,7 @@ export const FileProvider = ({ children }) => {
   );
 
   const [imageUrl, setImageUrl] = useState(
-    localStorage.getItem("imageUrl") || null
+    localStorage.getItem("imageUrl") || ""
   );
 
   const [imageType, setImageType] = useState(
