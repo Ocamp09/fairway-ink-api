@@ -162,8 +162,8 @@ export const drawPaths = (canvasRef, paths, templateType) => {
           const textWidth = context.measureText(path.text).width;
           const textHeight = path.width; // Height of the text
 
-          context.strokeStyle = "blue"; // Border color
-          context.lineWidth = 2; // Border width
+          context.strokeStyle = "black"; // Border color
+          context.lineWidth = 1; // Border width
           context.strokeRect(
             path.bbox.x1 - 5,
             path.bbox.y2 - 5,
