@@ -227,3 +227,19 @@ export const drawLine = (canvasRef, startX, startY, endX, endY, width = 7) => {
   context.strokeStyle = "white";
   context.stroke();
 };
+
+export const calculateBbox = (x, y, textMetrics) => {
+  const leftRightOffset = textMetrics.width / 2;
+
+  const bbox = {
+    x1: x - leftRightOffset,
+    y1: y - textMetrics.actualBoundingBoxDescent,
+    x2: x + leftRightOffset,
+    y2:
+      y -
+      textMetrics.actualBoundingBoxAscent -
+      textMetrics.actualBoundingBoxDescent,
+  };
+
+  return bbox;
+};

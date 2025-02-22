@@ -10,6 +10,7 @@ import {
   centerCanvasDrawing,
   drawImage,
   drawPaths,
+  calculateBbox,
 } from "../../utils/canvasUtils";
 import { useFontLoader } from "../../hooks/useFontLoader";
 import { useCanvasScaling } from "../../hooks/useCanvasScaling";
@@ -24,6 +25,7 @@ function ImageEditor() {
   const [error, setError] = useState("");
 
   const [isDrawing, setIsDrawing] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
   const [reloadPaths, setReloadPaths] = useState(false);
   const [canvasScale, setCanvasScale] = useState(1);
   const [lineWidth, setLineWidth] = useState(5);
@@ -64,7 +66,6 @@ function ImageEditor() {
         if (path.type === "text") {
           // get the bounding box for text selection
           const boundingBox = path.bbox;
-          console.log("select bbox", boundingBox);
 
           // Check if the click is within the bounding box
           if (
@@ -73,25 +74,30 @@ function ImageEditor() {
             y >= boundingBox.y2 &&
             y <= boundingBox.y1
           ) {
-            console.log("match");
+            if (path.selected) {
+              setIsDragging(true);
+              return;
+            }
+
             setPaths((prevPaths) => {
               const updatedPaths = [...prevPaths];
-              updatedPaths[index] = { ...updatedPaths[index], selected: true };
+              updatedPaths[index] = {
+                ...updatedPaths[index],
+                selected: true,
+              };
               return updatedPaths;
             });
+            setReloadPaths(true);
           } else {
-            if (path.selected === true) {
-              setPaths((prevPaths) => {
-                const updatedPaths = [...prevPaths];
-                updatedPaths[index] = {
-                  ...updatedPaths[index],
-                  selected: false,
-                };
-                return updatedPaths;
-              });
-
-              setReloadPaths(true);
-            }
+            setPaths((prevPaths) => {
+              const updatedPaths = [...prevPaths];
+              updatedPaths[index] = {
+                ...updatedPaths[index],
+                selected: false,
+              };
+              return updatedPaths;
+            });
+            setReloadPaths(true);
           }
         }
       });
@@ -119,24 +125,9 @@ function ImageEditor() {
 
           x = centerX;
           y = centerY + textHeight / 2 + offset;
-
-          console.log("write coords", x, y);
-          console.log(textMetrics);
         }
 
-        const leftRightOffset = textMetrics.width / 2;
-
-        const bbox = {
-          x1: x - leftRightOffset,
-          y1: y - textMetrics.actualBoundingBoxDescent,
-          x2: x + leftRightOffset,
-          y2:
-            y -
-            textMetrics.actualBoundingBoxAscent -
-            textMetrics.actualBoundingBoxDescent,
-        };
-
-        console.log("write bbox", bbox);
+        const bbox = calculateBbox(x, y, textMetrics);
 
         setPaths((prevPaths) => {
           return [
@@ -171,12 +162,51 @@ function ImageEditor() {
 
   const handleMoveDrawing = (e) => {
     e.preventDefault();
-    if (editorMode === "type") return;
+    if (editorMode === "type") return; // Skip for text typing mode
 
     const coords = getCoordinates(e, canvasRef, canvasScale);
     if (!coords || !isDrawing) return;
 
     const { x, y, pressure } = coords;
+
+    if (editorMode === "select" && isDragging) {
+      setPaths((prevPaths) => {
+        return prevPaths.map((path, index) => {
+          if (path.selected) {
+            const updatedPath = { ...path };
+
+            // Calculate the offset based on the initial position of the path
+            const xOffset = x - path.points[0][0]; // x position offset
+            const yOffset = y - path.points[0][1]; // y position offset
+
+            // Update the points of the selected path by moving them based on the offset
+            updatedPath.points = updatedPath.points.map(([px, py, pz]) => [
+              px + xOffset,
+              py + yOffset,
+              pz, // keep the pressure unchanged
+            ]);
+
+            // Update the bounding box if the path is of type "text"
+            if (path.type === "text") {
+              const canvas = canvasRef.current;
+              const context = canvas.getContext("2d");
+              context.font = path.width + "px stencil"; // Ensure to match the font size
+              const textMetrics = context.measureText(path.text);
+              updatedPath.bbox = calculateBbox(
+                updatedPath.points[0][0], // x position of the text
+                updatedPath.points[0][1], // y position of the text
+                textMetrics
+              );
+            }
+            return updatedPath;
+          }
+          return path;
+        });
+      });
+      setReloadPaths(true);
+      return;
+    }
+
     setPaths((prevPaths) => {
       const updatedPaths = [...prevPaths];
       const lastPath = updatedPaths[updatedPaths.length - 1];
@@ -192,6 +222,7 @@ function ImageEditor() {
 
   const handleStopDrawing = () => {
     setIsDrawing(false);
+    setIsDragging(false);
   };
 
   const handleSvg = async () => {
