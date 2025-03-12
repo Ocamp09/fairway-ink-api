@@ -113,7 +113,7 @@ def generate_gcode():
     try:
         svg_file.save(output_svg_path)
 
-        blender_path = r"C:\Program Files\Blender Foundation\Blender 4.3\blender.exe"
+        blender_path = r"/home/ec2-user/blender-4.3.2-linux-x64/blender"
         if platform.system() == "Darwin":
             blender_path = r"/Applications/Blender.app/Contents/MacOS/blender"
 
@@ -130,7 +130,7 @@ def generate_gcode():
 
         os.remove(OUTPUT_FOLDER + session_id + "/" + filename)
         stl_name = filename.split(".")[0] + ".stl"  
-        stl_url = f"http://localhost:5001/output/{session_id}/{stl_name}"
+        stl_url = f"http://3.147.42.18/output/{session_id}/{stl_name}"
         return jsonify({"success": True, "stlUrl": stl_url})
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 502
