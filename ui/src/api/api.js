@@ -2,6 +2,7 @@ import axios from "axios";
 import Cookies from "js-cookie";
 import { v4 as uuidv4 } from "uuid";
 
+// const API_URL = "http://3.147.42.18";
 const API_URL = "http://localhost:5001";
 
 const get_ssid = () => {
@@ -59,17 +60,13 @@ export const generateStl = async (svgData, scale, stlKey, templateType) => {
   }
 
   try {
-    const response = await axios.post(
-      "http://localhost:5001/generate",
-      formData,
-      {
-        headers: {
-          "Content-Type": "multipart/form-data",
-          ssid: session_id,
-          stlKey: stlKey,
-        },
-      }
-    );
+    const response = await axios.post(API_URL + "/generate", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+        ssid: session_id,
+        stlKey: stlKey,
+      },
+    });
 
     if (response.data.success) {
       return response.data;
