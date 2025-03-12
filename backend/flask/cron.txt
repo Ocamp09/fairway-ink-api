@@ -1,0 +1,1 @@
+0 * * * * /usr/bin/python3.11 /home/ec2-user/golf-marker/backend/flask/cleanup.py
