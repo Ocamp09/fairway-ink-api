@@ -3,7 +3,7 @@ from flask_cors import CORS  # Import CORS
 import os
 import subprocess
 from werkzeug.utils import secure_filename
-import img_to_svg
+import img_to_svg as img_to_svg
 import platform
 import json
 import stripe
