@@ -2,8 +2,8 @@ import axios from "axios";
 import Cookies from "js-cookie";
 import { v4 as uuidv4 } from "uuid";
 
-// const API_URL = "http://3.147.42.18";
-const API_URL = "http://localhost:5001";
+const API_URL = "http://3.142.159.228";
+//const API_URL = "http://localhost:5001";
 
 const get_ssid = () => {
   let sessionId = Cookies.get("session_id");
@@ -18,7 +18,6 @@ const get_ssid = () => {
 
 export const uploadImage = async (file, method) => {
   const session_id = get_ssid();
-  console.log(session_id);
 
   const formData = new FormData();
   formData.append("file", file, "fairway_ink_drawing.png");

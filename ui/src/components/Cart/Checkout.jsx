@@ -17,7 +17,6 @@ const Checkout = ({ cartTotal }) => {
     const fetchClientSecret = async () => {
       try {
         const secret = await getPaymentIntent(cartTotal);
-        console.log("sec", secret);
         setClientSecret(secret);
       } catch (error) {
         console.error("Error fetching client secret", error);
@@ -25,8 +24,6 @@ const Checkout = ({ cartTotal }) => {
         setLoading(false); // Set loading to false regardless of success/failure
       }
     };
-
-    console.log(cartTotal); // This will now log
 
     if (cartTotal > 0) {
       fetchClientSecret();
