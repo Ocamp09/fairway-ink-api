@@ -98,7 +98,4 @@ def image_to_svg(image_path, method=PrintType.SOLID):
     elif method == PrintType.CUSTOM:
         svg_data = flag_problematic(svg_data)
 
-    with open("./output/svg/recent.svg", "w") as svg_file:
-         svg_file.write(svg_data)
-
     return svg_data
