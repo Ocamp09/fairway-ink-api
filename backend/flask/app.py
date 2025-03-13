@@ -47,9 +47,6 @@ def allowed_file(filename):
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
-@app.route("/")
-def index():
-    return jsonify({"success": True, "message": "test"})
 @app.route("/output/<ssid>/<filename>")
 def output_stl(ssid, filename):
     return send_from_directory(f"output/{ssid}", filename)
