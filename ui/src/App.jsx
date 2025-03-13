@@ -8,6 +8,8 @@ import { useState } from "react";
 import ViewCartPopup from "./components/Cart/ViewCartPopup";
 import Cookies from "js-cookie";
 import { v4 as uuidv4 } from "uuid";
+import { BrowserRouter as Router, Route, Routes } from "react-router-dom"; // Use Routes instead of Switch
+import SuccessPage from "./components/SuccessPage"; // Import the SuccessPage component
 
 function App() {
   const [cartPopup, setCartPopup] = useState(false);
@@ -20,15 +22,19 @@ function App() {
   }
 
   return (
-    <>
+    <Router>
+      {" "}
       <FileProvider>
         <CartProvider>
           <Header cartPopup={cartPopup} setCartPopup={setCartPopup} />
-          <GolfBallDisplay />
+          <Routes>
+            <Route path="/" element={<GolfBallDisplay />} />{" "}
+            <Route path="/success" element={<SuccessPage />} />{" "}
+          </Routes>
           <ViewCartPopup isOpen={cartPopup} setIsOpen={setCartPopup} />
         </CartProvider>
       </FileProvider>
-    </>
+    </Router>
   );
 }
 
