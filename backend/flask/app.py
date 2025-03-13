@@ -182,32 +182,69 @@ def add_to_cart():
         app.logger.exception("Error adding to cart", str(e))
         return jsonify({"success": False, "error": str(e)}), 500
 
-@app.route('/create-payment-intent', methods=['POST'])
-def create_payment():
+@app.route('/create-checkout-session', methods=['POST'])
+def create_checkout_session():
     try:
-        cart = request.form.get("cart", 1)  
+        cart = request.form.get("cart", -1)  
         if cart == -1:
-            return jsonify({"success": False, "error": str(e) + " no cart provided"}), 502
-    
-        amount = calculate_order_amount(json.loads(cart))
+            return jsonify({"success": False, "error": "No cart provided"}), 502
 
-        if amount <= 0:
-            return jsonify({"success": False, "error": str(e) + " invalid amount"}), 502
-    
-        # Create a PaymentIntent with the order amount and currency
-        intent = stripe.PaymentIntent.create(
-            amount=amount,
-            currency='usd',
-            payment_method_types=['card']
+        cart = json.loads(cart)  # Parse cart items from the frontend
+        print(cart)
+        if not cart:
+            return jsonify({"success": False, "error": "Cart is empty"}), 502
+
+        # Prepare line items for Stripe Checkout session
+        line_items = []
+        total_amount = 0
+        
+        for item in cart:
+            price = 0
+            if item["type"] == "solid":
+                price = SOLID_PRICE
+            elif item["type"] == "text":
+                price = TEXT_PRICE
+            elif item["type"] == "custom":
+                price = CUSTOM_PRICE
+            else:
+                return jsonify({"success": False, "error": "Invalid item type in cart"}), 502
+            price_data = {
+                "currency": "usd",
+                "product_data": {
+                    "name": "Custom golf ball stencil - type: {0}, qty: {1}".format(item["type"], item["quantity"])
+                },
+                "unit_amount": price,  # Convert to cents
+            }
+            line_items.append({
+                "price_data": price_data,
+                "quantity": item["quantity"],
+            })
+            total_amount += price * item["quantity"]
+
+        if total_amount <= 0:
+            return jsonify({"success": False, "error": "Invalid order amount"}), 502
+
+        domain = "https://www.fairway-ink.com"
+
+        if platform.system() != "Linux":
+            domain = "http://localhost:5173"
+
+        # Create a Checkout Session with line items and success/cancel URLs
+        session = stripe.checkout.Session.create(
+            payment_method_types=["card"],
+            line_items=line_items,
+            mode="payment",
+            success_url=f"{domain}/success", 
+            cancel_url=f"{domain}", 
         )
 
         return jsonify({
-            'clientSecret': intent['client_secret']
+            'id': session.id
         })
     except Exception as e:
-        app.logger.exception("Error creating payment intent: ", str(e))
-        return jsonify(error="ERROR"), 403
-    
+        app.logger.exception("Error creating checkout session: ", str(e))
+        return jsonify({"error": "ERROR"}), 500
+
 
 if __name__ == "__main__":
     app.run(debug=True, port=5001)

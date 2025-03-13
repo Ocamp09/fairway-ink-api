@@ -2,8 +2,8 @@ import axios from "axios";
 import Cookies from "js-cookie";
 import { v4 as uuidv4 } from "uuid";
 
-const API_URL = "https://api.fairway-ink.com";
-//const API_URL = "http://localhost:5001";
+//const API_URL = "https://api.fairway-ink.com";
+const API_URL = "http://localhost:5001";
 
 const get_ssid = () => {
   let sessionId = Cookies.get("session_id");
@@ -95,7 +95,7 @@ export const addToCartApi = (stlUrl) => {
   }
 };
 
-export const getPaymentIntent = async () => {
+export const getCheckoutSession = async () => {
   const session_id = get_ssid();
 
   const formData = new FormData();
@@ -103,7 +103,7 @@ export const getPaymentIntent = async () => {
 
   try {
     const response = await axios.post(
-      API_URL + "/create-payment-intent",
+      API_URL + "/create-checkout-session",
       formData,
       {
         headers: {
@@ -111,10 +111,10 @@ export const getPaymentIntent = async () => {
         },
       }
     );
-
-    return response.data.clientSecret;
+    console.log(response);
+    return response.data.id;
   } catch (error) {
-    console.log("Error getting payment intent: ", error);
+    console.log("Error getting checkout session: ", error);
     throw error;
   }
 };
