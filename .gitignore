@@ -14,3 +14,4 @@ venv/
 *.env
 *.blend1
 .venv
+app.log
