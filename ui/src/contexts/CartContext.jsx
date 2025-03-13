@@ -3,28 +3,20 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 const CartContext = createContext();
 
 export const CartProvider = ({ children }) => {
-  const [cartItems, setCartItems] = useState([
-    // {
-    //   id: "golfball0",
-    //   stl: "http://localhost:5001/output/stl/golfball0.stl",
-    //   quantity: 2,
-    // },
-    // {
-    //   id: "golfball1",
-    //   stl: "http://localhost:5001/output/stl/golfball1.stl",
-    //   quantity: 1,
-    // },
-  ]);
+  const [cartItems, setCartItems] = useState(() => {
+    const storedCart = sessionStorage.getItem("cart");
+    return storedCart ? JSON.parse(storedCart) : [];
+  });
 
   useEffect(() => {
-    const storedCart = localStorage.getItem("cart");
+    const storedCart = sessionStorage.getItem("cart");
     if (storedCart) {
       setCartItems(JSON.parse(storedCart));
     }
   }, []);
 
   useEffect(() => {
-    localStorage.setItem("cart", JSON.stringify(cartItems));
+    sessionStorage.setItem("cart", JSON.stringify(cartItems));
   }, [cartItems]);
 
   const addToCart = (key, item, quantity, type) => {
