@@ -2,8 +2,8 @@ import axios from "axios";
 import Cookies from "js-cookie";
 import { v4 as uuidv4 } from "uuid";
 
-const API_URL = "https://api.fairway-ink.com";
-//const API_URL = "http://localhost:5001";
+//const API_URL = "https://api.fairway-ink.com";
+const API_URL = "http://localhost:5001";
 
 const get_ssid = () => {
   let sessionId = Cookies.get("session_id");
@@ -58,12 +58,13 @@ export const generateStl = async (svgData, scale, stlKey, templateType) => {
     formData.append("scale", scale);
   }
 
+  formData.append("stlKey", stlKey);
+
   try {
     const response = await axios.post(API_URL + "/generate", formData, {
       headers: {
         "Content-Type": "multipart/form-data",
         ssid: session_id,
-        stlKey: stlKey,
       },
     });
 
@@ -95,15 +96,13 @@ export const addToCartApi = (stlUrl) => {
   }
 };
 
-export const getPaymentIntent = async () => {
-  const session_id = get_ssid();
-
+export const getCheckoutSession = async () => {
   const formData = new FormData();
-  formData.append("cart", localStorage.getItem("cart"));
+  formData.append("cart", sessionStorage.getItem("cart"));
 
   try {
     const response = await axios.post(
-      API_URL + "/create-payment-intent",
+      API_URL + "/create-checkout-session",
       formData,
       {
         headers: {
@@ -111,10 +110,35 @@ export const getPaymentIntent = async () => {
         },
       }
     );
-
-    return response.data.clientSecret;
+    console.log(response);
+    return response.data.id;
   } catch (error) {
-    console.log("Error getting payment intent: ", error);
+    console.log("Error getting checkout session: ", error);
     throw error;
+  }
+};
+
+export const verifySuccessfulCheckout = async (sessionId) => {
+  const browser_ssid = get_ssid();
+
+  try {
+    const response = await axios.post(
+      API_URL + "/verify-payment",
+      { swipe_ssid: sessionId, browser_ssid: browser_ssid },
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    if (response.data.success) {
+      return response.data;
+    } else {
+      alert(response.data.message || "Payment failed");
+    }
+  } catch (error) {
+    console.error("Error verifying payment:", error);
+    alert("Error verifying payment");
   }
 };

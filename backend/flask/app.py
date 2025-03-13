@@ -10,6 +10,7 @@ import stripe
 import platform
 import logging
 from logging.handlers import RotatingFileHandler
+import boto3
 
 # stripe secret API key (test)
 stripe.api_key = 'sk_test_51Qs6WuACPDsvvNfxayxO5fGAKEh7GSTbYPooWZ6qwxfe1S6st8SzE5utVWlzShFWrVoSiLNEvy1n30ZG7sWAJPNd00TSAreBRT'
@@ -34,6 +35,27 @@ SOLID_PRICE = 599
 TEXT_PRICE = 599
 
 cart_items = {}
+
+STL_S3_BUCKET = "fairway-ink-stl"
+S3_REGION = "us-east-2"
+
+s3_client = boto3.client("s3", region_name=S3_REGION)
+
+# Load MySQL connection details from environment variables (for security)
+DB_HOST = os.getenv("DB_HOST", "put_local_host_here")
+DB_USER = os.getenv("DB_USER", "admin")
+DB_PASSWORD = os.getenv("DB_PASSWORD", "local_password")
+DB_NAME = os.getenv("DB_NAME", "local_DB_name")
+
+# Function to get a database connection
+def get_db_connection():
+    return pymysql.connect(
+        host=DB_HOST,
+        user=DB_USER,
+        password=DB_PASSWORD,
+        database=DB_NAME,
+        cursorclass=pymysql.cursors.DictCursor
+    )
 
 def calculate_order_amount(items):
     price = 0
@@ -182,32 +204,114 @@ def add_to_cart():
         app.logger.exception("Error adding to cart", str(e))
         return jsonify({"success": False, "error": str(e)}), 500
 
-@app.route('/create-payment-intent', methods=['POST'])
-def create_payment():
+@app.route('/create-checkout-session', methods=['POST'])
+def create_checkout_session():
     try:
-        cart = request.form.get("cart", 1)  
+        cart = request.form.get("cart", -1)  
         if cart == -1:
-            return jsonify({"success": False, "error": str(e) + " no cart provided"}), 502
-    
-        amount = calculate_order_amount(json.loads(cart))
+            return jsonify({"success": False, "error": "No cart provided"}), 501
 
-        if amount <= 0:
-            return jsonify({"success": False, "error": str(e) + " invalid amount"}), 502
-    
-        # Create a PaymentIntent with the order amount and currency
-        intent = stripe.PaymentIntent.create(
-            amount=amount,
-            currency='usd',
-            payment_method_types=['card']
+        cart = json.loads(cart)  # Parse cart items from the frontend
+        if not cart:
+            return jsonify({"success": False, "error": "Cart is empty"}), 502
+
+        # Prepare line items for Stripe Checkout session
+        line_items = []
+        total_amount = 0
+        
+        for item in cart:
+            price = 0
+            if item["type"] == "solid":
+                price = SOLID_PRICE
+            elif item["type"] == "text":
+                price = TEXT_PRICE
+            elif item["type"] == "custom":
+                price = CUSTOM_PRICE
+            else:
+                return jsonify({"success": False, "error": "Invalid item type in cart"}), 502
+            price_data = {
+                "currency": "usd",
+                "product_data": {
+                    "name": "Custom golf ball stencil - type: {0}, qty: {1}".format(item["type"], item["quantity"])
+                },
+                "unit_amount": price,  # Convert to cents
+            }
+            line_items.append({
+                "price_data": price_data,
+                "quantity": item["quantity"],
+            })
+            total_amount += price * item["quantity"]
+
+        if total_amount <= 0:
+            return jsonify({"success": False, "error": "Invalid order amount"}), 502
+
+        domain = "https://www.fairway-ink.com"
+
+        if platform.system() != "Linux":
+            domain = "http://localhost:5173"
+
+        # Create a Checkout Session with line items and success/cancel URLs
+        session = stripe.checkout.Session.create(
+            payment_method_types=["card"],
+            line_items=line_items,
+            mode="payment",
+            success_url=f"{domain}/success?session_id={{CHECKOUT_SESSION_ID}}", 
+            cancel_url=f"{domain}", 
         )
 
         return jsonify({
-            'clientSecret': intent['client_secret']
+            'id': session.id
         })
     except Exception as e:
-        app.logger.exception("Error creating payment intent: ", str(e))
-        return jsonify(error="ERROR"), 403
-    
+        app.logger.exception("Error creating checkout session: ", str(e))
+        return jsonify({"error": "ERROR"}), 500
+
+
+@app.route('/verify-payment', methods=['POST'])
+def verify_payment():
+    swipe_ssid = request.json.get('swipe_ssid') 
+    browser_ssid = request.json.get('browser_ssid') 
+
+    try:
+        # Retrieve the checkout session from Stripe
+        session = stripe.checkout.Session.retrieve(swipe_ssid)
+        
+        # Check if the payment was successful
+        if session.payment_status == 'paid':
+        # Fetch order details and return to the frontend
+            order = {
+                "id": session.id,
+                "email": session.customer_details.email,
+                "total": session.amount_total / 100, 
+            }
+            print(browser_ssid, cart_items)
+            if browser_ssid in cart_items:
+                for file in cart_items[browser_ssid]:
+                    local_path = "./" + "/".join(file.split("/")[3::])
+                    filename = file.split("/")[-1]
+
+                    if os.path.exists(local_path):
+                        s3_key = f"{browser_ssid}/{filename}"  # S3 folder per session
+                        s3_client.upload_file(local_path, STL_S3_BUCKET, s3_key)
+                        print(f"Uploaded {filename} to S3 bucket {STL_S3_BUCKET}")
+
+            # conn = get_db_connection()
+            # with conn.cursor() as cursor:
+            #     sql = """INSERT INTO purchases 
+            #          (purchaser_email, stl_link, purchase_amount, stripe_ssid, payment_status, shipping_status)
+            #          VALUES (%s, %s, %s, %s, %s, %s)"""
+            #     cursor.execute(sql, (purchaser_email, stl_link, purchase_amount, stripe_ssid, payment_status, shipping_status))
+            #     conn.commit()
+            # conn.close()
+
+            return jsonify({"success": True, "order": order})
+        else:
+            return jsonify({"success": False, "message": "Payment not successful"})
+
+    except stripe.error.StripeError as e:
+        # Handle Stripe API errors
+        return jsonify({"success": False, "message": str(e)})
+
 
 if __name__ == "__main__":
     app.run(debug=True, port=5001)
