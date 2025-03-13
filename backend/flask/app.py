@@ -41,6 +41,22 @@ S3_REGION = "us-east-2"
 
 s3_client = boto3.client("s3", region_name=S3_REGION)
 
+# Load MySQL connection details from environment variables (for security)
+DB_HOST = os.getenv("DB_HOST", "put_local_host_here")
+DB_USER = os.getenv("DB_USER", "admin")
+DB_PASSWORD = os.getenv("DB_PASSWORD", "local_password")
+DB_NAME = os.getenv("DB_NAME", "local_DB_name")
+
+# Function to get a database connection
+def get_db_connection():
+    return pymysql.connect(
+        host=DB_HOST,
+        user=DB_USER,
+        password=DB_PASSWORD,
+        database=DB_NAME,
+        cursorclass=pymysql.cursors.DictCursor
+    )
+
 def calculate_order_amount(items):
     price = 0
     for item in items:
@@ -279,6 +295,14 @@ def verify_payment():
                         s3_client.upload_file(local_path, STL_S3_BUCKET, s3_key)
                         print(f"Uploaded {filename} to S3 bucket {STL_S3_BUCKET}")
 
+            # conn = get_db_connection()
+            # with conn.cursor() as cursor:
+            #     sql = """INSERT INTO purchases 
+            #          (purchaser_email, stl_link, purchase_amount, stripe_ssid, payment_status, shipping_status)
+            #          VALUES (%s, %s, %s, %s, %s, %s)"""
+            #     cursor.execute(sql, (purchaser_email, stl_link, purchase_amount, stripe_ssid, payment_status, shipping_status))
+            #     conn.commit()
+            # conn.close()
 
             return jsonify({"success": True, "order": order})
         else:
