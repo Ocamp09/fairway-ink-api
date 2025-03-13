@@ -119,10 +119,12 @@ export const getCheckoutSession = async () => {
 };
 
 export const verifySuccessfulCheckout = async (sessionId) => {
+  const browser_ssid = get_ssid();
+
   try {
     const response = await axios.post(
       API_URL + "/verify-payment",
-      { sessionId },
+      { swipe_ssid: sessionId, browser_ssid: browser_ssid },
       {
         headers: {
           "Content-Type": "application/json",

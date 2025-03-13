@@ -10,6 +10,7 @@ import stripe
 import platform
 import logging
 from logging.handlers import RotatingFileHandler
+import boto3
 
 # stripe secret API key (test)
 stripe.api_key = 'sk_test_51Qs6WuACPDsvvNfxayxO5fGAKEh7GSTbYPooWZ6qwxfe1S6st8SzE5utVWlzShFWrVoSiLNEvy1n30ZG7sWAJPNd00TSAreBRT'
@@ -34,6 +35,11 @@ SOLID_PRICE = 599
 TEXT_PRICE = 599
 
 cart_items = {}
+
+STL_S3_BUCKET = "fairway-ink-stl"
+S3_REGION = "us-east-2"
+
+s3_client = boto3.client("s3", region_name=S3_REGION)
 
 def calculate_order_amount(items):
     price = 0
@@ -187,10 +193,9 @@ def create_checkout_session():
     try:
         cart = request.form.get("cart", -1)  
         if cart == -1:
-            return jsonify({"success": False, "error": "No cart provided"}), 502
+            return jsonify({"success": False, "error": "No cart provided"}), 501
 
         cart = json.loads(cart)  # Parse cart items from the frontend
-        print(cart)
         if not cart:
             return jsonify({"success": False, "error": "Cart is empty"}), 502
 
@@ -248,13 +253,14 @@ def create_checkout_session():
 
 @app.route('/verify-payment', methods=['POST'])
 def verify_payment():
-    session_id = request.json.get('sessionId')  # Get sessionId from the client
+    swipe_ssid = request.json.get('swipe_ssid') 
+    browser_ssid = request.json.get('browser_ssid') 
 
     try:
         # Retrieve the checkout session from Stripe
-        session = stripe.checkout.Session.retrieve(session_id)
-        print(session)
-        # # Check if the payment was successful
+        session = stripe.checkout.Session.retrieve(swipe_ssid)
+        
+        # Check if the payment was successful
         if session.payment_status == 'paid':
         # Fetch order details and return to the frontend
             order = {
@@ -262,11 +268,21 @@ def verify_payment():
                 "email": session.customer_details.email,
                 "total": session.amount_total / 100, 
             }
-            return jsonify({"success": True, "order": order})
+            print(browser_ssid, cart_items)
+            if browser_ssid in cart_items:
+                for file in cart_items[browser_ssid]:
+                    local_path = "./" + "/".join(file.split("/")[3::])
+                    filename = file.split("/")[-1]
 
+                    if os.path.exists(local_path):
+                        s3_key = f"{browser_ssid}/{filename}"  # S3 folder per session
+                        s3_client.upload_file(local_path, STL_S3_BUCKET, s3_key)
+                        print(f"Uploaded {filename} to S3 bucket {STL_S3_BUCKET}")
+
+
+            return jsonify({"success": True, "order": order})
         else:
             return jsonify({"success": False, "message": "Payment not successful"})
-
 
     except stripe.error.StripeError as e:
         # Handle Stripe API errors
