@@ -58,12 +58,13 @@ export const generateStl = async (svgData, scale, stlKey, templateType) => {
     formData.append("scale", scale);
   }
 
+  formData.append("stlKey", stlKey);
+
   try {
     const response = await axios.post(API_URL + "/generate", formData, {
       headers: {
         "Content-Type": "multipart/form-data",
         ssid: session_id,
-        stlKey: stlKey,
       },
     });
 
@@ -97,7 +98,7 @@ export const addToCartApi = (stlUrl) => {
 
 export const getCheckoutSession = async () => {
   const formData = new FormData();
-  formData.append("cart", localStorage.getItem("cart"));
+  formData.append("cart", sessionStorage.getItem("cart"));
 
   try {
     const response = await axios.post(
