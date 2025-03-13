@@ -234,7 +234,7 @@ def create_checkout_session():
             payment_method_types=["card"],
             line_items=line_items,
             mode="payment",
-            success_url=f"{domain}/success", 
+            success_url=f"{domain}/success?session_id={{CHECKOUT_SESSION_ID}}", 
             cancel_url=f"{domain}", 
         )
 
@@ -244,6 +244,33 @@ def create_checkout_session():
     except Exception as e:
         app.logger.exception("Error creating checkout session: ", str(e))
         return jsonify({"error": "ERROR"}), 500
+
+
+@app.route('/verify-payment', methods=['POST'])
+def verify_payment():
+    session_id = request.json.get('sessionId')  # Get sessionId from the client
+
+    try:
+        # Retrieve the checkout session from Stripe
+        session = stripe.checkout.Session.retrieve(session_id)
+        print(session)
+        # # Check if the payment was successful
+        if session.payment_status == 'paid':
+        # Fetch order details and return to the frontend
+            order = {
+                "id": session.id,
+                "email": session.customer_details.email,
+                "total": session.amount_total / 100, 
+            }
+            return jsonify({"success": True, "order": order})
+
+        else:
+            return jsonify({"success": False, "message": "Payment not successful"})
+
+
+    except stripe.error.StripeError as e:
+        # Handle Stripe API errors
+        return jsonify({"success": False, "message": str(e)})
 
 
 if __name__ == "__main__":

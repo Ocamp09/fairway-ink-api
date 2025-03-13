@@ -96,8 +96,6 @@ export const addToCartApi = (stlUrl) => {
 };
 
 export const getCheckoutSession = async () => {
-  const session_id = get_ssid();
-
   const formData = new FormData();
   formData.append("cart", localStorage.getItem("cart"));
 
@@ -116,5 +114,28 @@ export const getCheckoutSession = async () => {
   } catch (error) {
     console.log("Error getting checkout session: ", error);
     throw error;
+  }
+};
+
+export const verifySuccessfulCheckout = async (sessionId) => {
+  try {
+    const response = await axios.post(
+      API_URL + "/verify-payment",
+      { sessionId },
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    if (response.data.success) {
+      return response.data;
+    } else {
+      alert(response.data.message || "Payment failed");
+    }
+  } catch (error) {
+    console.error("Error verifying payment:", error);
+    alert("Error verifying payment");
   }
 };
