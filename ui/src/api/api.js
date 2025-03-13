@@ -2,8 +2,8 @@ import axios from "axios";
 import Cookies from "js-cookie";
 import { v4 as uuidv4 } from "uuid";
 
-//const API_URL = "https://api.fairway-ink.com";
-const API_URL = "http://localhost:5001";
+const API_URL = "https://api.fairway-ink.com";
+//const API_URL = "http://localhost:5001";
 
 const get_ssid = () => {
   let sessionId = Cookies.get("session_id");
