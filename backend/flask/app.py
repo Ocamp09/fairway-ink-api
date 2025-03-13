@@ -47,6 +47,9 @@ def allowed_file(filename):
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
+@app.route("/")
+def index():
+    return jsonify({"success": True, "message": "test"})
 @app.route("/output/<ssid>/<filename>")
 def output_stl(ssid, filename):
     return send_from_directory(f"output/{ssid}", filename)
@@ -131,7 +134,7 @@ def generate_gcode():
         os.remove(OUTPUT_FOLDER + session_id + "/" + filename)
         stl_name = filename.split(".")[0] + ".stl"  
         # stl_url = f"http://localhost:5001/output/{session_id}/{stl_name}"
-        stl_url = f"http://3.142.159.228/output/{session_id}/{stl_name}"
+        stl_url = f"https://api.fairway-ink.com/output/{session_id}/{stl_name}"
         return jsonify({"success": True, "stlUrl": stl_url})
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 502
