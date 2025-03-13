@@ -7,6 +7,7 @@ import img_to_svg as img_to_svg
 import platform
 import json
 import stripe
+import platform
 
 # stripe secret API key (test)
 stripe.api_key = 'sk_test_51Qs6WuACPDsvvNfxayxO5fGAKEh7GSTbYPooWZ6qwxfe1S6st8SzE5utVWlzShFWrVoSiLNEvy1n30ZG7sWAJPNd00TSAreBRT'
@@ -37,8 +38,6 @@ def calculate_order_amount(items):
                 price += CUSTOM_PRICE
             case _:
                 return -1
-
-
     return price
 
 
@@ -95,27 +94,36 @@ def generate_gcode():
     svg_file = request.files['svg']
     filename = secure_filename(svg_file.filename)
 
+    if session_id not in cart_items:
+        cart_items[session_id] = []
+
     # remove the previous STL file if not saved to cart
-    if request.headers["stlKey"]:
-        key = request.headers["stlKey"]
-        if int(key) > 0:
+    stl_key = request.form.get("stlKey", 0)
+    if stl_key:
+        if int(stl_key) > 0:
             stripped = filename.find("g")
-            prevKey = int(key) - 1
+            prevKey = int(stl_key) - 1
             prevFile = str(prevKey) + filename[stripped::].replace("svg", "stl")
-            print(os.path.exists("./output/" + session_id + "/" + prevFile), "./output/" + session_id + "/" + prevFile)
-            print(cart_items)
-            # if os.path.exists(prevFile) and prevFile not in cart_items[session_id]:
-            #     os.remove(OUTPUT_FOLDER + session_id + "/" + prevFile)
+            file_path = "./output/" + session_id + "/" + prevFile
+            if os.path.exists(file_path) and session_id in cart_items.keys():
+                file_url = f"https://api.fairway-ink.com/output/{session_id}/{prevFile}"
+
+                if platform.system() != "Linux":
+                    file_url = f"http://localhost:5001/output/{session_id}/{prevFile}"
+
+                if file_url not in cart_items[session_id]:
+                    os.remove(OUTPUT_FOLDER + session_id + "/" + prevFile)
 
     os.makedirs("./output/" + session_id, exist_ok=True)
 
     output_svg_path = os.path.join(OUTPUT_FOLDER + session_id, filename)
     try:
         svg_file.save(output_svg_path)
-        # blender_path = r"C:\Program Files\Blender Foundation\Blender 4.3\blender.exe"
         blender_path = r"/home/ec2-user/blender-4.3.2-linux-x64/blender"
         if platform.system() == "Darwin":
             blender_path = r"/Applications/Blender.app/Contents/MacOS/blender"
+        elif platform.system() == "Windows":
+            blender_path = r"C:\Program Files\Blender Foundation\Blender 4.3\blender.exe"
 
         blender_command = [
             blender_path,
@@ -130,8 +138,12 @@ def generate_gcode():
 
         os.remove(OUTPUT_FOLDER + session_id + "/" + filename)
         stl_name = filename.split(".")[0] + ".stl"  
-        # stl_url = f"http://localhost:5001/output/{session_id}/{stl_name}"
         stl_url = f"https://api.fairway-ink.com/output/{session_id}/{stl_name}"
+
+        # use local host if the platform is not the ec2 instance
+        if platform.system() != "Linux":
+            stl_url = f"http://localhost:5001/output/{session_id}/{stl_name}"
+
         return jsonify({"success": True, "stlUrl": stl_url})
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 502
@@ -143,9 +155,9 @@ def add_to_cart():
     filename = request.form.get("filename")
 
     if session_id not in cart_items:
-        cart_items[session_id] = set()
+        cart_items[session_id] = []
 
-    cart_items[session_id].add(filename)
+    cart_items[session_id].append(filename)
     print(cart_items)
 
     return jsonify({"success": True})
