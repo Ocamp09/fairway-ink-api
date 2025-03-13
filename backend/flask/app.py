@@ -158,7 +158,6 @@ def add_to_cart():
         cart_items[session_id] = []
 
     cart_items[session_id].append(filename)
-    print(cart_items)
 
     return jsonify({"success": True})
 
