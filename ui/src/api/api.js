@@ -18,7 +18,6 @@ const get_ssid = () => {
 
 export const uploadImage = async (file, method) => {
   const session_id = get_ssid();
-  console.log(session_id);
 
   const formData = new FormData();
   formData.append("file", file, "fairway_ink_drawing.png");

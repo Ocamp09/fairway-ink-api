@@ -18,6 +18,7 @@ const Toolbar = ({
   lineWidth,
   setLineWidth,
   setReloadPaths,
+  imgCanvasRef,
   canvasRef,
   fontSize,
   setFontSize,
@@ -70,6 +71,7 @@ const Toolbar = ({
 
   const saveCanvas = () => {
     const canvas = canvasRef.current;
+    const imgCanvas = imgCanvasRef.current;
 
     const canvasBackground = document.createElement("canvas");
     canvasBackground.width = canvas.width;
@@ -78,6 +80,7 @@ const Toolbar = ({
     const ctx = canvasBackground.getContext("2d");
     ctx.fillStyle = "white";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(imgCanvas, 0, 0);
     ctx.drawImage(canvas, 0, 0);
 
     const dataUrl = canvasBackground.toDataURL("image/png");
