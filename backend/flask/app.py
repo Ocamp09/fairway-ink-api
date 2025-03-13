@@ -130,7 +130,7 @@ def generate_gcode():
 
         os.remove(OUTPUT_FOLDER + session_id + "/" + filename)
         stl_name = filename.split(".")[0] + ".stl"  
-        stl_url = f"http://3.147.42.18/output/{session_id}/{stl_name}"
+        stl_url = f"http://3.142.159.228/output/{session_id}/{stl_name}"
         return jsonify({"success": True, "stlUrl": stl_url})
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 502
