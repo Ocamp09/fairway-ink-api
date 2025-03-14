@@ -9,6 +9,8 @@
 *.pyc
 venv/
 *.env
+.flaskenv
 *.blend1
 .venv
 app.log
+test_db.py

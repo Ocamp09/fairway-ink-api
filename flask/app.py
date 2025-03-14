@@ -11,6 +11,7 @@ import platform
 import logging
 from logging.handlers import RotatingFileHandler
 import boto3
+import pymysql
 
 # stripe secret API key (test)
 stripe.api_key = 'sk_test_51Qs6WuACPDsvvNfxayxO5fGAKEh7GSTbYPooWZ6qwxfe1S6st8SzE5utVWlzShFWrVoSiLNEvy1n30ZG7sWAJPNd00TSAreBRT'
@@ -41,11 +42,19 @@ S3_REGION = "us-east-2"
 
 s3_client = boto3.client("s3", region_name=S3_REGION)
 
+def get_env(var):
+    val = os.getenv(var)
+    if val is None:
+        raise EnvironmentError(f"missing environment variables: {var}")
+    return val
+
+
 # Load MySQL connection details from environment variables (for security)
-DB_HOST = os.getenv("DB_HOST", "put_local_host_here")
-DB_USER = os.getenv("DB_USER", "admin")
-DB_PASSWORD = os.getenv("DB_PASSWORD", "local_password")
-DB_NAME = os.getenv("DB_NAME", "local_DB_name")
+DB_HOST = get_env("DB_HOST")
+DB_USER = get_env("DB_USER")
+DB_PASSWORD = get_env("DB_PASSWORD")
+DB_NAME = get_env("DB_NAME")
+
 
 # Function to get a database connection
 def get_db_connection():
@@ -303,10 +312,11 @@ def verify_payment():
             
             conn = get_db_connection()
             with conn.cursor() as cursor:
-                sql = """INSERT INTO orders 
-                     (purchaser_email, purchase_name, browser_ssid, stripe_ssid, total_amount, payment_status)
-                     VALUES (%s, %s, %s, %s, %s, %s)"""
-                cursor.execute(sql, (purchaser_email, purchaser_name, browser_ssid, stripe_ssid, total, payment_status))
+                orders_insert = """INSERT INTO orders
+                            (`purchaser_email`,`purchaser_name`,`browser_ssid`,
+                            `stripe_ssid`,`total_amount`,`payment_status`)
+                            VALUES (%s, %s, %s, %s, %s, %s)"""
+                cursor.execute(orders_insert, (purchaser_email, purchaser_name, browser_ssid, stripe_ssid, total, payment_status))
                 conn.commit()
             conn.close()
 
