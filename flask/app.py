@@ -279,10 +279,16 @@ def verify_payment():
         # Check if the payment was successful
         if session.payment_status == 'paid':
         # Fetch order details and return to the frontend
+            purchaser_email = session.customer_details.email
+            purchaser_name = session.customer_details.name
+            stripe_ssid = session.id
+            total = session.amount_total / 100
+            payment_status = session.payment_status
+            
             order = {
-                "id": session.id,
-                "email": session.customer_details.email,
-                "total": session.amount_total / 100, 
+                "id": stripe_ssid,
+                "email": purchaser_email,
+                "total": total, 
             }
             print(browser_ssid, cart_items)
             if browser_ssid in cart_items:
@@ -294,15 +300,15 @@ def verify_payment():
                         s3_key = f"{browser_ssid}/{filename}"  # S3 folder per session
                         s3_client.upload_file(local_path, STL_S3_BUCKET, s3_key)
                         print(f"Uploaded {filename} to S3 bucket {STL_S3_BUCKET}")
-
-            # conn = get_db_connection()
-            # with conn.cursor() as cursor:
-            #     sql = """INSERT INTO purchases 
-            #          (purchaser_email, stl_link, purchase_amount, stripe_ssid, payment_status, shipping_status)
-            #          VALUES (%s, %s, %s, %s, %s, %s)"""
-            #     cursor.execute(sql, (purchaser_email, stl_link, purchase_amount, stripe_ssid, payment_status, shipping_status))
-            #     conn.commit()
-            # conn.close()
+            
+            conn = get_db_connection()
+            with conn.cursor() as cursor:
+                sql = """INSERT INTO orders 
+                     (purchaser_email, purchase_name, browser_ssid, stripe_ssid, total_amount, payment_status)
+                     VALUES (%s, %s, %s, %s, %s, %s)"""
+                cursor.execute(sql, (purchaser_email, purchaser_name, browser_ssid, stripe_ssid, total, payment_status))
+                conn.commit()
+            conn.close()
 
             return jsonify({"success": True, "order": order})
         else:
