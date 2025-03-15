@@ -41,6 +41,7 @@ STL_S3_BUCKET = "fairway-ink-stl"
 S3_REGION = "us-east-2"
 
 s3_client = boto3.client("s3", region_name=S3_REGION)
+lambda_client = boto3.client('lambda', region_name=S3_REGION)
 
 def get_env(var):
     val = os.getenv(var)
@@ -48,23 +49,6 @@ def get_env(var):
         raise EnvironmentError(f"missing environment variables: {var}")
     return val
 
-
-# Load MySQL connection details from environment variables (for security)
-DB_HOST = get_env("DB_HOST")
-DB_USER = get_env("DB_USER")
-DB_PASSWORD = get_env("DB_PASSWORD")
-DB_NAME = get_env("DB_NAME")
-
-
-# Function to get a database connection
-def get_db_connection():
-    return pymysql.connect(
-        host=DB_HOST,
-        user=DB_USER,
-        password=DB_PASSWORD,
-        database=DB_NAME,
-        cursorclass=pymysql.cursors.DictCursor
-    )
 
 def calculate_order_amount(items):
     price = 0
@@ -310,15 +294,20 @@ def verify_payment():
                         s3_client.upload_file(local_path, STL_S3_BUCKET, s3_key)
                         print(f"Uploaded {filename} to S3 bucket {STL_S3_BUCKET}")
             
-            conn = get_db_connection()
-            with conn.cursor() as cursor:
-                orders_insert = """INSERT INTO orders
-                            (`purchaser_email`,`purchaser_name`,`browser_ssid`,
-                            `stripe_ssid`,`total_amount`,`payment_status`)
-                            VALUES (%s, %s, %s, %s, %s, %s)"""
-                cursor.execute(orders_insert, (purchaser_email, purchaser_name, browser_ssid, stripe_ssid, total, payment_status))
-                conn.commit()
-            conn.close()
+            order_details = {
+                "purchaser_email": purchaser_email, 
+                "purchaser_name": purchaser_name, 
+                "browser_ssid": browser_ssid,
+                "stripe_ssid": stripe_ssid,
+                "total": total, 
+                "payment_status": payment_status
+            }
+
+            lambda_client.invoke(
+                FunctionName='handle-order-dev-insert-order',
+                InvocationType='RequestResponse',  # Use 'Event' for async execution
+                Payload=json.dumps({"order_details": order_details})  # Replace with actual payload
+            )
 
             return jsonify({"success": True, "order": order})
         else:
