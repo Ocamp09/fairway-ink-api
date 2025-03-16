@@ -1,5 +1,3 @@
-USE fairway_ink;
-
 CREATE TABLE orders (
     order_id       INT AUTO_INCREMENT PRIMARY KEY,
     purchaser_email VARCHAR(255) NOT NULL,
@@ -15,7 +13,7 @@ CREATE TABLE stl_files (
     stl_id         INT AUTO_INCREMENT PRIMARY KEY,
     browser_ssid       VARCHAR(255) NOT NULL,
     file_name VARCHAR(20) NOT NULL,
-    created_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE print_jobs (
@@ -26,7 +24,7 @@ CREATE TABLE print_jobs (
     started_at     TIMESTAMP NULL,
     completed_at   TIMESTAMP NULL,
     created_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (order_id) REFERENCES orders(order_id) ON DELETE CASCADE,
+    FOREIGN KEY (order_id) REFERENCES orders(order_id) ON DELETE CASCADE
 );
 
 CREATE TABLE shipping (
