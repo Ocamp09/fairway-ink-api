@@ -1,0 +1,2 @@
+mysql -h fairway-ink.criqiyqoswk3.us-east-2.rds.amazonaws.com -u admin -p fairway_ink < ./fairway-ink-db-schema.sql
+

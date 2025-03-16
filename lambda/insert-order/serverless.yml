@@ -1,0 +1,22 @@
+# "org" ensures this Service is used with the correct Serverless Framework Access Key.
+org: fairwayink
+# "app" enables Serverless Framework Dashboard features and sharing them with other Services.
+app: fairway-ink
+# "service" is the name of this project. This will also be added to your AWS resource names.
+service: handle-order
+
+provider:
+  name: aws
+  runtime: python3.11
+  region: us-east-2
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - secretsmanager:GetSecretValue
+      Resource: "arn:aws:secretsmanager:us-east-2:156041405876:secret:fairway-ink-db-keys-3C7X25"
+
+functions:
+  insert-order:
+    handler: handler.insert_order
+    layers:
+      - arn:aws:lambda:us-east-2:156041405876:layer:pymysql-layer:1

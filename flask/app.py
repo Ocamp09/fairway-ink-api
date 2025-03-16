@@ -11,6 +11,7 @@ import platform
 import logging
 from logging.handlers import RotatingFileHandler
 import boto3
+import pymysql
 
 # stripe secret API key (test)
 stripe.api_key = 'sk_test_51Qs6WuACPDsvvNfxayxO5fGAKEh7GSTbYPooWZ6qwxfe1S6st8SzE5utVWlzShFWrVoSiLNEvy1n30ZG7sWAJPNd00TSAreBRT'
@@ -40,22 +41,14 @@ STL_S3_BUCKET = "fairway-ink-stl"
 S3_REGION = "us-east-2"
 
 s3_client = boto3.client("s3", region_name=S3_REGION)
+lambda_client = boto3.client('lambda', region_name=S3_REGION)
 
-# Load MySQL connection details from environment variables (for security)
-DB_HOST = os.getenv("DB_HOST", "put_local_host_here")
-DB_USER = os.getenv("DB_USER", "admin")
-DB_PASSWORD = os.getenv("DB_PASSWORD", "local_password")
-DB_NAME = os.getenv("DB_NAME", "local_DB_name")
+def get_env(var):
+    val = os.getenv(var)
+    if val is None:
+        raise EnvironmentError(f"missing environment variables: {var}")
+    return val
 
-# Function to get a database connection
-def get_db_connection():
-    return pymysql.connect(
-        host=DB_HOST,
-        user=DB_USER,
-        password=DB_PASSWORD,
-        database=DB_NAME,
-        cursorclass=pymysql.cursors.DictCursor
-    )
 
 def calculate_order_amount(items):
     price = 0
@@ -279,10 +272,16 @@ def verify_payment():
         # Check if the payment was successful
         if session.payment_status == 'paid':
         # Fetch order details and return to the frontend
+            purchaser_email = session.customer_details.email
+            purchaser_name = session.customer_details.name
+            stripe_ssid = session.id
+            total = session.amount_total / 100
+            payment_status = session.payment_status
+            
             order = {
-                "id": session.id,
-                "email": session.customer_details.email,
-                "total": session.amount_total / 100, 
+                "id": stripe_ssid,
+                "email": purchaser_email,
+                "total": total, 
             }
             print(browser_ssid, cart_items)
             if browser_ssid in cart_items:
@@ -294,15 +293,21 @@ def verify_payment():
                         s3_key = f"{browser_ssid}/{filename}"  # S3 folder per session
                         s3_client.upload_file(local_path, STL_S3_BUCKET, s3_key)
                         print(f"Uploaded {filename} to S3 bucket {STL_S3_BUCKET}")
+            
+            order_details = {
+                "purchaser_email": purchaser_email, 
+                "purchaser_name": purchaser_name, 
+                "browser_ssid": browser_ssid,
+                "stripe_ssid": stripe_ssid,
+                "total": total, 
+                "payment_status": payment_status
+            }
 
-            # conn = get_db_connection()
-            # with conn.cursor() as cursor:
-            #     sql = """INSERT INTO purchases 
-            #          (purchaser_email, stl_link, purchase_amount, stripe_ssid, payment_status, shipping_status)
-            #          VALUES (%s, %s, %s, %s, %s, %s)"""
-            #     cursor.execute(sql, (purchaser_email, stl_link, purchase_amount, stripe_ssid, payment_status, shipping_status))
-            #     conn.commit()
-            # conn.close()
+            lambda_client.invoke(
+                FunctionName='handle-order-dev-insert-order',
+                InvocationType='RequestResponse',  # Use 'Event' for async execution
+                Payload=json.dumps({"order_details": order_details})  # Replace with actual payload
+            )
 
             return jsonify({"success": True, "order": order})
         else:
