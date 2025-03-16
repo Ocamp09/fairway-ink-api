@@ -14,3 +14,5 @@ venv/
 .venv
 app.log
 test_db.py
+node_modules/
+python/

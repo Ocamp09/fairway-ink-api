@@ -7,7 +7,8 @@ service: handle-order
 
 provider:
   name: aws
-  runtime: python3.12
+  runtime: python3.11
+  region: us-east-2
   iamRoleStatements:
     - Effect: Allow
       Action:
@@ -17,3 +18,5 @@ provider:
 functions:
   insert-order:
     handler: handler.insert_order
+    layers:
+      - arn:aws:lambda:us-east-2:156041405876:layer:pymysql-layer:1
