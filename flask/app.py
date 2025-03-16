@@ -293,7 +293,16 @@ def verify_payment():
             purchaser_name = session.customer_details.get("name") if session.customer_details else None
             total = session.amount_total / 100
             payment_status = session.payment_status
-            print(session.customer_details)
+
+             # Get address from Stripe
+            address = session.customer_details.get("address") if session.customer_details else {}
+            address_1 = address.get("line1")
+            address_2 = address.get("line2", "")
+            city = address.get("city")
+            state = address.get("state")
+            zipcode = address.get("postal_code")
+            country = address.get("country")
+
             order = {
                 "id": stripe_ssid,
                 "email": purchaser_email,
@@ -331,6 +340,12 @@ def verify_payment():
             order_details = {
                 "purchaser_email": purchaser_email,
                 "purchaser_name": purchaser_name,
+                "address_1": address_1,
+                "address_2": address_2,
+                "city": city,
+                "state": state,
+                "zipcode": zipcode,
+                "country": country,
                 "browser_ssid": browser_ssid,
                 "stripe_ssid": stripe_ssid,
                 "total": total,
