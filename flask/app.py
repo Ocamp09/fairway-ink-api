@@ -266,6 +266,7 @@ def create_checkout_session():
             mode="payment",
             success_url=f"{domain}/success?session_id={{CHECKOUT_SESSION_ID}}", 
             cancel_url=f"{domain}", 
+            shipping_address_collection={"allowed_countries": ["US"]}
         )
 
         return jsonify({
@@ -292,7 +293,7 @@ def verify_payment():
             purchaser_name = session.customer_details.get("name") if session.customer_details else None
             total = session.amount_total / 100
             payment_status = session.payment_status
-
+            print(session.customer_details)
             order = {
                 "id": stripe_ssid,
                 "email": purchaser_email,
@@ -308,8 +309,12 @@ def verify_payment():
                         filename = file.split("/")[-1]
 
                         if os.path.exists(local_path):
-                            s3_key = f"{browser_ssid}/{filename}"
-                            s3_client.upload_file(local_path, STL_S3_BUCKET, s3_key)
+                            s3_stl_key = f"{browser_ssid}/{filename}"
+
+                            # upload stl file
+                            s3_client.upload_file(local_path, STL_S3_BUCKET, s3_stl_key)
+
+                            # upload gcode file
 
                             # Insert into database
                             with conn.cursor() as cursor:
