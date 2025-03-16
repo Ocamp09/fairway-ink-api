@@ -308,11 +308,22 @@ def verify_payment():
                 "email": purchaser_email,
                 "total": total,
             }
+            conn = get_db_connection()  # Connect to MySQL
+            if not conn:
+                return {"statusCode": 500, "body": json.dumps({"error": "Database connection failed"})}
 
-            # Check if browser_ssid exists in cart_items to avoid KeyError
-            if cart_items.get(browser_ssid):
-                conn = get_db_connection()  # Connect to MySQL
-                try:
+            try:
+                # insert into orders table
+                with conn.cursor() as cursor:
+                    orders_insert = """INSERT INTO orders
+                                (`purchaser_email`,`purchaser_name`,`address_1`,`address_2`,`city`,`state`,`zipcode`,`country`,`browser_ssid`,
+                                `stripe_ssid`,`total_amount`,`payment_status`)
+                                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"""
+                    cursor.execute(orders_insert, (purchaser_email, purchaser_name, address_1, address_2, city, state, zipcode, country, browser_ssid, stripe_ssid, total, payment_status))
+                    conn.commit()
+
+                # Check if browser_ssid exists in cart_items to avoid KeyError
+                if cart_items.get(browser_ssid):
                     for file in cart_items[browser_ssid]:
                         local_path = "./" + "/".join(file.split("/")[3:])
                         filename = file.split("/")[-1]
@@ -323,9 +334,7 @@ def verify_payment():
                             # upload stl file
                             s3_client.upload_file(local_path, STL_S3_BUCKET, s3_stl_key)
 
-                            # upload gcode file
-
-                            # Insert into database
+                            # Insert s3 files into database
                             with conn.cursor() as cursor:
                                 s3_query = """INSERT INTO stl_files (browser_ssid, file_name) VALUES (%s, %s);"""
                                 cursor.execute(s3_query, (browser_ssid, filename))
@@ -334,29 +343,12 @@ def verify_payment():
                                 print(f"Successfully inserted {filename} for browser_ssid {browser_ssid}.")
                             else:
                                 print(f"Failed to insert {filename}. No rows were affected.")
-                finally:
-                    conn.close() 
 
-            order_details = {
-                "purchaser_email": purchaser_email,
-                "purchaser_name": purchaser_name,
-                "address_1": address_1,
-                "address_2": address_2,
-                "city": city,
-                "state": state,
-                "zipcode": zipcode,
-                "country": country,
-                "browser_ssid": browser_ssid,
-                "stripe_ssid": stripe_ssid,
-                "total": total,
-                "payment_status": payment_status
-            }
-
-            lambda_client.invoke(
-                FunctionName='handle-order-dev-insert-order',
-                InvocationType='RequestResponse',
-                Payload=json.dumps({"order_details": order_details}),
-            )
+            except pymysql.MySQLError as e:
+                conn.rollback()
+                return {"statusCode": 505, "body": json.dumps({"error": "Failed to insert order into database"})}
+            finally:
+                conn.close()
 
             return jsonify({"success": True, "order": order})
 
