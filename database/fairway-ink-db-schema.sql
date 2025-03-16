@@ -1,3 +1,5 @@
+USE fairway_ink;
+
 CREATE TABLE orders (
     order_id       INT AUTO_INCREMENT PRIMARY KEY,
     purchaser_email VARCHAR(255) NOT NULL,
@@ -5,7 +7,7 @@ CREATE TABLE orders (
     browser_ssid VARCHAR(255) NOT NULL,
     stripe_ssid VARCHAR(255) UNIQUE NOT NULL,
     total_amount   DECIMAL(10,2) NOT NULL,
-    payment_status ENUM('pending', 'paid', 'refunded') DEFAULT 'pending',
+    payment_status VARCHAR(20) NOT NULL,
     created_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
