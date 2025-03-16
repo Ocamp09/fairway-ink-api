@@ -313,9 +313,13 @@ def verify_payment():
 
                             # Insert into database
                             with conn.cursor() as cursor:
-                                s3_query = """INSERT INTO stl_files (order_id, file_name) VALUES (%s, %s);"""
+                                s3_query = """INSERT INTO stl_files (browser_ssid, file_name) VALUES (%s, %s);"""
                                 cursor.execute(s3_query, (browser_ssid, filename))
                                 conn.commit()
+                            if cursor.rowcount > 0:
+                                print(f"Successfully inserted {filename} for browser_ssid {browser_ssid}.")
+                            else:
+                                print(f"Failed to insert {filename}. No rows were affected.")
                 finally:
                     conn.close() 
 
@@ -332,7 +336,6 @@ def verify_payment():
                 FunctionName='handle-order-dev-insert-order',
                 InvocationType='RequestResponse',
                 Payload=json.dumps({"order_details": order_details}),
-                ContentType='application/json'
             )
 
             return jsonify({"success": True, "order": order})
