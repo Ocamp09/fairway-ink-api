@@ -49,6 +49,22 @@ def get_env(var):
         raise EnvironmentError(f"missing environment variables: {var}")
     return val
 
+# Load MySQL connection details from environment variables (for security)
+DB_HOST = get_env("DB_HOST")
+DB_USER = get_env("DB_USER")
+DB_PSWD = get_env("DB_PSWD")
+DB_NAME = get_env("DB_NAME")
+
+# Function to get a database connection
+def get_db_connection():
+    return pymysql.connect(
+        host=DB_HOST,
+        user=DB_USER,
+        password=DB_PSWD,
+        database=DB_NAME,
+        cursorclass=pymysql.cursors.DictCursor
+    )
+
 
 def calculate_order_amount(items):
     price = 0
@@ -262,60 +278,72 @@ def create_checkout_session():
 
 @app.route('/verify-payment', methods=['POST'])
 def verify_payment():
-    swipe_ssid = request.json.get('swipe_ssid') 
-    browser_ssid = request.json.get('browser_ssid') 
+    stripe_ssid = request.json.get('stripe_ssid')  # Fixed variable name
+    browser_ssid = request.json.get('browser_ssid')
 
     try:
         # Retrieve the checkout session from Stripe
-        session = stripe.checkout.Session.retrieve(swipe_ssid)
-        
+        session = stripe.checkout.Session.retrieve(stripe_ssid)
+
         # Check if the payment was successful
         if session.payment_status == 'paid':
-        # Fetch order details and return to the frontend
-            purchaser_email = session.customer_details.email
-            purchaser_name = session.customer_details.name
-            stripe_ssid = session.id
+            # Safely get customer details
+            purchaser_email = session.customer_details.get("email") if session.customer_details else None
+            purchaser_name = session.customer_details.get("name") if session.customer_details else None
             total = session.amount_total / 100
             payment_status = session.payment_status
-            
+
             order = {
                 "id": stripe_ssid,
                 "email": purchaser_email,
-                "total": total, 
+                "total": total,
             }
-            print(browser_ssid, cart_items)
-            if browser_ssid in cart_items:
-                for file in cart_items[browser_ssid]:
-                    local_path = "./" + "/".join(file.split("/")[3::])
-                    filename = file.split("/")[-1]
 
-                    if os.path.exists(local_path):
-                        s3_key = f"{browser_ssid}/{filename}"  # S3 folder per session
-                        s3_client.upload_file(local_path, STL_S3_BUCKET, s3_key)
-                        print(f"Uploaded {filename} to S3 bucket {STL_S3_BUCKET}")
-            
+            # Check if browser_ssid exists in cart_items to avoid KeyError
+            if cart_items.get(browser_ssid):
+                conn = get_db_connection()  # Connect to MySQL
+                try:
+                    for file in cart_items[browser_ssid]:
+                        local_path = "./" + "/".join(file.split("/")[3:])
+                        filename = file.split("/")[-1]
+
+                        if os.path.exists(local_path):
+                            s3_key = f"{browser_ssid}/{filename}"
+                            s3_client.upload_file(local_path, STL_S3_BUCKET, s3_key)
+
+                            # Insert into database
+                            with conn.cursor() as cursor:
+                                s3_query = """INSERT INTO stl_files (order_id, file_name) VALUES (%s, %s);"""
+                                cursor.execute(s3_query, (browser_ssid, filename))
+                                conn.commit()
+                finally:
+                    conn.close() 
+
             order_details = {
-                "purchaser_email": purchaser_email, 
-                "purchaser_name": purchaser_name, 
+                "purchaser_email": purchaser_email,
+                "purchaser_name": purchaser_name,
                 "browser_ssid": browser_ssid,
                 "stripe_ssid": stripe_ssid,
-                "total": total, 
+                "total": total,
                 "payment_status": payment_status
             }
 
             lambda_client.invoke(
                 FunctionName='handle-order-dev-insert-order',
-                InvocationType='RequestResponse',  # Use 'Event' for async execution
-                Payload=json.dumps({"order_details": order_details})  # Replace with actual payload
+                InvocationType='RequestResponse',
+                Payload=json.dumps({"order_details": order_details}),
+                ContentType='application/json'
             )
 
             return jsonify({"success": True, "order": order})
-        else:
-            return jsonify({"success": False, "message": "Payment not successful"})
+
+        return jsonify({"success": False, "message": "Payment not successful"})
 
     except stripe.error.StripeError as e:
-        # Handle Stripe API errors
-        return jsonify({"success": False, "message": str(e)})
+        return jsonify({"success": False, "message": f"Stripe error: {str(e)}"}), 400
+    except Exception as e:
+        return jsonify({"success": False, "message": f"Internal server error: {str(e)}"}), 500
+
 
 
 if __name__ == "__main__":
