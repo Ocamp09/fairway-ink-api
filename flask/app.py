@@ -359,18 +359,22 @@ def verify_payment():
                 conn.commit()
             except pymysql.MySQLError as e:
                 conn.rollback()
+                app.logger.exception("Error inserting data into table: ", str(e))
                 return {"statusCode": 505, "body": json.dumps({"error": "Failed to insert order into database"})}
             finally:
                 conn.close()
 
             return jsonify({"success": True, "order": order})
-
+        app.logger.exception("Payment was not successful")
         return jsonify({"success": False, "message": "Payment not successful"})
 
     except stripe.error.StripeError as e:
+        app.logger.exception("Error with stripe: ", str(e))
         return jsonify({"success": False, "message": f"Stripe error: {str(e)}"}), 400
     except Exception as e:
         print(str(e))
+        app.logger.exception("Error verifying payment: ", str(e))
+
         return jsonify({"success": False, "message": f"Internal server error: {str(e)}"}), 500
 
 
