@@ -364,6 +364,11 @@ def verify_payment():
                                 else:
                                     app.logger.exception("Error inserting data into stl_files table")
                                     print(f"Failed to insert {filename}. No rows were affected.")
+                    else: 
+                        print("Unable to find STL files")
+                        app.logger.exception("Unable to find STL files")
+                        raise pymysql.MySQLError(f"Unable to find STL files")
+
                 conn.commit()
             except pymysql.MySQLError as e:
                 conn.rollback()
