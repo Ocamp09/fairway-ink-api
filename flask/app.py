@@ -320,30 +320,43 @@ def verify_payment():
                                 `stripe_ssid`,`total_amount`,`payment_status`)
                                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"""
                     cursor.execute(orders_insert, (purchaser_email, purchaser_name, address_1, address_2, city, state, zipcode, country, browser_ssid, stripe_ssid, total, payment_status))
-                    conn.commit()
+                    
+                    # Check if order was inserted
+                    order_id = cursor.lastrowid
+                    if not order_id:
+                        raise pymysql.MySQLError(f"Failed to insert order for browser_ssid {browser_ssid}. No order ID returned.")
 
-                # Check if browser_ssid exists in cart_items to avoid KeyError
-                if cart_items.get(browser_ssid):
-                    for file in cart_items[browser_ssid]:
-                        local_path = "./" + "/".join(file.split("/")[3:])
-                        filename = file.split("/")[-1]
+                    print(f"Successfully inserted order with ID: {order_id}")
+                    jobs_insert = """INSERT INTO print_jobs 
+                                    (order_id, status) VALUES (%s, %s)"""
+                    cursor.execute(jobs_insert, (order_id, 'queued'))
 
-                        if os.path.exists(local_path):
-                            s3_stl_key = f"{browser_ssid}/{filename}"
+                    job_id = cursor.lastrowid
+                    if not job_id:
+                        raise pymysql.MySQLError(f"Failed to insert print_job for browser_ssid {browser_ssid}. No Job ID returned.")
 
-                            # upload stl file
-                            s3_client.upload_file(local_path, STL_S3_BUCKET, s3_stl_key)
+                    print(f"Successfully inserted order with ID: {job_id}")
 
-                            # Insert s3 files into database
-                            with conn.cursor() as cursor:
-                                s3_query = """INSERT INTO stl_files (browser_ssid, file_name) VALUES (%s, %s);"""
-                                cursor.execute(s3_query, (browser_ssid, filename))
-                                conn.commit()
-                            if cursor.rowcount > 0:
-                                print(f"Successfully inserted {filename} for browser_ssid {browser_ssid}.")
-                            else:
-                                print(f"Failed to insert {filename}. No rows were affected.")
+                    # Check if browser_ssid exists in cart_items to avoid KeyError
+                    if cart_items.get(browser_ssid):
+                        for file in cart_items[browser_ssid]:
+                            local_path = "./" + "/".join(file.split("/")[3:])
+                            filename = file.split("/")[-1]
 
+                            if os.path.exists(local_path):
+                                s3_stl_key = f"{browser_ssid}/{filename}"
+
+                                # upload stl file
+                                s3_client.upload_file(local_path, STL_S3_BUCKET, s3_stl_key)
+
+                                # Insert s3 files into database
+                                s3_query = """INSERT INTO stl_files (browser_ssid, file_name, job_id) VALUES (%s, %s, %s);"""
+                                cursor.execute(s3_query, (browser_ssid, filename, job_id))
+                                if cursor.rowcount > 0:
+                                    print(f"Successfully inserted {filename} for browser_ssid {browser_ssid}.")
+                                else:
+                                    print(f"Failed to insert {filename}. No rows were affected.")
+                conn.commit()
             except pymysql.MySQLError as e:
                 conn.rollback()
                 return {"statusCode": 505, "body": json.dumps({"error": "Failed to insert order into database"})}
@@ -357,8 +370,8 @@ def verify_payment():
     except stripe.error.StripeError as e:
         return jsonify({"success": False, "message": f"Stripe error: {str(e)}"}), 400
     except Exception as e:
+        print(str(e))
         return jsonify({"success": False, "message": f"Internal server error: {str(e)}"}), 500
-
 
 
 if __name__ == "__main__":

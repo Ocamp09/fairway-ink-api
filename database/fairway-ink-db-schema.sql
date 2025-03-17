@@ -19,7 +19,9 @@ CREATE TABLE stl_files (
     stl_id         INT AUTO_INCREMENT PRIMARY KEY,
     browser_ssid       VARCHAR(255) NOT NULL,
     file_name VARCHAR(20) NOT NULL,
-    created_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    job_id INT NOT NULL,
+    created_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (job_id) REFERENCES print_jobs(job_id)
 );
 
 CREATE TABLE print_jobs (
