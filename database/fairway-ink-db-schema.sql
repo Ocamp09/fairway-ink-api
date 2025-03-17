@@ -6,13 +6,13 @@ DROP TABLE orders;
 DROP TABLE cart_items;
 
 CREATE TABLE cart_items (
-    id = INT AUTO_INCREMENT PRIMARY KEY,
-    browser_ssid VARCHAR(255) NOT NULL
+    id  INT AUTO_INCREMENT PRIMARY KEY,
+    browser_ssid VARCHAR(255) NOT NULL,
     stl_url VARCHAR(255) NOT NULL,
-    quantity = INT NOT NULL,
-    template_type = VARCHAR(20) NOT NULL
+    quantity INT NOT NULL,
+    template_type VARCHAR(20) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-)
+);
 
 CREATE TABLE orders (
     order_id       INT AUTO_INCREMENT PRIMARY KEY,
