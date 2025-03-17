@@ -145,25 +145,29 @@ def generate_gcode():
                 cart_select = """SELECT stl_url FROM cart_items WHERE browser_ssid = %s"""
                 cursor.execute(cart_select, (session_id))
 
+                # get the current STL list
+                cart_stls = []
                 if cursor.rowcount > 0:
-                    # remove the previous STL file if not saved to cart
-                    cart_stls = []
                     for item in cursor.fetchall():
                         cart_stls.append(item["stl_url"])
-                    stl_key = request.form.get("stlKey", -1)
-                    if int(stl_key) > 0:
-                        stripped = filename.find("g")
-                        prevKey = int(stl_key) - 1
-                        prevFile = str(prevKey) + filename[stripped::].replace("svg", "stl")
-                        file_path = "./output/" + session_id + "/" + prevFile
-                        if os.path.exists(file_path):
-                            file_url = f"https://api.fairway-ink.com/output/{session_id}/{prevFile}"
 
-                            if platform.system() != "Linux":
-                                file_url = f"http://localhost:5001/output/{session_id}/{prevFile}"
+                # remove if the file exists and is not in cart list
+                stl_key = request.form.get("stlKey", -1)
+                if int(stl_key) > 0:
+                    print("strip file")
+                    stripped = filename.find("g")
+                    prevKey = int(stl_key) - 1
+                    prevFile = str(prevKey) + filename[stripped::].replace("svg", "stl")
+                    file_path = "./output/" + session_id + "/" + prevFile
+                    if os.path.exists(file_path):
+                        print("path exists")
+                        file_url = f"https://api.fairway-ink.com/output/{session_id}/{prevFile}"
 
-                            if file_url not in cart_stls:
-                                os.remove(OUTPUT_FOLDER + session_id + "/" + prevFile)
+                        if platform.system() != "Linux":
+                            file_url = f"http://localhost:5001/output/{session_id}/{prevFile}"
+
+                        if file_url not in cart_stls:
+                            os.remove(OUTPUT_FOLDER + session_id + "/" + prevFile)
 
         except pymysql.MySQLError as e:
             conn.rollback()
