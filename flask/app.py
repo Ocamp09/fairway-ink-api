@@ -35,8 +35,6 @@ CUSTOM_PRICE = 799
 SOLID_PRICE = 599
 TEXT_PRICE = 599
 
-cart_items = {}
-
 STL_S3_BUCKET = "fairway-ink-stl"
 S3_REGION = "us-east-2"
 
@@ -139,25 +137,41 @@ def generate_gcode():
         svg_file = request.files['svg']
         filename = secure_filename(svg_file.filename)
 
-        if session_id not in cart_items:
-            cart_items[session_id] = []
+        conn = get_db_connection()
+        if not conn:
+            return jsonify({"success": False, "error": "Unable to connect to database"}), 503
+        try:
+            with conn.cursor() as cursor:
+                cart_select = """SELECT stl_url FROM cart_items WHERE browser_ssid = %s"""
+                cursor.execute(cart_select, (session_id))
 
-        # remove the previous STL file if not saved to cart
-        stl_key = request.form.get("stlKey", 0)
-        if stl_key:
-            if int(stl_key) > 0:
-                stripped = filename.find("g")
-                prevKey = int(stl_key) - 1
-                prevFile = str(prevKey) + filename[stripped::].replace("svg", "stl")
-                file_path = "./output/" + session_id + "/" + prevFile
-                if os.path.exists(file_path) and session_id in cart_items.keys():
-                    file_url = f"https://api.fairway-ink.com/output/{session_id}/{prevFile}"
+                if cursor.rowcount > 0:
+                    # remove the previous STL file if not saved to cart
+                    cart_stls = []
+                    for item in cursor.fetchall():
+                        cart_stls.append(item["stl_url"])
+                    stl_key = request.form.get("stlKey", -1)
+                    if int(stl_key) > 0:
+                        stripped = filename.find("g")
+                        prevKey = int(stl_key) - 1
+                        prevFile = str(prevKey) + filename[stripped::].replace("svg", "stl")
+                        file_path = "./output/" + session_id + "/" + prevFile
+                        if os.path.exists(file_path):
+                            file_url = f"https://api.fairway-ink.com/output/{session_id}/{prevFile}"
 
-                    if platform.system() != "Linux":
-                        file_url = f"http://localhost:5001/output/{session_id}/{prevFile}"
+                            if platform.system() != "Linux":
+                                file_url = f"http://localhost:5001/output/{session_id}/{prevFile}"
 
-                    if file_url not in cart_items[session_id]:
-                        os.remove(OUTPUT_FOLDER + session_id + "/" + prevFile)
+                            if file_url not in cart_stls:
+                                os.remove(OUTPUT_FOLDER + session_id + "/" + prevFile)
+
+        except pymysql.MySQLError as e:
+            conn.rollback()
+            return {"statusCode": 505, "body": json.dumps({"error": "Failed to insert order into database"})}
+        finally:
+            conn.close()
+        
+      
 
         os.makedirs("./output/" + session_id, exist_ok=True)
 
@@ -219,6 +233,7 @@ def add_to_cart():
                 app.logger.exception(f"Error inserting cart_items")
                 raise pymysql.MySQLError(f"Unable to insert cart_items")
 
+        conn.commit()
         return jsonify({"success": True})
     except pymysql.MySQLError as e:
         conn.rollback()
@@ -360,11 +375,13 @@ def verify_payment():
                         raise pymysql.MySQLError(f"Failed to insert print_job for browser_ssid {browser_ssid}. No Job ID returned.")
 
                     print(f"Successfully inserted order with ID: {job_id}")
-                    app.logger.debug(f"CART_ITEMS {cart_items}")
+
+                    cart_select = """SELECT stl_url, quantity, template_type FROM cart_items WHERE browser_ssid=%s"""
+                    cursor.execute(cart_select, (browser_ssid))
                     # Check if browser_ssid exists in cart_items to avoid KeyError
-                    if cart_items.get(browser_ssid):
-                        for item in cart_items[browser_ssid]:
-                            url = item.get("url")
+                    if cursor.rowcount > 0:
+                        for item in cursor.fetchall():
+                            url = item.get("stl_url")
                             local_path = "./" + "/".join(url.split("/")[3:])
                             filename = url.split("/")[-1]
                             quantity = item.get("quantity")
