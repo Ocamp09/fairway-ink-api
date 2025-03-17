@@ -201,12 +201,15 @@ def generate_gcode():
 def add_to_cart():
     try:
         session_id = request.headers["ssid"]
-        filename = request.form.get("filename")
+        url = request.form.get("stlUrl")
+        quantity = request.form.get("quantity")
+        template_type = request.form.get("templateType")
+
 
         if session_id not in cart_items:
             cart_items[session_id] = []
 
-        cart_items[session_id].append(filename)
+        cart_items[session_id].append({"url": url, "quantity": quantity, "template_type": template_type})
 
         return jsonify({"success": True})
     except Exception as e:
@@ -241,7 +244,7 @@ def create_checkout_session():
             price_data = {
                 "currency": "usd",
                 "product_data": {
-                    "name": "Custom golf ball stencil - type: {0}, qty: {1}".format(item["type"], item["quantity"])
+                    "name": "Custom golf ball stencil - type: {0}, qty: {1}".format(item["type"], item["quantity"]),
                 },
                 "unit_amount": price,  # Convert to cents
             }
@@ -266,7 +269,7 @@ def create_checkout_session():
             mode="payment",
             success_url=f"{domain}/success?session_id={{CHECKOUT_SESSION_ID}}", 
             cancel_url=f"{domain}", 
-            shipping_address_collection={"allowed_countries": ["US"]}
+            shipping_address_collection={"allowed_countries": ["US"]},
         )
 
         return jsonify({
@@ -346,10 +349,11 @@ def verify_payment():
 
                     # Check if browser_ssid exists in cart_items to avoid KeyError
                     if cart_items.get(browser_ssid):
-                        for file in cart_items[browser_ssid]:
-                            local_path = "./" + "/".join(file.split("/")[3:])
-                            filename = file.split("/")[-1]
-
+                        for item in cart_items[browser_ssid]:
+                            url = item.get("url")
+                            local_path = "./" + "/".join(url.split("/")[3:])
+                            filename = url.split("/")[-1]
+                            quantity = item.get("quantity")
                             if os.path.exists(local_path):
                                 s3_stl_key = f"{browser_ssid}/{filename}"
 
@@ -357,10 +361,10 @@ def verify_payment():
                                 s3_client.upload_file(local_path, STL_S3_BUCKET, s3_stl_key)
 
                                 # Insert s3 files into database
-                                s3_query = """INSERT INTO stl_files (browser_ssid, file_name, job_id) VALUES (%s, %s, %s);"""
-                                cursor.execute(s3_query, (browser_ssid, filename, job_id))
+                                s3_query = """INSERT INTO stl_files (browser_ssid, file_name, job_id, quantity) VALUES (%s, %s, %s, %s);"""
+                                cursor.execute(s3_query, (browser_ssid, filename, job_id, quantity))
                                 if cursor.rowcount > 0:
-                                    print(f"Successfully inserted {filename} for browser_ssid {browser_ssid}.")
+                                    print(f"Successfully inserted {filename} for browser_ssid {browser_ssid} w/ quantity {quantity}.")
                                 else:
                                     app.logger.exception("Error inserting data into stl_files table")
                                     print(f"Failed to insert {filename}. No rows were affected.")
