@@ -19,12 +19,13 @@ stripe.api_key = 'sk_test_51Qs6WuACPDsvvNfxayxO5fGAKEh7GSTbYPooWZ6qwxfe1S6st8SzE
 app = Flask(__name__)
 CORS(app)
 
-# logging config
-app.logger.setLevel(logging.INFO)
-formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-handler = RotatingFileHandler('app.log', maxBytes=10000, backupCount=3)
-handler.setFormatter(formatter)
-app.logger.addHandler(handler)
+# Logging setup
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    handlers=[RotatingFileHandler("api.log", maxBytes=10000, backupCount=3)],
+)
+logger = logging.getLogger(__name__)
 
 # Configuration
 ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "svg"}
