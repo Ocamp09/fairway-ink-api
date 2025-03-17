@@ -119,7 +119,7 @@ def upload_file():
         svg_data = img_to_svg.image_to_svg(file, method=method)
         return jsonify({"success": True, "svgData": svg_data})
     except Exception as e:
-        app.logger.exception("Error processing upload: ", str(e))
+        logger.exception("Error processing upload: ", str(e))
         return jsonify({"success": False, "error": str(e)}), 500
 
 
@@ -212,7 +212,7 @@ def generate_gcode():
         except Exception as e:
             return jsonify({"success": False, "error": str(e)}), 502
     except Exception as e:
-        app.logger.exception("Error generating STL", str(e))
+        logger.exception("Error generating STL", str(e))
         return jsonify({"success": False, "error": str(e)}), 500
     
 
@@ -235,17 +235,17 @@ def add_to_cart():
             cursor.execute(cart_insert, (session_id, url, quantity, template_type))
 
             if cursor.rowcount < 1:
-                app.logger.exception(f"Error inserting cart_items")
+                logger.exception(f"Error inserting cart_items")
                 raise pymysql.MySQLError(f"Unable to insert cart_items")
 
         conn.commit()
         return jsonify({"success": True})
     except pymysql.MySQLError as e:
         conn.rollback()
-        app.logger.exception("Error inserting cart_items into table: ", str(e))
+        logger.exception("Error inserting cart_items into table: ", str(e))
         return {"statusCode": 505, "body": json.dumps({"error": "Failed to insert order into database"})}
     except Exception as e:
-        app.logger.exception("Error adding to cart", str(e))
+        logger.exception("Error adding to cart", str(e))
         return jsonify({"success": False, "error": str(e)}), 500        
     finally:
         conn.close()
@@ -310,7 +310,7 @@ def create_checkout_session():
             'id': session.id
         })
     except Exception as e:
-        app.logger.exception("Error creating checkout session: ", str(e))
+        logger.exception("Error creating checkout session: ", str(e))
         return jsonify({"error": "ERROR"}), 500
 
 
@@ -359,7 +359,7 @@ def verify_payment():
                     cursor.execute(orders_insert, (purchaser_email, purchaser_name, address_1, address_2, city, state, zipcode, country, browser_ssid, stripe_ssid, total, payment_status))
                     
                     if (cursor.rowcount < 1):
-                        app.logger.exception("Error inserting data into orders table")
+                        logger.exception("Error inserting data into orders table")
                         raise pymysql.MySQLError(f"Failed to insert order for browser_ssid {browser_ssid}. No order ID returned.")
 
                     # Check if order was inserted
@@ -372,7 +372,7 @@ def verify_payment():
                                     (order_id, status) VALUES (%s, %s);"""
                     cursor.execute(jobs_insert, (order_id, 'queued'))
                     if (cursor.rowcount < 1):
-                        app.logger.exception("Error inserting data into print_jobs table")
+                        logger.exception("Error inserting data into print_jobs table")
                         raise pymysql.MySQLError(f"Failed to insert print_job")
                     
                     job_id = cursor.lastrowid
@@ -402,31 +402,31 @@ def verify_payment():
                                 if cursor.rowcount > 0:
                                     print(f"Successfully inserted {filename} for browser_ssid {browser_ssid} w/ quantity {quantity}.")
                                 else:
-                                    app.logger.exception("Error inserting data into stl_files table")
+                                    logger.exception("Error inserting data into stl_files table")
                                     print(f"Failed to insert {filename}. No rows were affected.")
                     else: 
                         print("Unable to find STL files")
-                        app.logger.exception("Unable to find STL files")
+                        logger.exception("Unable to find STL files")
                         raise pymysql.MySQLError(f"Unable to find STL files")
 
                 conn.commit()
             except pymysql.MySQLError as e:
                 conn.rollback()
-                app.logger.exception("Error inserting data into table: ", str(e))
+                logger.exception("Error inserting data into table: ", str(e))
                 return {"statusCode": 505, "body": json.dumps({"error": "Failed to insert order into database"})}
             finally:
                 conn.close()
 
             return jsonify({"success": True, "order": order})
-        app.logger.exception("Payment was not successful")
+        logger.exception("Payment was not successful")
         return jsonify({"success": False, "message": "Payment not successful"})
 
     except stripe.error.StripeError as e:
-        app.logger.exception("Error with stripe: ", str(e))
+        logger.exception("Error with stripe: ", str(e))
         return jsonify({"success": False, "message": f"Stripe error: {str(e)}"}), 400
     except Exception as e:
         print(str(e))
-        app.logger.exception("Error verifying payment: ", str(e))
+        logger.exception("Error verifying payment: ", str(e))
 
         return jsonify({"success": False, "message": f"Internal server error: {str(e)}"}), 500
 
