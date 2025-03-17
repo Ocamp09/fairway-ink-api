@@ -199,22 +199,36 @@ def generate_gcode():
 
 @app.route("/cart", methods=["POST"])
 def add_to_cart():
+    conn = get_db_connection()
+    if not conn:
+        return jsonify({"success": False, "error": "error connecting to Database"})
+        
     try:
         session_id = request.headers["ssid"]
         url = request.form.get("stlUrl")
         quantity = request.form.get("quantity")
         template_type = request.form.get("templateType")
 
+        with conn.cursor() as cursor:
+            cart_insert = """INSERT INTO cart_items (browser_ssid, stl_url, quantity, template_type)
+            VALUES (%s, %s, %s, %s)"""
 
-        if session_id not in cart_items:
-            cart_items[session_id] = []
+            cursor.execute(cart_insert, (session_id, url, quantity, template_type))
 
-        cart_items[session_id].append({"url": url, "quantity": quantity, "template_type": template_type})
+            if cursor.rowcount < 1:
+                app.logger.exception(f"Error inserting cart_items")
+                raise pymysql.MySQLError(f"Unable to insert cart_items")
 
         return jsonify({"success": True})
+    except pymysql.MySQLError as e:
+        conn.rollback()
+        app.logger.exception("Error inserting cart_items into table: ", str(e))
+        return {"statusCode": 505, "body": json.dumps({"error": "Failed to insert order into database"})}
     except Exception as e:
         app.logger.exception("Error adding to cart", str(e))
-        return jsonify({"success": False, "error": str(e)}), 500
+        return jsonify({"success": False, "error": str(e)}), 500        
+    finally:
+        conn.close()
 
 @app.route('/create-checkout-session', methods=['POST'])
 def create_checkout_session():
