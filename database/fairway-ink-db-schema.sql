@@ -15,15 +15,6 @@ CREATE TABLE orders (
     created_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE stl_files (
-    stl_id         INT AUTO_INCREMENT PRIMARY KEY,
-    browser_ssid       VARCHAR(255) NOT NULL,
-    file_name VARCHAR(20) NOT NULL,
-    job_id INT NOT NULL,
-    created_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (job_id) REFERENCES print_jobs(job_id)
-);
-
 CREATE TABLE print_jobs (
     job_id INT AUTO_INCREMENT PRIMARY KEY,
     order_id INT NOT NULL,
@@ -33,6 +24,15 @@ CREATE TABLE print_jobs (
     completed_at   TIMESTAMP NULL,
     created_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (order_id) REFERENCES orders(order_id) ON DELETE CASCADE
+);
+
+CREATE TABLE stl_files (
+    stl_id         INT AUTO_INCREMENT PRIMARY KEY,
+    browser_ssid       VARCHAR(255) NOT NULL,
+    file_name VARCHAR(20) NOT NULL,
+    job_id INT NOT NULL,
+    created_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (job_id) REFERENCES print_jobs(job_id)
 );
 
 CREATE TABLE shipping (
