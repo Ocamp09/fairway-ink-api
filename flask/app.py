@@ -321,6 +321,10 @@ def verify_payment():
                                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"""
                     cursor.execute(orders_insert, (purchaser_email, purchaser_name, address_1, address_2, city, state, zipcode, country, browser_ssid, stripe_ssid, total, payment_status))
                     
+                    if (cursor.rowcount != 1):
+                        app.logger.exception("Error inserting data into orders table")
+                        raise pymysql.MySQLError(f"Failed to insert order for browser_ssid {browser_ssid}. No order ID returned.")
+
                     # Check if order was inserted
                     order_id = cursor.lastrowid
                     if not order_id:
@@ -330,7 +334,10 @@ def verify_payment():
                     jobs_insert = """INSERT INTO print_jobs 
                                     (order_id, status) VALUES (%s, %s)"""
                     cursor.execute(jobs_insert, (order_id, 'queued'))
-
+                    if (cursor.rowcount != 1):
+                        app.logger.exception("Error inserting data into print_jobs table")
+                        raise pymysql.MySQLError(f"Failed to insert print_job")
+                    
                     job_id = cursor.lastrowid
                     if not job_id:
                         raise pymysql.MySQLError(f"Failed to insert print_job for browser_ssid {browser_ssid}. No Job ID returned.")
