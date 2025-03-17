@@ -360,7 +360,7 @@ def verify_payment():
                         raise pymysql.MySQLError(f"Failed to insert print_job for browser_ssid {browser_ssid}. No Job ID returned.")
 
                     print(f"Successfully inserted order with ID: {job_id}")
-
+                    app.logger.debug(f"CART_ITEMS {cart_items}")
                     # Check if browser_ssid exists in cart_items to avoid KeyError
                     if cart_items.get(browser_ssid):
                         for item in cart_items[browser_ssid]:
