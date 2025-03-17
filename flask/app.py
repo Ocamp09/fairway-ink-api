@@ -142,7 +142,7 @@ def generate_gcode():
             return jsonify({"success": False, "error": "Unable to connect to database"}), 503
         try:
             with conn.cursor() as cursor:
-                cart_select = """SELECT stl_url FROM cart_items WHERE browser_ssid = %s"""
+                cart_select = """SELECT stl_url FROM cart_items WHERE browser_ssid = %s;"""
                 cursor.execute(cart_select, (session_id))
 
                 # get the current STL list
@@ -229,7 +229,7 @@ def add_to_cart():
 
         with conn.cursor() as cursor:
             cart_insert = """INSERT INTO cart_items (browser_ssid, stl_url, quantity, template_type)
-            VALUES (%s, %s, %s, %s)"""
+            VALUES (%s, %s, %s, %s);"""
 
             cursor.execute(cart_insert, (session_id, url, quantity, template_type))
 
@@ -354,7 +354,7 @@ def verify_payment():
                     orders_insert = """INSERT INTO orders
                                 (`purchaser_email`,`purchaser_name`,`address_1`,`address_2`,`city`,`state`,`zipcode`,`country`,`browser_ssid`,
                                 `stripe_ssid`,`total_amount`,`payment_status`)
-                                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"""
+                                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);"""
                     cursor.execute(orders_insert, (purchaser_email, purchaser_name, address_1, address_2, city, state, zipcode, country, browser_ssid, stripe_ssid, total, payment_status))
                     
                     if (cursor.rowcount < 1):
@@ -368,7 +368,7 @@ def verify_payment():
 
                     print(f"Successfully inserted order with ID: {order_id}")
                     jobs_insert = """INSERT INTO print_jobs 
-                                    (order_id, status) VALUES (%s, %s)"""
+                                    (order_id, status) VALUES (%s, %s);"""
                     cursor.execute(jobs_insert, (order_id, 'queued'))
                     if (cursor.rowcount < 1):
                         app.logger.exception("Error inserting data into print_jobs table")
@@ -380,7 +380,7 @@ def verify_payment():
 
                     print(f"Successfully inserted order with ID: {job_id}")
 
-                    cart_select = """SELECT stl_url, quantity, template_type FROM cart_items WHERE browser_ssid=%s"""
+                    cart_select = """SELECT stl_url, quantity, template_type FROM cart_items WHERE browser_ssid=%s;"""
                     cursor.execute(cart_select, (browser_ssid))
                     # Check if browser_ssid exists in cart_items to avoid KeyError
                     if cursor.rowcount > 0:
