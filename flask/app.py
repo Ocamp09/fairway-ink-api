@@ -348,7 +348,7 @@ def verify_payment():
             conn = get_db_connection()  # Connect to MySQL
             if not conn:
                 return {"statusCode": 500, "body": json.dumps({"error": "Database connection failed"})}
-
+            logger.info("Start inserting")
             try:
                 # insert into orders table
                 with conn.cursor() as cursor:
@@ -362,6 +362,7 @@ def verify_payment():
                         logger.exception("Error inserting data into orders table")
                         raise pymysql.MySQLError(f"Failed to insert order for browser_ssid {browser_ssid}. No order ID returned.")
 
+                    logger.info("Inserted orders")
                     # Check if order was inserted
                     order_id = cursor.lastrowid
                     if not order_id:
@@ -379,11 +380,14 @@ def verify_payment():
                     if not job_id:
                         raise pymysql.MySQLError(f"Failed to insert print_job for browser_ssid {browser_ssid}. No Job ID returned.")
 
+                    logger.info("Inserted job")
                     print(f"Successfully inserted order with ID: {job_id}")
 
                     cart_select = """SELECT stl_url, quantity, template_type FROM cart_items WHERE browser_ssid=%s;"""
                     cursor.execute(cart_select, (browser_ssid))
                     # Check if browser_ssid exists in cart_items to avoid KeyError
+                    logger.info("Made select")
+
                     if cursor.rowcount > 0:
                         for item in cursor.fetchall():
                             url = item.get("stl_url")
