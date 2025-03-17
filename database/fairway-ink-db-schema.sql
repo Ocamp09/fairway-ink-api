@@ -1,9 +1,13 @@
-USE fairway_ink;
-
 CREATE TABLE orders (
     order_id       INT AUTO_INCREMENT PRIMARY KEY,
     purchaser_email VARCHAR(255) NOT NULL,
     purchaser_name VARCHAR(255),
+    address_1 VARCHAR(255) NOT NULL,
+    address_2 VARCHAR(255) NULL,
+    city VARCHAR(255) NOT NULL,
+    state VARCHAR(255) NOT NULL,
+    zipcode VARCHAR(5) NOT NULL,
+    country VARCHAR(2) NOT NULL,
     browser_ssid VARCHAR(255) NOT NULL,
     stripe_ssid VARCHAR(255) UNIQUE NOT NULL,
     total_amount   DECIMAL(10,2) NOT NULL,
@@ -13,22 +17,22 @@ CREATE TABLE orders (
 
 CREATE TABLE stl_files (
     stl_id         INT AUTO_INCREMENT PRIMARY KEY,
-    order_id       INT NOT NULL,
-    s3_url         VARCHAR(2083) NOT NULL,
-    file_name VARCHAR(15) NOT NULL,
+    browser_ssid       VARCHAR(255) NOT NULL,
+    file_name VARCHAR(20) NOT NULL,
+    job_id INT NOT NULL,
     created_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (order_id) REFERENCES orders(order_id) ON DELETE CASCADE
+    FOREIGN KEY (job_id) REFERENCES print_jobs(job_id)
 );
 
-CREATE TABLE print_queue (
-    print_id       INT AUTO_INCREMENT PRIMARY KEY,
-    stl_id         INT NOT NULL,
-    printer_id     VARCHAR(50),
+CREATE TABLE print_jobs (
+    job_id INT AUTO_INCREMENT PRIMARY KEY,
+    order_id INT NOT NULL,
     status         ENUM('queued', 'printing', 'completed', 'failed') DEFAULT 'queued',
-    estimated_completion_time TIMESTAMP,
+    estimated_completion_time INT NULL,
     started_at     TIMESTAMP NULL,
     completed_at   TIMESTAMP NULL,
-    FOREIGN KEY (stl_id) REFERENCES stl_files(stl_id) ON DELETE CASCADE
+    created_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (order_id) REFERENCES orders(order_id) ON DELETE CASCADE
 );
 
 CREATE TABLE shipping (

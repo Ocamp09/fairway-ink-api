@@ -47,6 +47,13 @@ def insert_order(event, context):
     # get the variables
     purchaser_email = order_details["purchaser_email"]
     purchaser_name = order_details["purchaser_name"]
+    address_1 = order_details["address_1"]
+    address_2 = order_details.get("address_2", "")  # Optional, using .get() to prevent KeyError
+    city = order_details["city"]
+    state = order_details["state"]
+    zipcode = order_details["zipcode"]
+    country = order_details["country"]
+
     browser_ssid = order_details["browser_ssid"]
     stripe_ssid = order_details["stripe_ssid"]
     total = order_details["total"]
@@ -59,10 +66,10 @@ def insert_order(event, context):
     try:
         with conn.cursor() as cursor:
             orders_insert = """INSERT INTO orders
-                        (`purchaser_email`,`purchaser_name`,`browser_ssid`,
+                        (`purchaser_email`,`purchaser_name`,`address_1`,`address_2`,`city`,`state`,`zipcode`,`country`,`browser_ssid`,
                         `stripe_ssid`,`total_amount`,`payment_status`)
-                        VALUES (%s, %s, %s, %s, %s, %s)"""
-            cursor.execute(orders_insert, (purchaser_email, purchaser_name, browser_ssid, stripe_ssid, total, payment_status))
+                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"""
+            cursor.execute(orders_insert, (purchaser_email, purchaser_name, address_1, address_2, city, state, zipcode, country, browser_ssid, stripe_ssid, total, payment_status))
             conn.commit()
     except pymysql.MySQLError as e:
         conn.rollback()
