@@ -1,9 +1,3 @@
-DROP TABLE financials;
-DROP TABLE shipping;
-DROP TABLE stl_files;
-DROP TABLE print_jobs;
-DROP TABLE orders;
-DROP TABLE cart_items;
 
 CREATE TABLE cart_items (
     id  INT AUTO_INCREMENT PRIMARY KEY,
@@ -77,5 +71,5 @@ CREATE TABLE designs (
     design_id INT AUTO_INCREMENT PRIMARY KEY,
     item_name VARCHAR(255) NOT NULL,
     file_name VARCHAR(255) NOT NULL,
-    created_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
