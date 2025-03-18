@@ -30,6 +30,7 @@ app.logger.addHandler(handler)
 ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "svg"}
 MAX_FILE_SIZE = 5 * 1024 * 1024  # 5MB
 OUTPUT_FOLDER = "./output/"
+DESIGN_FOLDER = "./designs/"
 
 CUSTOM_PRICE = 799
 SOLID_PRICE = 599
@@ -90,6 +91,29 @@ def allowed_file(filename):
 def output_stl(ssid, filename):
     return send_from_directory(f"output/{ssid}", filename)
 
+
+@app.route("/designs/<filename>")
+def output_design(filename):
+    return send_from_directory(f"designs/", filename)
+
+
+@app.route("/designs")
+def get_designs():
+    try:
+        files = os.listdir(DESIGN_FOLDER)
+        if not files:
+            return jsonify({"designs": []})
+
+        file_urls = [f"https://api.fairway-ink.com/designs/{file}" for file in files]
+
+        # Use localhost for development
+        if platform.system() != "Linux":
+            file_urls = [f"http://localhost:5001/designs/{file}" for file in files]
+
+        return jsonify({"designs": file_urls})
+
+    except Exception as e:
+        return jsonify({"error": str(e), "designs": []}), 500
 
 @app.route("/upload", methods=["POST"])
 def upload_file():
