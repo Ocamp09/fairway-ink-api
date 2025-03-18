@@ -1,3 +1,19 @@
+DROP TABLE financials;
+DROP TABLE shipping;
+DROP TABLE stl_files;
+DROP TABLE print_jobs;
+DROP TABLE orders;
+DROP TABLE cart_items;
+
+CREATE TABLE cart_items (
+    id  INT AUTO_INCREMENT PRIMARY KEY,
+    browser_ssid VARCHAR(255) NOT NULL,
+    stl_url VARCHAR(255) NOT NULL,
+    quantity INT NOT NULL,
+    template_type VARCHAR(20) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 CREATE TABLE orders (
     order_id       INT AUTO_INCREMENT PRIMARY KEY,
     purchaser_email VARCHAR(255) NOT NULL,
@@ -15,15 +31,6 @@ CREATE TABLE orders (
     created_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE stl_files (
-    stl_id         INT AUTO_INCREMENT PRIMARY KEY,
-    browser_ssid       VARCHAR(255) NOT NULL,
-    file_name VARCHAR(20) NOT NULL,
-    job_id INT NOT NULL,
-    created_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (job_id) REFERENCES print_jobs(job_id)
-);
-
 CREATE TABLE print_jobs (
     job_id INT AUTO_INCREMENT PRIMARY KEY,
     order_id INT NOT NULL,
@@ -33,6 +40,16 @@ CREATE TABLE print_jobs (
     completed_at   TIMESTAMP NULL,
     created_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (order_id) REFERENCES orders(order_id) ON DELETE CASCADE
+);
+
+CREATE TABLE stl_files (
+    stl_id         INT AUTO_INCREMENT PRIMARY KEY,
+    browser_ssid       VARCHAR(255) NOT NULL,
+    file_name VARCHAR(20) NOT NULL,
+    quantity INT NOT NULL,
+    job_id INT NOT NULL,
+    created_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (job_id) REFERENCES print_jobs(job_id)
 );
 
 CREATE TABLE shipping (
