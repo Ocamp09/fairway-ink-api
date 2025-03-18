@@ -19,12 +19,13 @@ stripe.api_key = 'sk_test_51Qs6WuACPDsvvNfxayxO5fGAKEh7GSTbYPooWZ6qwxfe1S6st8SzE
 app = Flask(__name__)
 CORS(app)
 
-# logging config
-app.logger.setLevel(logging.INFO)
-formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-handler = RotatingFileHandler('app.log', maxBytes=10000, backupCount=3)
-handler.setFormatter(formatter)
-app.logger.addHandler(handler)
+# Logging setup
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    handlers=[RotatingFileHandler("api.log", maxBytes=10000, backupCount=3)],
+)
+logger = logging.getLogger(__name__)
 
 # Configuration
 ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "svg"}
@@ -34,8 +35,6 @@ OUTPUT_FOLDER = "./output/"
 CUSTOM_PRICE = 799
 SOLID_PRICE = 599
 TEXT_PRICE = 599
-
-cart_items = {}
 
 STL_S3_BUCKET = "fairway-ink-stl"
 S3_REGION = "us-east-2"
@@ -120,7 +119,7 @@ def upload_file():
         svg_data = img_to_svg.image_to_svg(file, method=method)
         return jsonify({"success": True, "svgData": svg_data})
     except Exception as e:
-        app.logger.exception("Error processing upload: ", str(e))
+        logger.exception("Error processing upload: ", str(e))
         return jsonify({"success": False, "error": str(e)}), 500
 
 
@@ -139,25 +138,45 @@ def generate_gcode():
         svg_file = request.files['svg']
         filename = secure_filename(svg_file.filename)
 
-        if session_id not in cart_items:
-            cart_items[session_id] = []
+        conn = get_db_connection()
+        if not conn:
+            return jsonify({"success": False, "error": "Unable to connect to database"}), 503
+        try:
+            with conn.cursor() as cursor:
+                cart_select = """SELECT stl_url FROM cart_items WHERE browser_ssid = %s;"""
+                cursor.execute(cart_select, (session_id))
 
-        # remove the previous STL file if not saved to cart
-        stl_key = request.form.get("stlKey", 0)
-        if stl_key:
-            if int(stl_key) > 0:
-                stripped = filename.find("g")
-                prevKey = int(stl_key) - 1
-                prevFile = str(prevKey) + filename[stripped::].replace("svg", "stl")
-                file_path = "./output/" + session_id + "/" + prevFile
-                if os.path.exists(file_path) and session_id in cart_items.keys():
-                    file_url = f"https://api.fairway-ink.com/output/{session_id}/{prevFile}"
+                # get the current STL list
+                cart_stls = []
+                if cursor.rowcount > 0:
+                    for item in cursor.fetchall():
+                        cart_stls.append(item["stl_url"])
 
-                    if platform.system() != "Linux":
-                        file_url = f"http://localhost:5001/output/{session_id}/{prevFile}"
+                # remove if the file exists and is not in cart list
+                stl_key = request.form.get("stlKey", -1)
+                if int(stl_key) > 0:
+                    print("strip file")
+                    stripped = filename.find("g")
+                    prevKey = int(stl_key) - 1
+                    prevFile = str(prevKey) + filename[stripped::].replace("svg", "stl")
+                    file_path = "./output/" + session_id + "/" + prevFile
+                    if os.path.exists(file_path):
+                        print("path exists")
+                        file_url = f"https://api.fairway-ink.com/output/{session_id}/{prevFile}"
 
-                    if file_url not in cart_items[session_id]:
-                        os.remove(OUTPUT_FOLDER + session_id + "/" + prevFile)
+                        if platform.system() != "Linux":
+                            file_url = f"http://localhost:5001/output/{session_id}/{prevFile}"
+
+                        if file_url not in cart_stls:
+                            os.remove(OUTPUT_FOLDER + session_id + "/" + prevFile)
+
+        except pymysql.MySQLError as e:
+            conn.rollback()
+            return {"statusCode": 505, "body": json.dumps({"error": "Failed to insert order into database"})}
+        finally:
+            conn.close()
+        
+      
 
         os.makedirs("./output/" + session_id, exist_ok=True)
 
@@ -193,25 +212,43 @@ def generate_gcode():
         except Exception as e:
             return jsonify({"success": False, "error": str(e)}), 502
     except Exception as e:
-        app.logger.exception("Error generating STL", str(e))
+        logger.exception("Error generating STL", str(e))
         return jsonify({"success": False, "error": str(e)}), 500
     
 
 @app.route("/cart", methods=["POST"])
 def add_to_cart():
+    conn = get_db_connection()
+    if not conn:
+        return jsonify({"success": False, "error": "error connecting to Database"})
+        
     try:
         session_id = request.headers["ssid"]
-        filename = request.form.get("filename")
+        url = request.form.get("stlUrl")
+        quantity = request.form.get("quantity")
+        template_type = request.form.get("templateType")
 
-        if session_id not in cart_items:
-            cart_items[session_id] = []
+        with conn.cursor() as cursor:
+            cart_insert = """INSERT INTO cart_items (browser_ssid, stl_url, quantity, template_type)
+            VALUES (%s, %s, %s, %s);"""
 
-        cart_items[session_id].append(filename)
+            cursor.execute(cart_insert, (session_id, url, quantity, template_type))
 
+            if cursor.rowcount < 1:
+                logger.exception(f"Error inserting cart_items")
+                raise pymysql.MySQLError(f"Unable to insert cart_items")
+
+        conn.commit()
         return jsonify({"success": True})
+    except pymysql.MySQLError as e:
+        conn.rollback()
+        logger.exception("Error inserting cart_items into table: ", str(e))
+        return {"statusCode": 505, "body": json.dumps({"error": "Failed to insert order into database"})}
     except Exception as e:
-        app.logger.exception("Error adding to cart", str(e))
-        return jsonify({"success": False, "error": str(e)}), 500
+        logger.exception("Error adding to cart", str(e))
+        return jsonify({"success": False, "error": str(e)}), 500        
+    finally:
+        conn.close()
 
 @app.route('/create-checkout-session', methods=['POST'])
 def create_checkout_session():
@@ -241,7 +278,7 @@ def create_checkout_session():
             price_data = {
                 "currency": "usd",
                 "product_data": {
-                    "name": "Custom golf ball stencil - type: {0}, qty: {1}".format(item["type"], item["quantity"])
+                    "name": "Custom golf ball stencil - type: {0}, qty: {1}".format(item["type"], item["quantity"]),
                 },
                 "unit_amount": price,  # Convert to cents
             }
@@ -266,14 +303,14 @@ def create_checkout_session():
             mode="payment",
             success_url=f"{domain}/success?session_id={{CHECKOUT_SESSION_ID}}", 
             cancel_url=f"{domain}", 
-            shipping_address_collection={"allowed_countries": ["US"]}
+            shipping_address_collection={"allowed_countries": ["US"]},
         )
 
         return jsonify({
             'id': session.id
         })
     except Exception as e:
-        app.logger.exception("Error creating checkout session: ", str(e))
+        logger.exception("Error creating checkout session: ", str(e))
         return jsonify({"error": "ERROR"}), 500
 
 
@@ -311,16 +348,21 @@ def verify_payment():
             conn = get_db_connection()  # Connect to MySQL
             if not conn:
                 return {"statusCode": 500, "body": json.dumps({"error": "Database connection failed"})}
-
+            logger.info("Start inserting")
             try:
                 # insert into orders table
                 with conn.cursor() as cursor:
                     orders_insert = """INSERT INTO orders
                                 (`purchaser_email`,`purchaser_name`,`address_1`,`address_2`,`city`,`state`,`zipcode`,`country`,`browser_ssid`,
                                 `stripe_ssid`,`total_amount`,`payment_status`)
-                                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"""
+                                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);"""
                     cursor.execute(orders_insert, (purchaser_email, purchaser_name, address_1, address_2, city, state, zipcode, country, browser_ssid, stripe_ssid, total, payment_status))
                     
+                    if (cursor.rowcount < 1):
+                        logger.exception("Error inserting data into orders table")
+                        raise pymysql.MySQLError(f"Failed to insert order for browser_ssid {browser_ssid}. No order ID returned.")
+
+                    logger.info("Inserted orders")
                     # Check if order was inserted
                     order_id = cursor.lastrowid
                     if not order_id:
@@ -328,21 +370,30 @@ def verify_payment():
 
                     print(f"Successfully inserted order with ID: {order_id}")
                     jobs_insert = """INSERT INTO print_jobs 
-                                    (order_id, status) VALUES (%s, %s)"""
+                                    (order_id, status) VALUES (%s, %s);"""
                     cursor.execute(jobs_insert, (order_id, 'queued'))
-
+                    if (cursor.rowcount < 1):
+                        logger.exception("Error inserting data into print_jobs table")
+                        raise pymysql.MySQLError(f"Failed to insert print_job")
+                    
                     job_id = cursor.lastrowid
                     if not job_id:
                         raise pymysql.MySQLError(f"Failed to insert print_job for browser_ssid {browser_ssid}. No Job ID returned.")
 
+                    logger.info("Inserted job")
                     print(f"Successfully inserted order with ID: {job_id}")
 
+                    cart_select = """SELECT stl_url, quantity, template_type FROM cart_items WHERE browser_ssid=%s;"""
+                    cursor.execute(cart_select, (browser_ssid))
                     # Check if browser_ssid exists in cart_items to avoid KeyError
-                    if cart_items.get(browser_ssid):
-                        for file in cart_items[browser_ssid]:
-                            local_path = "./" + "/".join(file.split("/")[3:])
-                            filename = file.split("/")[-1]
+                    logger.info("Made select")
 
+                    if cursor.rowcount > 0:
+                        for item in cursor.fetchall():
+                            url = item.get("stl_url")
+                            local_path = "./" + "/".join(url.split("/")[3:])
+                            filename = url.split("/")[-1]
+                            quantity = item.get("quantity")
                             if os.path.exists(local_path):
                                 s3_stl_key = f"{browser_ssid}/{filename}"
 
@@ -350,27 +401,37 @@ def verify_payment():
                                 s3_client.upload_file(local_path, STL_S3_BUCKET, s3_stl_key)
 
                                 # Insert s3 files into database
-                                s3_query = """INSERT INTO stl_files (browser_ssid, file_name, job_id) VALUES (%s, %s, %s);"""
-                                cursor.execute(s3_query, (browser_ssid, filename, job_id))
+                                s3_query = """INSERT INTO stl_files (browser_ssid, file_name, job_id, quantity) VALUES (%s, %s, %s, %s);"""
+                                cursor.execute(s3_query, (browser_ssid, filename, job_id, quantity))
                                 if cursor.rowcount > 0:
-                                    print(f"Successfully inserted {filename} for browser_ssid {browser_ssid}.")
+                                    print(f"Successfully inserted {filename} for browser_ssid {browser_ssid} w/ quantity {quantity}.")
                                 else:
+                                    logger.exception("Error inserting data into stl_files table")
                                     print(f"Failed to insert {filename}. No rows were affected.")
+                    else: 
+                        print("Unable to find STL files")
+                        logger.exception("Unable to find STL files")
+                        raise pymysql.MySQLError(f"Unable to find STL files")
+
                 conn.commit()
             except pymysql.MySQLError as e:
                 conn.rollback()
+                logger.exception("Error inserting data into table: ", str(e))
                 return {"statusCode": 505, "body": json.dumps({"error": "Failed to insert order into database"})}
             finally:
                 conn.close()
 
             return jsonify({"success": True, "order": order})
-
+        logger.exception("Payment was not successful")
         return jsonify({"success": False, "message": "Payment not successful"})
 
     except stripe.error.StripeError as e:
+        logger.exception("Error with stripe: ", str(e))
         return jsonify({"success": False, "message": f"Stripe error: {str(e)}"}), 400
     except Exception as e:
         print(str(e))
+        logger.exception("Error verifying payment: ", str(e))
+
         return jsonify({"success": False, "message": f"Internal server error: {str(e)}"}), 500
 
 
