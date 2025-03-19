@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+option go_package = "github.com/ocamp09/fairway-ink-api/golang-api/pb";
+
+service ImageToSvg {
+    rpc ConvertImage(ImageRequest) returns (SvgResponse);
+}
+
+message ImageRequest {
+    bytes image_data = 1;
+    string method = 2;
+}
+
+message SvgResponse {
+    string svg_data = 1;
+}
