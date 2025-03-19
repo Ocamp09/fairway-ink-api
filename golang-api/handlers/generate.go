@@ -110,7 +110,7 @@ func GenerateStl(c *gin.Context) {
 	blenderCommand := []string{
 		blenderPath,
 		"--background",
-		"--python", "./blender_v1.py", outputSvgPath, scale,
+		"--python", "./blender/blender_v1.py", outputSvgPath, scale,
 	}
 
 	cmd := exec.Command(blenderCommand[0], blenderCommand[1:]...)

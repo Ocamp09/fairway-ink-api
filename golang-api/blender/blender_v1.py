@@ -62,7 +62,7 @@ def main():
     dir_path = pathlib.Path.cwd()
 
     image_path = dir_path / in_file
-    stl_path = dir_path / "default.stl"
+    stl_path = dir_path / "blender" / "default.stl"
 
     if image_path.exists(): 
         # Get list of objects before importing

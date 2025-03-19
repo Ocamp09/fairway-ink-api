@@ -6,7 +6,7 @@ import (
 	"log"
 	"net/http"
 
-	pb "github.com/ocamp09/fairway-ink-api/golang-api/pb"
+	pb "github.com/ocamp09/fairway-ink-api/golang-api/grpc"
 	"google.golang.org/grpc"
 
 	"github.com/gin-gonic/gin"
