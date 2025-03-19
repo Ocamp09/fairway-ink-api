@@ -31,7 +31,7 @@ logger = logging.getLogger(__name__)
 ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "svg"}
 MAX_FILE_SIZE = 5 * 1024 * 1024  # 5MB
 OUTPUT_FOLDER = "./output/"
-DESIGN_FOLDER = "./designs/"
+DESIGN_FOLDER = "../designs/"
 
 CUSTOM_PRICE = 799
 SOLID_PRICE = 599
@@ -152,13 +152,15 @@ def generate_gcode():
     try: 
         scale = request.form.get("scale", 1)  
 
-        if not request.headers["ssid"]:
-            return jsonify({"success": False, "error": "No session ID"}), 403
+
 
         if 'svg' not in request.files:
             return jsonify({"success": False, "error": "No SVG file provided"}), 401
 
-        session_id = request.headers["ssid"]
+        session_id = request.form.get("ssid", "")
+        if session_id == "":
+            return jsonify({"success": False, "error": "No session ID"}), 403
+        
         svg_file = request.files['svg']
         filename = secure_filename(svg_file.filename)
 
@@ -221,6 +223,8 @@ def generate_gcode():
                 output_svg_path,
                 str(scale)
             ]
+
+            print(blender_command)
 
             subprocess.run(blender_command, capture_output=True, text=True)
 
