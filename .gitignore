@@ -7,11 +7,14 @@
 !default.stl
 .DS_Store
 *.pyc
-!/ui/public/*.svg
-!/ui/public/*.jpg
-!/ui/public/*.png
 venv/
 *.env
+.flaskenv
 *.blend1
 .venv
 app.log
+test_db.py
+node_modules/
+python/
+*.log*
+api-binary
