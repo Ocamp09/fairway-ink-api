@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -36,7 +37,7 @@ func ListDesigns(c *gin.Context) {
 
 	var fileURLs []string
 	for _, file := range files {
-		if !file.IsDir() {
+		if !file.IsDir() && strings.Contains(file.Name(), "medium") {
 			url := fmt.Sprintf("https://api.fairway-ink.com/designs/%s", file.Name())
 
 			// Use localhost URL for development
