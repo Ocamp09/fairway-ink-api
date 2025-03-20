@@ -1,6 +1,10 @@
 import bpy, pathlib
 import sys
+import logging
 
+# Set up logging
+logging.basicConfig(filename='blender.log', level=logging.DEBUG,
+                    format='%(asctime)s - %(levelname)s - %(message)s', filemode="w")
 
 # remove the initial cube that comes in blender projects
 def remove_cube():
@@ -10,7 +14,7 @@ def remove_cube():
 
         # Delete the cube
         bpy.data.objects.remove(cube, do_unlink=True)
-
+        logging.info("Removed default cube from scene")
 
 # method that turns the sphere into a semi-sphere  
 def delete_bottom():
@@ -30,7 +34,7 @@ def delete_bottom():
     bpy.ops.object.mode_set(mode='EDIT')
     bpy.ops.mesh.delete(type='VERT')
     bpy.ops.object.mode_set(mode='OBJECT')
-    
+    logging.info("Deleted vertices below threshold")
 
 # convert the curves to meshes so they can be adjusted    
 def convert_curves(C, curve):
@@ -40,41 +44,41 @@ def convert_curves(C, curve):
     C.view_layer.objects.active = o
     
     bpy.ops.object.convert(target='MESH')
-   
-   
+    logging.info(f"Converted curve {curve} to mesh")
+
 def main():
-    print("starting job", str(sys.argv))
+    logging.info("Starting Blender job")
+    logging.info(f"Received arguments: {sys.argv}")
+    
     #remove starting cube
     remove_cube()
 
     C = bpy.context
-
-    # for use in blender
-    #in_file = "miami_logo.svg"
-    #dir_path = pathlib.Path.home() / "Documents" / "Coding" / "golf-marker" / "Modeling" / "v1"
 
     # for use in scripting
     in_file = sys.argv[4]
     scale = float(sys.argv[5])
 
     dir_path = pathlib.Path.cwd()
+
     image_path = dir_path / in_file
-    stl_path = dir_path / "default.stl"
+    stl_path = dir_path / "blender" / "default.stl"
 
     if image_path.exists(): 
         # Get list of objects before importing
         names_pre_import = set([o.name for o in C.scene.objects])
-        print("pre-import: ", str(names_pre_import))
-        bpy.ops.import_curve.svg(filepath=str(image_path)) # import
+        logging.info(f"Pre-import objects: {names_pre_import}")
+
+        bpy.ops.import_curve.svg(filepath=str(image_path))  # import
         
         # Get name of new object
         names_post_import = set([ o.name for o in C.scene.objects ])
-        print("post-import: ", str(names_post_import))
+        logging.info(f"Post-import objects: {names_post_import}")
         
         cut_object = ""
         # if one new curve added
         if len(names_post_import) - len(names_pre_import) == 1:
-            print("1 curve")
+            logging.info("1 curve detected")
             
             # Reference new object and make sure active
             new_object_name = names_post_import.difference( names_pre_import ).pop()
@@ -84,9 +88,10 @@ def main():
 
             # specify object name to cut with
             cut_object = new_object_name
+            logging.info(f"Set cut object to {new_object_name}")
             
         else:
-            print("multi curve")
+            logging.info("Multiple curves detected")
             
             # get list of new curves
             new_object_names = names_post_import.difference( names_pre_import )
@@ -100,6 +105,7 @@ def main():
             bpy.ops.mesh.select_all(action='SELECT')
             bpy.ops.object.mode_set(mode='OBJECT')
             bpy.ops.object.join()
+            logging.info("Joined multiple curves into one object")
             
             # get name of joined curve and set the cut object
             names_post_join = set([ o.name for o in C.scene.objects ])
@@ -108,34 +114,38 @@ def main():
 
             # convert back to curves for extrusion
             bpy.ops.object.convert(target='CURVE')
+            logging.info("Converted joined object back to curve")
 
         # center and scale curves up before extruding
         bpy.ops.object.origin_set(type='GEOMETRY_ORIGIN', center='MEDIAN')
         bpy.ops.transform.resize(value=(-60 * scale, -60 * scale, -60 * scale), orient_type='GLOBAL', orient_matrix=((1, 0, 0), (0, 1, 0), (0, 0, 1)), orient_matrix_type='GLOBAL', mirror=False, use_proportional_edit=False, proportional_edit_falloff='SMOOTH', proportional_size=1, use_proportional_connected=False, use_proportional_projected=False, snap=False, snap_elements={'INCREMENT'}, use_snap_project=False, snap_target='CLOSEST', use_snap_self=True, use_snap_edit=True, use_snap_nonedit=True, use_snap_selectable=False)
         bpy.context.object.data.extrude = 15
         bpy.ops.object.convert(target='MESH')
+        logging.info("Applied scaling and extrusion to object")
 
         # create the object to be exported as STL
-        # import stl
         bpy.ops.wm.stl_import(filepath=str(stl_path))
         bpy.ops.object.origin_set(type='GEOMETRY_ORIGIN', center='MEDIAN')
-        
+        logging.info("STL imported")
+
         # cut imported curve out of STL
         bpy.ops.object.modifier_add(type='BOOLEAN')
         bpy.context.object.modifiers["Boolean"].object = bpy.data.objects[cut_object]
         bpy.context.object.modifiers["Boolean"].solver = 'FAST'    
+        logging.info(f"Applied Boolean modifier to cut {cut_object} from STL")
 
         # Hide the SVG object
         o = C.scene.objects[ cut_object ]
         o.hide_viewport = True
+        logging.info(f"Hid the SVG object {cut_object} from the viewport")
 
         # Download the file as STL
-        out_file = sys.argv[4][2:-4] + ".stl" 
-        #out_file = "miami_logo_manual.stl"
-        download_path = dir_path / out_file 
-        bpy.ops.wm.stl_export(filepath=str(download_path).replace("svg", "stl"))
+        download_path = dir_path / in_file.replace("svg", "stl")
+        bpy.ops.wm.stl_export(filepath=str(download_path))
+        logging.info(f"Exported STL to {download_path}")
+
     else:
-        print("path not found")
+        logging.error("Path not found: " + str(image_path))
         
 
 if __name__ == "__main__":

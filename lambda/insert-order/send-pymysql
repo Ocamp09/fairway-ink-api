@@ -1,2 +1,0 @@
-powershell Compress-Archive ./python/ ./pymysql-layer.zip
-aws lambda publish-layer-version --layer-name pymysql-layer --zip-file fileb://pymysql-layer.zip --compatible-runtimes python3.11

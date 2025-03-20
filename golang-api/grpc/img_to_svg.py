@@ -61,9 +61,7 @@ def flag_problematic(svg_data):
     return new_svg_data
 
 
-def image_to_svg(image_path, method=PrintType.SOLID):
-    image = Image.open(image_path)
-
+def image_to_svg(image, method=PrintType.SOLID):
     width, height = image.size
 
     bbox = image.getbbox()

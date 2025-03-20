@@ -1,0 +1,10 @@
+sudo dnf install -y \
+    atk \
+    at-spi2-atk \
+    at-spi2-core \
+    libXcomposite \
+    libXdamage \
+    libXrandr \
+    libxkbcommon \
+    alsa-lib
+
