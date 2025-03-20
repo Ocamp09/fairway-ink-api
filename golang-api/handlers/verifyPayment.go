@@ -7,6 +7,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/EasyPost/easypost-go/v4"
 	"github.com/gin-gonic/gin"
 	"github.com/ocamp09/fairway-ink-api/golang-api/config"
 	"github.com/stripe/stripe-go/v75"
@@ -93,6 +94,26 @@ func VerifyPayment(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve order ID"})
 		return
 	}
+
+	// Generate shipping label
+	ship_client := easypost.New(config.EASYPOST_KEY)
+
+	toAddress := &easypost.Address{
+		Name: purchaserName,
+		Street1: address1,
+		Street2: address2,
+		City: city,
+		State: state,
+		Zip: zipcode,
+		Country: country,
+	}
+
+	shipment, err := ship_client.CreateShipment(&easypost.Shipment{
+		FromAddress: &config.SENDER_ADDRESS,
+		ToAddress: toAddress,
+	})
+
+	print(shipment)
 
 	// Insert into print_jobs table
 	jobQuery := `INSERT INTO print_jobs (order_id, status) VALUES (?, ?)`
