@@ -49,7 +49,11 @@ CREATE TABLE stl_files (
 CREATE TABLE shipping (
     shipment_id    INT AUTO_INCREMENT PRIMARY KEY,
     order_id       INT NOT NULL,
+    easypost_id VARCHAR(255) NOT NULL,
+    carrier VARCHAR NOT NULL,
+    service VARCHAR NOT NULL,
     tracking_number VARCHAR(255) UNIQUE NOT NULL,
+    ship_rate VARCHAR(15) NOT NULL,
     shipping_label_url VARCHAR(2083),
     shipping_status ENUM('pending', 'shipped', 'delivered') DEFAULT 'pending',
     created_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
