@@ -16,7 +16,7 @@ CREATE TABLE orders (
     address_2 VARCHAR(255) NULL,
     city VARCHAR(255) NOT NULL,
     state VARCHAR(255) NOT NULL,
-    zipcode VARCHAR(5) NOT NULL,
+    zipcode VARCHAR(15) NOT NULL,
     country VARCHAR(2) NOT NULL,
     browser_ssid VARCHAR(255) NOT NULL,
     stripe_ssid VARCHAR(255) UNIQUE NOT NULL,
@@ -39,20 +39,20 @@ CREATE TABLE print_jobs (
 CREATE TABLE stl_files (
     stl_id         INT AUTO_INCREMENT PRIMARY KEY,
     browser_ssid       VARCHAR(255) NOT NULL,
-    file_name VARCHAR(20) NOT NULL,
+    file_name VARCHAR(255) NOT NULL,
     quantity INT NOT NULL,
     job_id INT NOT NULL,
     created_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (job_id) REFERENCES print_jobs(job_id)
+    FOREIGN KEY (job_id) REFERENCES print_jobs(job_id) ON DELETE CASCADE
 );
 
 CREATE TABLE shipping (
     shipment_id    INT AUTO_INCREMENT PRIMARY KEY,
     order_id       INT NOT NULL,
     easypost_id VARCHAR(255) NOT NULL,
-    carrier VARCHAR NOT NULL,
-    service VARCHAR NOT NULL,
-    tracking_number VARCHAR(255) UNIQUE NOT NULL,
+    carrier VARCHAR(255) NOT NULL,
+    service VARCHAR(255) NOT NULL,
+    tracking_number VARCHAR(255) NOT NULL,
     ship_rate VARCHAR(15) NOT NULL,
     shipping_label_url VARCHAR(2083),
     shipping_status ENUM('pending', 'shipped', 'delivered') DEFAULT 'pending',
@@ -63,12 +63,14 @@ CREATE TABLE shipping (
 CREATE TABLE financials (
     transaction_id INT AUTO_INCREMENT PRIMARY KEY,
     order_id       INT NOT NULL,
-    stripe_ssid VARCHAR(255) UNIQUE NOT NULL,
+    stripe_ssid    VARCHAR(255) UNIQUE NOT NULL,
     amount         DECIMAL(10,2) NOT NULL,
     fees          DECIMAL(10,2) NOT NULL,
     net_revenue   DECIMAL(10,2) NOT NULL,
     created_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (order_id) REFERENCES orders(order_id) ON DELETE CASCADE
+    FOREIGN KEY (order_id) REFERENCES orders(order_id) ON DELETE CASCADE,
+    FOREIGN KEY (stripe_ssid) REFERENCES orders(stripe_ssid) ON DELETE CASCADE
+
 );
 
 CREATE TABLE designs (
