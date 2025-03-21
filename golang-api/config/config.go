@@ -7,19 +7,29 @@ import (
 	"os"
 
 	_ "github.com/go-sql-driver/mysql"
+
+	"github.com/EasyPost/easypost-go/v4"
 )
 
-var DB *sql.DB
-var STRIPE_KEY string
-var STL_S3_BUCKET string
-var S3_REGION string
-
+var (
+	DB *sql.DB
+	STRIPE_KEY string
+	EASYPOST_KEY string
+	STL_S3_BUCKET string
+	S3_REGION string
+	SENDER_ADDRESS easypost.Address
+)
 func ConnectDB() {
 	var err error
 	var exists bool
 	STRIPE_KEY, exists = os.LookupEnv("STRIPE_KEY")
 	if !exists {
 		log.Fatal("Environment variable missing: STRIPE_KEY")
+	}
+
+	EASYPOST_KEY, exists = os.LookupEnv("EASYPOST_KEY")
+	if !exists {
+		log.Fatal("Environment variable missing: EASYPOST_KEY")
 	}
 
 	STL_S3_BUCKET, exists = os.LookupEnv("STL_S3_BUCKET")
@@ -73,4 +83,12 @@ func ConnectDB() {
 	}
 
 	log.Println("Database connected successfully!") // Log success
+
+	SENDER_ADDRESS = easypost.Address{
+		Company: "Fairway Ink",
+		Street1: "6729 Old Stagecoach Road",
+		City: "Frazeysburg",
+		State: "OH",
+		Zip: "43822",
+	}
 }
