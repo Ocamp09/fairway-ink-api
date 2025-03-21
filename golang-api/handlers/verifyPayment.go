@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -18,6 +19,12 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 )
 
+type ShippingInfo struct {
+	TrackingNumber string `json:"tracking_id"`
+	ToAddress easypost.Address `json:"to_address"`
+	Carrier string `json:"carrier"`
+	EstimatedDelivery int `json:"expected_delivery"`
+}
 func VerifyPayment(c *gin.Context) {
 	// Parse JSON request body
 	var requestBody struct {
@@ -108,13 +115,60 @@ func VerifyPayment(c *gin.Context) {
 		Country: country,
 	}
 
+	parcel := &easypost.Parcel{
+		Length: 8,
+		Width: 7,
+		Height: 1.25,
+		Weight: 15,
+	}
+
 	shipment, err := ship_client.CreateShipment(&easypost.Shipment{
 		FromAddress: &config.SENDER_ADDRESS,
 		ToAddress: toAddress,
+		Parcel: parcel,
 	})
 
-	print(shipment)
+	if err != nil {
+		log.Printf("Easypost error creating shipoment: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create shipping label"})
+	}
 
+	lowestShipping, err := ship_client.LowestShipmentRate(shipment)
+	if err != nil {
+		log.Printf("Easypost error getting lowest shipment: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to find the lowest shipping"})
+	}
+
+	shipment, err = ship_client.BuyShipment(shipment.ID, &easypost.Rate{ID: lowestShipping.ID}, "")
+	if err != nil {
+		log.Printf("Failed to buy shipping label: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to buy shipping label"})
+	}
+
+	prettyJSON, err := json.MarshalIndent(shipment, "", "    ")
+    if err != nil {
+        fmt.Fprintln(os.Stderr, "error creating JSON:", err)
+        os.Exit(1)
+    }
+
+	fmt.Println(string(prettyJSON))
+
+
+	shipInfo := ShippingInfo{
+		TrackingNumber: shipment.TrackingCode,
+		ToAddress: *toAddress,
+		Carrier:  shipment.SelectedRate.Carrier,
+		EstimatedDelivery: shipment.SelectedRate.EstDeliveryDays,
+	}
+
+	// shipQuery := `INSERT INTO shipping (order_id, easypost_id, carrier, service, tracking_number, shipping_label_url) VALUES(?, ?, ?, ?, ?, ?, ?)`
+	// _, err = config.DB.Exec(shipQuery, orderID, shipment.ID, shipment.SelectedRate.Carrier, shipment.SelectedRate.Service, shipment.TrackingCode, shipment.PostageLabel.LabelURL)
+    // if err != nil {
+	// 	log.Printf("Database error: %v", err)
+	// 	c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to insert print job"})
+	// 	return
+	// }
+	
 	// Insert into print_jobs table
 	jobQuery := `INSERT INTO print_jobs (order_id, status) VALUES (?, ?)`
 	jobResult, err := config.DB.Exec(jobQuery, orderID, "queued")
@@ -185,6 +239,7 @@ func VerifyPayment(c *gin.Context) {
 			"id":    stripeSSID,
 			"email": purchaserEmail,
 			"total": total,
+			"ship_info": shipInfo,
 		},
 	})
 }

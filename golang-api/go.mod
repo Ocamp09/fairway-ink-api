@@ -3,6 +3,7 @@ module github.com/ocamp09/fairway-ink-api/golang-api
 go 1.24
 
 require (
+	github.com/EasyPost/easypost-go/v4 v4.6.0
 	github.com/aws/aws-sdk-go v1.55.6
 	github.com/gin-gonic/gin v1.10.0
 	github.com/go-sql-driver/mysql v1.9.0
@@ -13,7 +14,6 @@ require (
 
 require (
 	filippo.io/edwards25519 v1.1.0 // indirect
-	github.com/EasyPost/easypost-go/v4 v4.6.0 // indirect
 	github.com/bytedance/sonic v1.11.6 // indirect
 	github.com/bytedance/sonic/loader v0.1.1 // indirect
 	github.com/cloudwego/base64x v0.1.4 // indirect
