@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -144,15 +143,6 @@ func VerifyPayment(c *gin.Context) {
 		log.Printf("Failed to buy shipping label: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to buy shipping label"})
 	}
-
-	prettyJSON, err := json.MarshalIndent(shipment, "", "    ")
-    if err != nil {
-        fmt.Fprintln(os.Stderr, "error creating JSON:", err)
-        os.Exit(1)
-    }
-
-	fmt.Println(string(prettyJSON))
-
 
 	shipInfo := ShippingInfo{
 		TrackingNumber: shipment.TrackingCode,
