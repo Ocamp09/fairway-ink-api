@@ -161,13 +161,13 @@ func VerifyPayment(c *gin.Context) {
 		EstimatedDelivery: shipment.SelectedRate.EstDeliveryDays,
 	}
 
-	// shipQuery := `INSERT INTO shipping (order_id, easypost_id, carrier, service, tracking_number, shipping_label_url) VALUES(?, ?, ?, ?, ?, ?, ?)`
-	// _, err = config.DB.Exec(shipQuery, orderID, shipment.ID, shipment.SelectedRate.Carrier, shipment.SelectedRate.Service, shipment.TrackingCode, shipment.PostageLabel.LabelURL)
-    // if err != nil {
-	// 	log.Printf("Database error: %v", err)
-	// 	c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to insert print job"})
-	// 	return
-	// }
+	shipQuery := `INSERT INTO shipping (order_id, easypost_id, carrier, service, tracking_number, ship_rate, shipping_label_url) VALUES(?, ?, ?, ?, ?, ?, ?)`
+	_, err = config.DB.Exec(shipQuery, orderID, shipment.ID, shipment.SelectedRate.Carrier, shipment.SelectedRate.Service, shipment.TrackingCode, shipment.SelectedRate.Rate, shipment.PostageLabel.LabelURL)
+    if err != nil {
+		log.Printf("Database error: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to insert print job"})
+		return
+	}
 	
 	// Insert into print_jobs table
 	jobQuery := `INSERT INTO print_jobs (order_id, status) VALUES (?, ?)`
