@@ -13,6 +13,6 @@ func RegisterRoutes(r *gin.Engine) {
 	r.POST("/upload", handlers.UploadFile)
 	r.POST("/generate", handlers.GenerateStl)
 	r.POST("/cart", handlers.AddToCart)
-	r.POST("/create-checkout-session", handlers.CreateCheckoutSession)
-	r.POST("/verify-payment", handlers.VerifyPayment)
+	r.POST("/create-payment-intent", handlers.CreatePaymentIntent)
+	r.POST("/handle-order", handlers.HandleOrder)
 }
