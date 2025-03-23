@@ -19,6 +19,26 @@ func ProcessOrder(orderInfo *structs.OrderInfo) (structs.OrderInfo, error) {
 	total := float64(orderInfo.Amount) / 100.0
 	paymentStatus := orderInfo.PaymentStatus
 
+	db, err := config.ConnectDB()
+	if err != nil {
+		return *orderInfo, fmt.Errorf("Failed to get DB connection: %w", err)
+	}
+
+	defer db.Close()
+
+	tx, err := db.Begin()
+	if err != nil {
+		return *orderInfo, fmt.Errorf("failed to begin db transaction: %w", err)
+	}
+
+	defer func() {
+		if err != nil {
+			tx.Rollback()
+		} else {
+
+		}
+	}()
+
 	// Insert into `orders` table
 	orderQuery := `
 		INSERT INTO orders (
@@ -26,7 +46,7 @@ func ProcessOrder(orderInfo *structs.OrderInfo) (structs.OrderInfo, error) {
 			browser_ssid, stripe_ssid, total_amount, payment_status
 		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 	`
-	result, err := config.DB.Exec(
+	result, err := db.Exec(
 		orderQuery,
 		orderInfo.Email, orderInfo.Name, orderInfo.Address.Line1, orderInfo.Address.Line2, orderInfo.Address.City, orderInfo.Address.State, orderInfo.Address.PostalCode, orderInfo.Address.Country,
 		orderInfo.BrowserSSID, orderInfo.PaymentIntentID, total, paymentStatus,
@@ -80,14 +100,14 @@ func ProcessOrder(orderInfo *structs.OrderInfo) (structs.OrderInfo, error) {
 
 	// Insert into `shipping` table
 	shipQuery := `INSERT INTO shipping (order_id, easypost_id, carrier, service, tracking_number, ship_rate, shipping_label_url) VALUES(?, ?, ?, ?, ?, ?, ?)`
-	_, err = config.DB.Exec(shipQuery, orderID, shipment.ID, shipment.SelectedRate.Carrier, shipment.SelectedRate.Service, shipment.TrackingCode, shipment.SelectedRate.Rate, shipment.PostageLabel.LabelURL)
+	_, err = db.Exec(shipQuery, orderID, shipment.ID, shipment.SelectedRate.Carrier, shipment.SelectedRate.Service, shipment.TrackingCode, shipment.SelectedRate.Rate, shipment.PostageLabel.LabelURL)
 	if err != nil {
 		return *orderInfo, fmt.Errorf("failed to insert shipping info: %w", err)
 	}
 
 	// Insert print job
 	jobQuery := `INSERT INTO print_jobs (order_id, status) VALUES (?, ?)`
-	jobResult, err := config.DB.Exec(jobQuery, orderID, "queued")
+	jobResult, err := db.Exec(jobQuery, orderID, "queued")
 	if err != nil {
 		return *orderInfo, fmt.Errorf("failed to insert print job: %w", err)
 	}
@@ -100,7 +120,7 @@ func ProcessOrder(orderInfo *structs.OrderInfo) (structs.OrderInfo, error) {
 
 	// Upload STL files and associate with job
 	cartQuery := `SELECT stl_url, quantity FROM cart_items WHERE browser_ssid = ?`
-	rows, err := config.DB.Query(cartQuery, orderInfo.BrowserSSID)
+	rows, err := db.Query(cartQuery, orderInfo.BrowserSSID)
 	if err != nil {
 		return *orderInfo, fmt.Errorf("failed to retrieve cart items: %w", err)
 	}
@@ -117,7 +137,7 @@ func ProcessOrder(orderInfo *structs.OrderInfo) (structs.OrderInfo, error) {
 		splitUrl := strings.Split(stlURL, "/")
 		filename := splitUrl[len(splitUrl)-1]
 		s3Key := fmt.Sprintf("%s/%s", orderInfo.BrowserSSID, filename)
-		dir := "./output/" + orderInfo.BrowserSSID
+		dir := "./output/" + orderInfo.BrowserSSID + "/"
 
 		if strings.Contains(filename, "design") {
 			dir = "../designs/"
@@ -129,9 +149,13 @@ func ProcessOrder(orderInfo *structs.OrderInfo) (structs.OrderInfo, error) {
 
 		// Insert into `stl_files` table
 		stlQuery := `INSERT INTO stl_files (browser_ssid, file_name, job_id, quantity) VALUES (?, ?, ?, ?)`
-		if _, err := config.DB.Exec(stlQuery, orderInfo.BrowserSSID, filename, jobID, quantity); err != nil {
+		if _, err := db.Exec(stlQuery, orderInfo.BrowserSSID, filename, jobID, quantity); err != nil {
 			return *orderInfo, fmt.Errorf("failed to insert STL file record: %w", err)
 		}
+	}
+
+	if err := tx.Commit(); err != nil {
+		return *orderInfo, fmt.Errorf("failed to commit transaction: %w", err)
 	}
 
 	return *orderInfo, nil
