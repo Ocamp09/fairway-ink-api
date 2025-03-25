@@ -40,10 +40,17 @@ func GenerateStl(c *gin.Context) {
 	// Get scale (default 1)
 	scale := c.DefaultPostForm("scale", "1")
 
+	db, err := config.ConnectDB()
+	if err != nil {
+		c.JSON(http.StatusServiceUnavailable, gin.H{"success": false, "error": "Unable to connect to database"})
+	}
+
+	defer db.Close()
+
 	// Get cart items from DB
 	var cartStls []string
 	query := `SELECT stl_url FROM cart_items WHERE browser_ssid = ?`
-	rows, err := config.DB.Query(query, ssid)
+	rows, err := db.Query(query, ssid)
 	if err != nil {
 		c.JSON(http.StatusServiceUnavailable, gin.H{"success": false, "error": "Unable to connect to database"})
 		return

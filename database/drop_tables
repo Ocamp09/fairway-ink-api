@@ -1,0 +1,1 @@
+mysql -h fairway-ink.criqiyqoswk3.us-east-2.rds.amazonaws.com -u admin -p fairway_ink < ./drop_tables.sql
