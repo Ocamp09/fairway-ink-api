@@ -17,23 +17,26 @@ def fill_svg(svg_data):
         paths = root.findall('.//{http://www.w3.org/2000/svg}path')
 
         if paths:
-            outermost_path = paths[0] # Assume the first path is the outermost.  This may need more sophisticated logic.
+            # remove paths that do not have two z's
+            for path in paths:
+                d_value = path.get('d')
 
-            # Check if the path has a fill attribute, if not add one. If it does, don't change it.
-            if outermost_path.get('fill') is None:
-                outermost_path.set('fill', 'black') 
+                z_cnt = d_value.count("Z")
+                if z_cnt < 2:
+                    root.remove(path)
 
-            # Remove all other paths (optional, if you only want the outline)
-            for path in paths[1:]:
-              root.remove(path)
 
-            d_value = outermost_path.get('d')
-            if d_value:
-                # Find the index of 'Z' (or 'z') and truncate the string
-                z_index = d_value.upper().find('Z')  # Case-insensitive search
-                if z_index != -1:
-                    truncated_d = d_value[:z_index]  # Keep 'Z'
-                    outermost_path.set('d', truncated_d)
+                # Check if the path has a fill attribute, if not add one. If it does, don't change it.
+                if path.get('fill') is None:
+                    path.set('fill', 'black') 
+
+                d_value = path.get('d')
+                if d_value:
+                    # Find the index of 'Z' (or 'z') and truncate the string
+                    z_index = d_value.upper().find('Z')  # Case-insensitive search
+                    if z_index != -1:
+                        truncated_d = d_value[:z_index]  # Keep 'Z'
+                        path.set('d', truncated_d)
         
         new_svg_data = ET.tostring(root, encoding='unicode', method='xml').replace("ns0:", "").replace(":ns0", "")
       
