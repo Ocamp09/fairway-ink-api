@@ -31,8 +31,8 @@ func main() {
 	// Apply CORS middleware
 	r.Use(CORSMiddleware())
 
-	// Load environment and database
-	config.ConnectDB()
+	// load environment
+	config.LoadEnv()
 
 	// Register routes
 	routes.RegisterRoutes(r)

@@ -12,15 +12,18 @@ import (
 )
 
 var (
-	DB *sql.DB
 	STRIPE_KEY string
 	EASYPOST_KEY string
 	STL_S3_BUCKET string
 	S3_REGION string
 	SENDER_ADDRESS easypost.Address
+	DB_USER string
+	DB_PSWD string
+	DB_HOST string
+	DB_NAME string
 )
-func ConnectDB() {
-	var err error
+
+func LoadEnv() {
 	var exists bool
 	STRIPE_KEY, exists = os.LookupEnv("STRIPE_KEY")
 	if !exists {
@@ -42,25 +45,37 @@ func ConnectDB() {
 		log.Fatal("Environment variable missing: S3_REGION")
 	}
 
-	DB_USER, exists := os.LookupEnv("DB_USER")
+	SENDER_ADDRESS = easypost.Address{
+		Company: "Fairway Ink",
+		Street1: "6729 Old Stagecoach Road",
+		City: "Frazeysburg",
+		State: "OH",
+		Zip: "43822",
+	}
+
+	DB_USER, exists = os.LookupEnv("DB_USER")
 	if !exists {
 		log.Fatal("Environment variable missing: DB_USER")
 	}
 
-	DB_PSWD, exists := os.LookupEnv("DB_PSWD")
+	DB_PSWD, exists = os.LookupEnv("DB_PSWD")
 	if !exists {
 		log.Fatal("Environment variable missing: DB_PSWD")
 	}
 
-	DB_HOST, exists := os.LookupEnv("DB_HOST")
+	DB_HOST, exists = os.LookupEnv("DB_HOST")
 	if !exists {
 		log.Fatal("Environment variable missing: DB_HOST")
 	}
 
-	DB_NAME, exists := os.LookupEnv("DB_NAME")
+	DB_NAME, exists = os.LookupEnv("DB_NAME")
 	if !exists {
 		log.Fatal("Environment variable missing: DB_NAME")
 	}
+}
+
+func ConnectDB() (*sql.DB, error) {
+	var err error
 
 	dsn := fmt.Sprintf("%s:%s@tcp(%s:3306)/%s?parseTime=true",
 		DB_USER,
@@ -69,26 +84,11 @@ func ConnectDB() {
 		DB_NAME,
 	)
 
-	log.Println("Connecting to database...")
-
 	// Open the database connection
-	DB, err = sql.Open("mysql", dsn)
+	db, err := sql.Open("mysql", dsn)
 	if err != nil {
-		log.Fatalf("Failed to open database connection: %v", err)
+		return nil, fmt.Errorf("failed to open database connection: %v", err)
 	}
 
-	// Ping to test the actual connection
-	if err = DB.Ping(); err != nil {
-		log.Fatalf("Database unreachable: %v", err)
-	}
-
-	log.Println("Database connected successfully!") // Log success
-
-	SENDER_ADDRESS = easypost.Address{
-		Company: "Fairway Ink",
-		Street1: "6729 Old Stagecoach Road",
-		City: "Frazeysburg",
-		State: "OH",
-		Zip: "43822",
-	}
+	return db, nil
 }

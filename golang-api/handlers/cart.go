@@ -18,8 +18,15 @@ func AddToCart(c *gin.Context) {
 		return
 	}
 
+	db, err := config.ConnectDB()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to connect to db"})
+	}
+
+	defer db.Close()
+
 	query := `INSERT INTO cart_items (browser_ssid, stl_url, quantity, template_type) VALUES (?, ?, ?, ?)`
-	_, err := config.DB.Exec(query, ssid, stlUrl, quantity, templateType)
+	_, err = db.Exec(query, ssid, stlUrl, quantity, templateType)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to add to cart"})
 		return

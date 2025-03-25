@@ -2,15 +2,13 @@ package handlers
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
-	"runtime"
 
 	"github.com/gin-gonic/gin"
 	"github.com/ocamp09/fairway-ink-api/golang-api/config"
 	"github.com/stripe/stripe-go/v75"
-	"github.com/stripe/stripe-go/v75/checkout/session"
+	"github.com/stripe/stripe-go/v75/paymentintent"
 )
 
 var (
@@ -19,7 +17,7 @@ var (
 	CUSTOM_PRICE = 799 
 )
 
-func CreateCheckoutSession(c *gin.Context) {
+func CreatePaymentIntent(c *gin.Context) {
 	var requestBody struct {
 		Cart string `form:"cart"`
 	}
@@ -48,7 +46,6 @@ func CreateCheckoutSession(c *gin.Context) {
 	}
 
 	// Prepare line items
-	var lineItems []*stripe.CheckoutSessionLineItemParams
 	totalAmount := 0
 
 	for _, item := range cart {
@@ -77,16 +74,6 @@ func CreateCheckoutSession(c *gin.Context) {
 			return
 		}
 
-		lineItems = append(lineItems, &stripe.CheckoutSessionLineItemParams{
-			PriceData: &stripe.CheckoutSessionLineItemPriceDataParams{
-				Currency: stripe.String("usd"),
-				ProductData: &stripe.CheckoutSessionLineItemPriceDataProductDataParams{
-					Name: stripe.String(fmt.Sprintf("Custom golf ball stencil - type: %s, qty: %d", itemType, int(quantity))),
-				},
-				UnitAmount: stripe.Int64(int64(price)), // Price in cents
-			},
-			Quantity: stripe.Int64(int64(quantity)),
-		})
 
 		totalAmount += price * int(quantity)
 	}
@@ -96,33 +83,22 @@ func CreateCheckoutSession(c *gin.Context) {
 		return
 	}
 
-	// Determine domain
-	domain := "https://www.fairway-ink.com"
-	if runtime.GOOS != "linux" {
-		domain = "http://localhost:5173"
-	}
-
-
 	stripe.Key = config.STRIPE_KEY
 
-	// Create Stripe checkout session
-	params := &stripe.CheckoutSessionParams{
-		PaymentMethodTypes: stripe.StringSlice([]string{"card"}),
-		LineItems:          lineItems,
-		Mode:               stripe.String(string(stripe.CheckoutSessionModePayment)),
-		SuccessURL:         stripe.String(fmt.Sprintf("%s/success?session_id={CHECKOUT_SESSION_ID}", domain)),
-		CancelURL:          stripe.String(domain),
-		ShippingAddressCollection: &stripe.CheckoutSessionShippingAddressCollectionParams{
-			AllowedCountries: stripe.StringSlice([]string{"US"}),
-		},
+	params := &stripe.PaymentIntentParams{
+		Amount: stripe.Int64(int64(totalAmount)),
+		Currency: stripe.String(string(stripe.CurrencyUSD)),
+		PaymentMethodTypes: []*string{stripe.String("card")},
+		CaptureMethod: stripe.String(string(stripe.PaymentIntentCaptureMethodManual)),
 	}
 
-	s, err := session.New(params)
+	intent, err := paymentintent.New(params)
 	if err != nil {
-		log.Println("Error creating Stripe checkout session:", err)
+		log.Println("Error creating Stripe paymentIntent:", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "ERROR"})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"id": s.ID})
+	println(intent.ID, intent.ClientSecret)
+	c.JSON(http.StatusOK, gin.H{"payment_intent": intent.ID, "client_secret": intent.ClientSecret})
 }
