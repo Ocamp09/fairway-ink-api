@@ -39,7 +39,6 @@ def fill_svg(svg_data):
                         path.set('d', truncated_d)
         
         new_svg_data = ET.tostring(root, encoding='unicode', method='xml').replace("ns0:", "").replace(":ns0", "")
-        print(new_svg_data)
         return new_svg_data
 
     except ET.ParseError as e:
