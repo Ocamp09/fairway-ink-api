@@ -16,6 +16,9 @@ def fill_svg(svg_data):
         root = ET.fromstring(svg_data)
         paths = root.findall('.//{http://www.w3.org/2000/svg}path')
 
+        if len(paths) == 1:
+            return svg_data
+
         if paths:
             # remove paths that do not have two z's
             for path in paths:

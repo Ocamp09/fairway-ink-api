@@ -7,16 +7,27 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"runtime"
-	"slices"
+	"sort"
 	"strconv"
 	"strings"
 
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/ocamp09/fairway-ink-api/golang-api/config"
 )
+
+func extractNumber(str string) (int, error) {
+	re := regexp.MustCompile(`^\d+`) // Match leading digits
+	match := re.FindString(str)
+
+	if match == "" {
+		return 0, fmt.Errorf("no leading number found")
+	}
+
+	return strconv.Atoi(match) // Convert string to integer
+}
 
 func GenerateStl(c *gin.Context) {
 	// Get session id from headers
@@ -28,83 +39,55 @@ func GenerateStl(c *gin.Context) {
 	}
 
 	// Get SVG file from the form
-	file, handler, err := c.Request.FormFile("svg")
+	file, _, err := c.Request.FormFile("svg")
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"success": false, "error": "No SVG file provided"})
 		return
 	}
 	defer file.Close()
 
-	filename := handler.Filename
-
 	// Get scale (default 1)
 	scale := c.DefaultPostForm("scale", "1")
 
-	db, err := config.ConnectDB()
-	if err != nil {
-		c.JSON(http.StatusServiceUnavailable, gin.H{"success": false, "error": "Unable to connect to database"})
-	}
-
-	defer db.Close()
-
-	// Get cart items from DB
-	var cartStls []string
-	query := `SELECT stl_url FROM cart_items WHERE browser_ssid = ?`
-	rows, err := db.Query(query, ssid)
-	if err != nil {
-		c.JSON(http.StatusServiceUnavailable, gin.H{"success": false, "error": "Unable to connect to database"})
-		return
-	}
-	defer rows.Close()
-
-	for rows.Next() {
-		var stlURL string
-		if err := rows.Scan(&stlURL); err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch cart items"})
-			return
-		}
-		cartStls = append(cartStls, stlURL)
-	}
-
-	// remove old SVG's not in cart
-	stlKey := c.DefaultPostForm("stlKey", "-1")
-	key, err := strconv.Atoi(stlKey)
-	if err != nil {
-		fmt.Println("Error converting STL key to int")
-		return
-	}
-
-	if key > 0 {
-		prevKey := key - 1
-			prevFile := fmt.Sprintf("%d%s.stl", prevKey, filename[strings.Index(filename, "g"):])
-			filePath := filepath.Join("output", ssid, prevFile)
-			if _, err := os.Stat(filePath); err == nil {
-				fileUrl := fmt.Sprintf("https://api.fairway-ink.com/output/%s/%s", ssid, prevFile)
-				if !slices.Contains(cartStls, fileUrl) {
-					os.Remove(filePath)
-				}
-			}
-	}
-
 	// Save the SVG file
-	outputDir := filepath.Join("output", ssid)
-	if err := os.MkdirAll(outputDir, os.ModePerm); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "error": "Failed to create output directory"})
-		return
+	outputDir := "../designs/"
+	files, err := os.ReadDir(outputDir)
+	if err != nil {
+		fmt.Println("Error reading directory: ", err)
 	}
+
+	var filenames []string
+	for _, file := range files {
+		filenames = append(filenames, file.Name())
+	}
+
+	println(strings.Join(filenames, ", "))
+
+	sort.Strings(filenames)
+	var lastFile string
+	if len(filenames) <= 0 {
+		fmt.Println("dir was empty")	
+	}
+
+	lastFile = filenames[len(filenames)-1]
+	fmt.Println("Last file alphabetically:", lastFile)
+
+	newKey, err := extractNumber(lastFile)
+	if err != nil {
+		newKey = 0
+	}
+
+	newKey += 1
+
+	println(newKey)
+
+	filename := fmt.Sprintf("%d_design_", newKey)
+	println(filename)
 
 	outputSvgPath := filepath.Join(outputDir, filename)
-	outFile, err := os.Create(outputSvgPath)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "error": "Failed to create SVG file"})
-		return
-	}
-	defer outFile.Close()
 
-	if _, err := io.Copy(outFile, file); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "error": "Failed to save SVG file"})
-		return
-	}
+	designFiles := []string{outputSvgPath + "small.svg", outputSvgPath + "medium.svg", outputSvgPath + "large.svg"}
+
 	// Execute Blender to generate STL
 	blenderPath := "/home/ec2-user/blender-4.3.2-linux-x64/blender"
 	if runtime.GOOS == "darwin" {
@@ -113,26 +96,44 @@ func GenerateStl(c *gin.Context) {
 		blenderPath = `C:\\Program Files\\Blender Foundation\\Blender 4.3\\blender.exe`
 	}
 
-	outputSvgPath = strings.ReplaceAll(outputSvgPath, "\\", "/")
-	blenderCommand := []string{
+	for index, path := range designFiles {
+		outFile, err := os.Create(path)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"success": false, "error": "Failed to create SVG file"})
+			return
+		}
+	
+		file.Seek(0, 0)
+		if _, err := io.Copy(outFile, file); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"success": false, "error": "Failed to save SVG file"})
+			return
+		}
+	
+		outFile.Close() // Ensure each file closes properly
+
+		var floatScale float64
+		floatScale, err = strconv.ParseFloat(scale, 64)
+			if err != nil {
+				log.Println("Unable to convert to float")
+			}
+		if index == 0 {
+			floatScale *= .65
+		} else if index == 2 {
+			floatScale *= 1.35
+		} 
+
+		path = strings.ReplaceAll(path, "\\", "/")
+		blenderCommand := []string{
 		blenderPath,
-		"--background",
-		"--python", "./blender/blender_v1.py", outputSvgPath, scale,
+			"--background",
+			"--python", "./blender/blender_v1.py", path, fmt.Sprintf("%.2f", floatScale),
+		}
+
+		cmd := exec.Command(blenderCommand[0], blenderCommand[1:]...)
+		cmdOutput, _ := cmd.CombinedOutput()
+		log.Printf("%s", fmt.Sprintf("Blender output: %s", string(cmdOutput)))
+		os.Remove(path)
 	}
-
-	cmd := exec.Command(blenderCommand[0], blenderCommand[1:]...)
-	cmdOutput, _ := cmd.CombinedOutput()
-	//TODO: fix blender script in future to not erroneously throw this error
-	// if err != nil {
-	// 	log.Printf("%s", fmt.Sprintf("Error running Blender: %v", err))
-	// 	c.JSON(http.StatusInternalServerError, gin.H{"success": false, "error": "Error generating STL"})
-	// 	return
-	// }
-	log.Printf("%s", fmt.Sprintf("Blender output: %s", string(cmdOutput)))
-
-	// Remove original SVG file after conversion
-	os.Remove(outputSvgPath)
-
 	// Generate the STL file path
 	stlFilename := strings.TrimSuffix(filename, filepath.Ext(filename)) + ".stl"
 	stlFilePath := filepath.Join(outputDir, stlFilename)
@@ -148,7 +149,7 @@ func GenerateStl(c *gin.Context) {
 
 	// Use localhost if not running in production
 	if runtime.GOOS != "linux" {
-		stlURL = fmt.Sprintf("http://localhost:5000/output/%s/%s", ssid, stlFilename)
+		stlURL = "http://localhost:5000/designs/1_design_medium"
 	}
 
 	// Return success with the STL URL
