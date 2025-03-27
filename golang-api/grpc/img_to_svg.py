@@ -16,18 +16,10 @@ def fill_svg(svg_data):
         root = ET.fromstring(svg_data)
         paths = root.findall('.//{http://www.w3.org/2000/svg}path')
 
-        if len(paths) == 1:
-            return svg_data
-
         if paths:
             # remove paths that do not have two z's
             for path in paths:
                 d_value = path.get('d')
-
-                z_cnt = d_value.count("Z")
-                if z_cnt < 2:
-                    root.remove(path)
-
 
                 # Check if the path has a fill attribute, if not add one. If it does, don't change it.
                 if path.get('fill') is None:
