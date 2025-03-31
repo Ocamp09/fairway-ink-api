@@ -7,6 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/ocamp09/fairway-ink-api/golang-api/config"
 	"github.com/ocamp09/fairway-ink-api/golang-api/routes"
+	"go.uber.org/zap"
 )
 
 func CORSMiddleware() gin.HandlerFunc {
@@ -26,6 +27,19 @@ func CORSMiddleware() gin.HandlerFunc {
 }
 
 func main() {
+	// set up logging
+	logger, err := zap.NewProduction()
+	if err != nil {
+		log.Fatalf("could not initialize zap logger: %v", err)
+	}
+	defer logger.Sync()
+
+	// initialize db connection
+	db, err := config.ConnectDB()
+	if err != nil {
+		logger.Fatal("failed to connect to teh db", zap.Error(err))
+	}
+
 	r := gin.Default()
 
 	// Apply CORS middleware
@@ -35,7 +49,7 @@ func main() {
 	config.LoadEnv()
 
 	// Register routes
-	routes.RegisterRoutes(r)
+	routes.RegisterRoutes(r, db, logger.Sugar())
 
 	log.Println("Server running on port 5000")
 	r.Run(":5000")
