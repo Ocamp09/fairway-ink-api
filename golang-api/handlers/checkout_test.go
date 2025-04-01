@@ -30,7 +30,6 @@ func TestPaymentIntent(t *testing.T) {
 	tests := []testFields {
 		{
 			desc: "No request body",
-			request: requestPayload{},
 			wantStatus: http.StatusInternalServerError,
 			wantSuccess: false,
 			wantLogs: []observer.LoggedEntry{

@@ -11,39 +11,38 @@ import (
 	"go.uber.org/zap"
 )
 
-var (
+const (
 	SOLID_PRICE  = 599
 	TEXT_PRICE   = 599
 	CUSTOM_PRICE = 799 
 )
+
+type CartItem struct {
+	Type string `json:"type"`
+	Quantity int `json:"quantity"`
+}
 
 func CreatePaymentIntent(c *gin.Context, logger *zap.SugaredLogger) {
 	var requestBody struct {
 		Cart string `form:"cart"`
 	}
 
-	if err := c.ShouldBind(&requestBody); err != nil {
+	if err := c.ShouldBindJSON(&requestBody); err != nil {
 		logger.Error("Error parsing request: ", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "error": "No cart provided"})
 		return
 	}
 
-	if requestBody.Cart == "" {
-		logger.Error("Cart is empty")
-		c.JSON(http.StatusNotImplemented, gin.H{"success": false, "error": "Cart is empty"})
-		return
-	}
-
-	var cart []map[string]any
+	var cart []CartItem
 	if err := json.Unmarshal([]byte(requestBody.Cart), &cart); err != nil {
 		logger.Error("Error parsing cart JSON:", err)
-		c.JSON(http.StatusBadGateway, gin.H{"success": false, "error": "Invalid cart format"})
+		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "error": "Invalid cart format"})
 		return
 	}
 
 	if len(cart) == 0 {
 		logger.Error("Failed to get cart items")
-		c.JSON(http.StatusBadGateway, gin.H{"success": false, "error": "Failed to get cart items"})
+		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "error": "Failed to get cart items"})
 		return
 	}
 
@@ -51,22 +50,8 @@ func CreatePaymentIntent(c *gin.Context, logger *zap.SugaredLogger) {
 	totalAmount := 0
 
 	for _, item := range cart {
-		itemType, ok := item["type"].(string)
-		if !ok {
-			logger.Error("Invalid item type in cart")
-			c.JSON(http.StatusBadGateway, gin.H{"success": false, "error": "Invalid item type in cart"})
-			return
-		}
-
-		quantity, ok := item["quantity"].(float64) // JSON unmarshalling gives float64 by default
-		if !ok {
-			logger.Error("Invalid quantity in cart")
-			c.JSON(http.StatusBadGateway, gin.H{"success": false, "error": "Invalid quantity in cart"})
-			return
-		}
-
 		var price int
-		switch itemType {
+		switch item.Type {
 		case "solid":
 			price = SOLID_PRICE
 		case "text":
@@ -75,16 +60,16 @@ func CreatePaymentIntent(c *gin.Context, logger *zap.SugaredLogger) {
 			price = CUSTOM_PRICE
 		default:
 			logger.Error("Invalid item type in cart")
-			c.JSON(http.StatusBadGateway, gin.H{"success": false, "error": "Invalid item type in cart"})
+			c.JSON(http.StatusInternalServerError, gin.H{"success": false, "error": "Invalid item type in cart"})
 			return
 		}
 
-		totalAmount += price * int(quantity)
+		totalAmount += price * int(item.Quantity)
 	}
 
 	if totalAmount <= 0 {
 		logger.Error("Invalid order amount")
-		c.JSON(http.StatusBadGateway, gin.H{"success": false, "error": "Invalid order amount"})
+		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "error": "Invalid order amount"})
 		return
 	}
 
