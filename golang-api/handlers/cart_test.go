@@ -33,10 +33,6 @@ type TestFields struct {
 }
 
 func TestAddToCart(t *testing.T) {
-	core, observedLogs := observer.New(zap.DebugLevel)
-	logger := zap.New(core)
-	sugar := logger.Sugar()
-
 	tests := []TestFields{ 
 		{
 			desc: "Missing ssid",
@@ -214,11 +210,14 @@ func TestAddToCart(t *testing.T) {
 		},
 	}
 
+	core, observedLogs := observer.New(zap.DebugLevel)
+	logger := zap.New(core)
+	sugar := logger.Sugar()
+
 	gin.SetMode(gin.TestMode)
-	
 
 	for _, tt := range tests {
-		t.Run(tt.desc, func(t * testing.T) {
+		t.Run(tt.desc, func(t *testing.T) {
 			observedLogs.TakeAll() // reset observed logs each call
 
 			// mock db
@@ -236,9 +235,15 @@ func TestAddToCart(t *testing.T) {
 			router.POST("/cart", func(c *gin.Context) {AddToCart(c, db, sugar)})
 
 			// convert request payload to json
-			jsonData, _ := json.Marshal(tt.request)
+			jsonData, err := json.Marshal(tt.request)
+			if err != nil {
+				t.Fatalf("Failed to get response json: %v", err)
+			}
 
-			req,_ := http.NewRequest("POST", "/cart", bytes.NewBuffer(jsonData))
+			req, err := http.NewRequest("POST", "/cart", bytes.NewBuffer(jsonData))
+			if err != nil {
+				t.Fatalf("Failed to create http request: %v", err)
+			}
 			req.Header.Set("Content-Type", "application/json")
 
 			w := httptest.NewRecorder()
@@ -248,10 +253,10 @@ func TestAddToCart(t *testing.T) {
 			var response map[string]interface{}
 			json.Unmarshal(w.Body.Bytes(), &response)
 
-			assert.Equal(t, tt.wantStatus, w.Code, "Status code does not match")
+			assert.Equal(t, tt.wantStatus, w.Code, "Status codes do not match")
 
 			if success, exists := response["success"]; exists {
-				assert.Equal(t, tt.wantSuccess, success, "Success code does not match")
+				assert.Equal(t, tt.wantSuccess, success, "Success codes do not match")
 			} else {
 				assert.False(t, tt.wantSuccess, "Expected success but key not found in response")
 			}
@@ -264,8 +269,8 @@ func TestAddToCart(t *testing.T) {
 					break
 				}
 
-				assert.Equal(t, wantLog.Entry.Level, allLogs[i].Entry.Level, "Log level does not match")
-				assert.Contains(t, allLogs[i].Entry.Message, wantLog.Entry.Message, "Log message does not contain expected text")
+				assert.Equal(t, wantLog.Entry.Level, allLogs[i].Entry.Level, "Log levels do not match")
+				assert.Contains(t, allLogs[i].Entry.Message, wantLog.Entry.Message, "Log messages do not contain expected text")
 			}
 
 			// Make sure all mock expectations were met
