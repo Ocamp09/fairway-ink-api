@@ -2,13 +2,13 @@ package handlers
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/ocamp09/fairway-ink-api/golang-api/config"
 	"github.com/stripe/stripe-go/v75"
 	"github.com/stripe/stripe-go/v75/paymentintent"
+	"go.uber.org/zap"
 )
 
 var (
@@ -17,31 +17,33 @@ var (
 	CUSTOM_PRICE = 799 
 )
 
-func CreatePaymentIntent(c *gin.Context) {
+func CreatePaymentIntent(c *gin.Context, logger *zap.SugaredLogger) {
 	var requestBody struct {
 		Cart string `form:"cart"`
 	}
 
 	if err := c.ShouldBind(&requestBody); err != nil {
-		log.Println("Error parsing request:", err)
+		logger.Error("Error parsing request: ", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "error": "No cart provided"})
 		return
 	}
 
 	if requestBody.Cart == "" {
-		c.JSON(http.StatusNotImplemented, gin.H{"success": false, "error": "No cart provided"})
+		logger.Error("Cart is empty")
+		c.JSON(http.StatusNotImplemented, gin.H{"success": false, "error": "Cart is empty"})
 		return
 	}
 
-	var cart []map[string]interface{}
+	var cart []map[string]any
 	if err := json.Unmarshal([]byte(requestBody.Cart), &cart); err != nil {
-		log.Println("Error parsing cart JSON:", err)
+		logger.Error("Error parsing cart JSON:", err)
 		c.JSON(http.StatusBadGateway, gin.H{"success": false, "error": "Invalid cart format"})
 		return
 	}
 
 	if len(cart) == 0 {
-		c.JSON(http.StatusBadGateway, gin.H{"success": false, "error": "Cart is empty"})
+		logger.Error("Failed to get cart items")
+		c.JSON(http.StatusBadGateway, gin.H{"success": false, "error": "Failed to get cart items"})
 		return
 	}
 
@@ -51,12 +53,14 @@ func CreatePaymentIntent(c *gin.Context) {
 	for _, item := range cart {
 		itemType, ok := item["type"].(string)
 		if !ok {
+			logger.Error("Invalid item type in cart")
 			c.JSON(http.StatusBadGateway, gin.H{"success": false, "error": "Invalid item type in cart"})
 			return
 		}
 
 		quantity, ok := item["quantity"].(float64) // JSON unmarshalling gives float64 by default
 		if !ok {
+			logger.Error("Invalid quantity in cart")
 			c.JSON(http.StatusBadGateway, gin.H{"success": false, "error": "Invalid quantity in cart"})
 			return
 		}
@@ -70,15 +74,16 @@ func CreatePaymentIntent(c *gin.Context) {
 		case "custom":
 			price = CUSTOM_PRICE
 		default:
+			logger.Error("Invalid item type in cart")
 			c.JSON(http.StatusBadGateway, gin.H{"success": false, "error": "Invalid item type in cart"})
 			return
 		}
-
 
 		totalAmount += price * int(quantity)
 	}
 
 	if totalAmount <= 0 {
+		logger.Error("Invalid order amount")
 		c.JSON(http.StatusBadGateway, gin.H{"success": false, "error": "Invalid order amount"})
 		return
 	}
@@ -94,11 +99,11 @@ func CreatePaymentIntent(c *gin.Context) {
 
 	intent, err := paymentintent.New(params)
 	if err != nil {
-		log.Println("Error creating Stripe paymentIntent:", err)
+		logger.Error("Error creating Stripe paymentIntent:", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "ERROR"})
 		return
 	}
 
-	println(intent.ID, intent.ClientSecret)
+	logger.Info("Successfully created payment intent")
 	c.JSON(http.StatusOK, gin.H{"payment_intent": intent.ID, "client_secret": intent.ClientSecret})
 }

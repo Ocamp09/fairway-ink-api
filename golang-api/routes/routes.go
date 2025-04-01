@@ -18,6 +18,8 @@ func RegisterRoutes(r *gin.Engine, db *sql.DB, logger *zap.SugaredLogger) {
 	r.POST("/cart", func(c *gin.Context) {
 		handlers.AddToCart(c, db, logger)
 	})
-	r.POST("/create-payment-intent", handlers.CreatePaymentIntent)
+	r.POST("/create-payment-intent", func(c *gin.Context) {
+		handlers.CreatePaymentIntent(c, logger)
+	})
 	r.POST("/handle-order", handlers.HandleOrder)
 }
