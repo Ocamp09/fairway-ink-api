@@ -15,7 +15,9 @@ func RegisterRoutes(r *gin.Engine, db *sql.DB, logger *zap.SugaredLogger, stripe
 	r.GET("/designs/:filename", handlers.GetDesign)
 	r.GET("/output/:ssid/:filename", handlers.OutputSTL)
 	r.POST("/upload", handlers.UploadFile)
-	r.POST("/generate", handlers.GenerateStl)
+	r.POST("/generate", func(c *gin.Context) {
+		handlers.GenerateStl(c, db, logger)
+	})
 	r.POST("/cart", func(c *gin.Context) {
 		handlers.AddToCart(c, db, logger)
 	})

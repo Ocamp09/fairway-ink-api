@@ -38,7 +38,7 @@ func main() {
 	// initialize db connection
 	db, err := config.ConnectDB()
 	if err != nil {
-		logger.Fatal("failed to connect to teh db", zap.Error(err))
+		logger.Fatal("failed to connect to the db", zap.Error(err))
 	}
 
 	// initialize stripe service

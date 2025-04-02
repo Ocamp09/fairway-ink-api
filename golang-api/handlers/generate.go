@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"database/sql"
 	"fmt"
 	"io"
 	"log"
@@ -15,22 +16,23 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/ocamp09/fairway-ink-api/golang-api/config"
+	"github.com/ocamp09/fairway-ink-api/golang-api/services"
+	"go.uber.org/zap"
 )
 
-func GenerateStl(c *gin.Context) {
+func GenerateStl(c *gin.Context, db *sql.DB, logger *zap.SugaredLogger) {
 	// Get session id from headers
 	ssid := c.DefaultPostForm("ssid", "")
 
 	if ssid == "" {
-		c.JSON(http.StatusUnauthorized, gin.H{"success": false, "error": "No session ID"})
+		services.ReturnError(c, logger, "No session ID provided", nil)
 		return
 	}
 
 	// Get SVG file from the form
 	file, handler, err := c.Request.FormFile("svg")
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"success": false, "error": "No SVG file provided"})
+		services.ReturnError(c, logger, "No SVG file provided", nil)
 		return
 	}
 	defer file.Close()
@@ -40,19 +42,19 @@ func GenerateStl(c *gin.Context) {
 	// Get scale (default 1)
 	scale := c.DefaultPostForm("scale", "1")
 
-	db, err := config.ConnectDB()
-	if err != nil {
-		c.JSON(http.StatusServiceUnavailable, gin.H{"success": false, "error": "Unable to connect to database"})
-	}
 
-	defer db.Close()
+	tx, err := db.Begin()
+	if err != nil {
+		services.ReturnError(c, logger, "Unable to start transaction", err)
+		return
+	}
 
 	// Get cart items from DB
 	var cartStls []string
 	query := `SELECT stl_url FROM cart_items WHERE browser_ssid = ?`
-	rows, err := db.Query(query, ssid)
+	rows, err := tx.Query(query, ssid)
 	if err != nil {
-		c.JSON(http.StatusServiceUnavailable, gin.H{"success": false, "error": "Unable to connect to database"})
+		services.ReturnError(c, logger, "Unable to fetch cart items", err)
 		return
 	}
 	defer rows.Close()
@@ -60,7 +62,7 @@ func GenerateStl(c *gin.Context) {
 	for rows.Next() {
 		var stlURL string
 		if err := rows.Scan(&stlURL); err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch cart items"})
+			services.ReturnError(c, logger, "Unable to find any cart items", err)
 			return
 		}
 		cartStls = append(cartStls, stlURL)
@@ -139,7 +141,7 @@ func GenerateStl(c *gin.Context) {
 
 	// Check if the file exists
 	if _, err := os.Stat(stlFilePath); os.IsNotExist(err) {
-		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "error": "STL file not generated"})
+		services.ReturnError(c, logger, "STL file was not generated", err)
 		return
 	}
 
@@ -152,5 +154,6 @@ func GenerateStl(c *gin.Context) {
 	}
 
 	// Return success with the STL URL
+	logger.Info("Successfully returned URL")
 	c.JSON(http.StatusOK, gin.H{"success": true, "stlUrl": stlURL})
 }
