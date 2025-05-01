@@ -2,14 +2,14 @@ package handlers
 
 import (
 	"bytes"
-	"database/sql"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
-	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/gin-gonic/gin"
+	"github.com/ocamp09/fairway-ink-api/golang-api/structs"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -26,10 +26,22 @@ type RequestPayload struct {
 type TestFields struct {
 	desc string
 	request RequestPayload
-	mockDB func(sqlmock.Sqlmock)
+	mockService func() *MockCartService
 	wantStatus int
 	wantSuccess bool
 	wantLogs []observer.LoggedEntry
+}
+
+type MockCartService struct {
+	InsertCartItemFn func(item structs.CartItem) error
+}
+
+func (m *MockCartService) InsertCartItem(item structs.CartItem) error {
+	if m.InsertCartItemFn != nil {
+		return m.InsertCartItemFn(item)
+	}
+
+	return nil
 }
 
 func TestAddToCart(t *testing.T) {
@@ -41,7 +53,9 @@ func TestAddToCart(t *testing.T) {
 				Quantity: 1,
 				TemplateType: "custom",
 			},
-			mockDB: func(s sqlmock.Sqlmock) {},
+			mockService: func() *MockCartService {
+				return &MockCartService{}
+			},
 			wantStatus: http.StatusInternalServerError,
 			wantSuccess: false,
 			wantLogs: []observer.LoggedEntry{
@@ -60,7 +74,9 @@ func TestAddToCart(t *testing.T) {
 				Quantity: 1,
 				TemplateType: "custom",
 			},
-			mockDB: func(s sqlmock.Sqlmock) {},
+			mockService: func() *MockCartService {
+				return &MockCartService{}
+			},			
 			wantStatus: http.StatusInternalServerError,
 			wantSuccess: false,
 			wantLogs: []observer.LoggedEntry{
@@ -79,7 +95,9 @@ func TestAddToCart(t *testing.T) {
 				StlURL: "example.com/test.stl",
 				TemplateType: "custom",
 			},
-			mockDB: func(s sqlmock.Sqlmock) {},
+			mockService: func() *MockCartService {
+				return &MockCartService{}
+			},		
 			wantStatus: http.StatusInternalServerError,
 			wantSuccess: false,
 			wantLogs: []observer.LoggedEntry{
@@ -98,7 +116,9 @@ func TestAddToCart(t *testing.T) {
 				StlURL: "example.com/test.stl",
 				Quantity: 1,
 			},
-			mockDB: func(s sqlmock.Sqlmock) {},
+			mockService: func() *MockCartService {
+				return &MockCartService{}
+			},				
 			wantStatus: http.StatusInternalServerError,
 			wantSuccess: false,
 			wantLogs: []observer.LoggedEntry{
@@ -111,73 +131,27 @@ func TestAddToCart(t *testing.T) {
 			},
 		},
 		{
-			desc: "failed transaction begin",
+			desc: "failed service call",
 			request: RequestPayload{
 				SSID: "1234",
 				StlURL: "example.com/test.stl",
 				Quantity: 1,
 				TemplateType: "custom",
 			},
-			mockDB: func(mock sqlmock.Sqlmock) {
-				mock.ExpectBegin().WillReturnError(sql.ErrConnDone)
-			},
+			mockService: func() *MockCartService {
+                return &MockCartService{
+                    InsertCartItemFn: func(item structs.CartItem) error {
+                        return errors.New("service error")
+                    },
+                }
+            },
 			wantStatus: http.StatusInternalServerError,
 			wantSuccess: false,
 			wantLogs: []observer.LoggedEntry{
 				{
 					Entry: zapcore.Entry{
 						Level: zapcore.ErrorLevel,
-						Message: "Failed to start transaction:",
-					},
-				},
-			},
-		},
-		{
-			desc: "failed insert query",
-			request: RequestPayload{
-				SSID: "1234",
-				StlURL: "example.com/test.stl",
-				Quantity: 1,
-				TemplateType: "custom",
-			},
-			mockDB: func(mock sqlmock.Sqlmock) {
-				mock.ExpectBegin()
-				mock.ExpectExec(`INSERT INTO cart_items`).WithArgs("1234", "example.com/test.stl", 1, "custom").WillReturnError(sql.ErrTxDone)
-				mock.ExpectRollback().WillReturnError(nil)
-			},
-			wantStatus: http.StatusInternalServerError,
-			wantSuccess: false,
-			wantLogs: []observer.LoggedEntry{
-				{
-					Entry: zapcore.Entry{
-						Level: zapcore.ErrorLevel,
-						Message: "Failed to insert into cart",
-					},
-				},
-			},
-		},
-		{
-			desc: "Failed transaction commit",
-			request: RequestPayload{
-				SSID:         "1234",
-				StlURL:       "example.com/test.stl",
-				Quantity:     1,
-				TemplateType: "custom",
-			},
-			mockDB: func(mock sqlmock.Sqlmock) {
-				mock.ExpectBegin()
-				mock.ExpectExec("INSERT INTO cart_items").
-					WithArgs("1234", "example.com/test.stl", 1, "custom").
-					WillReturnResult(sqlmock.NewResult(1, 1))
-				mock.ExpectCommit().WillReturnError(sql.ErrTxDone)
-			},
-			wantStatus:  http.StatusInternalServerError,
-			wantSuccess: false,
-			wantLogs: []observer.LoggedEntry{
-				{
-					Entry: zapcore.Entry{
-						Level:   zapcore.ErrorLevel,
-						Message: "Failed to commit transaction: ",
+						Message: "Unable to insert into DB: service error",
 					},
 				},
 			},
@@ -190,13 +164,13 @@ func TestAddToCart(t *testing.T) {
 				Quantity: 1,
 				TemplateType: "custom",
 			},
-			mockDB: func(mock sqlmock.Sqlmock) {
-				mock.ExpectBegin()
-				mock.ExpectExec("INSERT INTO cart_items").
-					WithArgs("1234", "example.com/test.stl", 1, "custom").
-					WillReturnResult(sqlmock.NewResult(1, 1))
-				mock.ExpectCommit()
-			},
+			mockService: func() *MockCartService {
+                return &MockCartService{
+                    InsertCartItemFn: func(item structs.CartItem) error {
+                        return nil
+                    },
+                }
+            },	
 			wantStatus: http.StatusOK,
 			wantSuccess: true,
 			wantLogs: []observer.LoggedEntry{
@@ -220,19 +194,13 @@ func TestAddToCart(t *testing.T) {
 		t.Run(tt.desc, func(t *testing.T) {
 			observedLogs.TakeAll() // reset observed logs each call
 
-			// mock db
-			db, mock, err := sqlmock.New()
-			if err != nil {
-				t.Fatalf("failed to mock db: %v", err)
-			}
-			defer db.Close()
-
 			// set mock expectations
-			tt.mockDB(mock)
+			mockService := tt.mockService()
 
 			// setup router w/ mock db and logger
 			router := gin.Default()
-			router.POST("/cart", func(c *gin.Context) {AddToCart(c, db, sugar)})
+			handler := NewCartHandler(mockService, sugar)
+			router.POST("/cart", handler.AddToCart)
 
 			// convert request payload to json
 			jsonData, err := json.Marshal(tt.request)
@@ -271,11 +239,6 @@ func TestAddToCart(t *testing.T) {
 
 				assert.Equal(t, wantLog.Entry.Level, allLogs[i].Entry.Level, "Log levels do not match")
 				assert.Contains(t, allLogs[i].Entry.Message, wantLog.Entry.Message, "Log messages do not contain expected text")
-			}
-
-			// Make sure all mock expectations were met
-			if err := mock.ExpectationsWereMet(); err != nil {
-				t.Errorf("there were unfulfilled expectations: %s", err)
 			}
 		})
 	}

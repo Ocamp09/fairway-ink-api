@@ -11,6 +11,10 @@ import (
 )
 
 func RegisterRoutes(r *gin.Engine, db *sql.DB, logger *zap.SugaredLogger, stripe *services.StripePaymentService) {
+	cartService := services.NewCartService(db)
+
+	cartHandler := handlers.NewCartHandler(cartService, logger)
+	
 	r.GET("/designs", handlers.ListDesigns)
 	r.GET("/designs/:filename", handlers.GetDesign)
 	r.GET("/output/:ssid/:filename", handlers.OutputSTL)
@@ -18,9 +22,7 @@ func RegisterRoutes(r *gin.Engine, db *sql.DB, logger *zap.SugaredLogger, stripe
 	r.POST("/generate", func(c *gin.Context) {
 		handlers.GenerateStl(c, db, logger)
 	})
-	r.POST("/cart", func(c *gin.Context) {
-		handlers.AddToCart(c, db, logger)
-	})
+	r.POST("/cart", cartHandler.AddToCart)
 	r.POST("/create-payment-intent", func(c *gin.Context) {
 		handlers.CreatePaymentIntent(c, logger, stripe)
 	})

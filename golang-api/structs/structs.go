@@ -26,3 +26,10 @@ type ShippingInfo struct {
 	Carrier           string           `json:"carrier"`
 	EstimatedDelivery int              `json:"expected_delivery"`
 }
+
+type CartItem struct {
+	SSID         string `json:"ssid" binding:"required"`
+	StlURL       string `json:"stlUrl" binding:"required"`
+	Quantity     int    `json:"quantity" binding:"required"`
+	TemplateType string `json:"templateType" binding:"required"`
+}
