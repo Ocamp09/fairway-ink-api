@@ -9,12 +9,25 @@ import (
 	"github.com/ocamp09/fairway-ink-api/golang-api/config"
 	"github.com/ocamp09/fairway-ink-api/golang-api/services"
 	"github.com/ocamp09/fairway-ink-api/golang-api/structs"
+	"go.uber.org/zap"
 
 	"github.com/stripe/stripe-go/v75"
 	"github.com/stripe/stripe-go/v75/paymentintent"
 )
 
-func HandleOrder(c *gin.Context) {
+type OrderHandler struct {
+	Service services.OrderService
+	Logger *zap.SugaredLogger
+}
+
+func NewOrderHandler(service services.OrderService, logger *zap.SugaredLogger) *OrderHandler{
+	return &OrderHandler{
+		Service: service,
+		Logger: logger,
+	}
+}
+
+func (h *OrderHandler) HandleOrder(c *gin.Context) {
 	// Parse JSON request body
 	var requestBody struct {
 		PaymentIntentID  string `json:"intent_id"`
@@ -67,7 +80,7 @@ func HandleOrder(c *gin.Context) {
 		Address: requestBody.Address,
 	}
 
-	orderInfo, err = services.ProcessOrder(&orderInfo)
+	orderInfo, err = h.Service.ProcessOrder(&orderInfo)
 	if err != nil {
 		print(fmt.Sprintf("Unable to process order: %v", err))
 		c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("Unable to process order: %v", err)})

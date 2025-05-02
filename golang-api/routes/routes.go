@@ -15,12 +15,14 @@ func RegisterRoutes(r *gin.Engine, db *sql.DB, logger *zap.SugaredLogger, stripe
 	generateService := services.NewGenerateStlService(db)
 	designService := services.NewDesignService("../designs", "https://api.fairway-ink.com")
 	outputService := services.NewDesignService("./output", "https://api.fairway-ink.com")
+	orderService := services.NewOrderService(db)
 
 	cartHandler := handlers.NewCartHandler(cartService, logger)
 	generateHandler := handlers.NewGenerateHandler(generateService, logger)
 	designHandler := handlers.NewDesignHandler(designService, logger)
 	outputHandler := handlers.NewDesignHandler(outputService, logger)
-	
+	orderHandler := handlers.NewOrderHandler(orderService, logger)
+
 	r.GET("/designs", designHandler.ListDesigns)
 	r.GET("/designs/:filename", designHandler.GetDesign)
 	r.GET("/output/:ssid/:filename", outputHandler.GetDesign)
@@ -30,5 +32,5 @@ func RegisterRoutes(r *gin.Engine, db *sql.DB, logger *zap.SugaredLogger, stripe
 	r.POST("/create-payment-intent", func(c *gin.Context) {
 		handlers.CreatePaymentIntent(c, logger, stripe)
 	})
-	r.POST("/handle-order", handlers.HandleOrder)
+	r.POST("/handle-order", orderHandler.HandleOrder)
 }

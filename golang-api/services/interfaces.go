@@ -20,3 +20,7 @@ type DesignService interface {
 	GetFilePath(filename string) string
 	FileExists(path string) bool
 }
+
+type OrderService interface {
+	ProcessOrder(orderInfo *structs.OrderInfo) (structs.OrderInfo, error)
+}

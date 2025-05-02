@@ -1,6 +1,7 @@
 package services
 
 import (
+	"database/sql"
 	"fmt"
 	"log"
 	"os"
@@ -14,14 +15,22 @@ import (
 	"github.com/ocamp09/fairway-ink-api/golang-api/structs"
 )
 
-func ProcessOrder(orderInfo *structs.OrderInfo) (structs.OrderInfo, error) {
+type OrderServiceImpl struct {
+	DB *sql.DB
+}
+
+func NewOrderService(db *sql.DB) OrderService {
+	return &OrderServiceImpl{DB: db}
+}
+
+func (os *OrderServiceImpl) ProcessOrder(orderInfo *structs.OrderInfo) (structs.OrderInfo, error) {
 	// Extract order details
 	total := float64(orderInfo.Amount) / 100.0
 	paymentStatus := orderInfo.PaymentStatus
 
 	db, err := config.ConnectDB()
 	if err != nil {
-		return *orderInfo, fmt.Errorf("Failed to get DB connection: %w", err)
+		return *orderInfo, fmt.Errorf("failed to get DB connection: %w", err)
 	}
 
 	defer db.Close()
