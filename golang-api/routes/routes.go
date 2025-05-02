@@ -15,7 +15,7 @@ func RegisterRoutes(r *gin.Engine, db *sql.DB, logger *zap.SugaredLogger, stripe
 	generateService := services.NewGenerateStlService(db)
 
 	cartHandler := handlers.NewCartHandler(cartService, logger)
-	generateHandler := handlers.NewGenerateHandler(generateService, logger, db)
+	generateHandler := handlers.NewGenerateHandler(generateService, logger)
 	
 	r.GET("/designs", handlers.ListDesigns)
 	r.GET("/designs/:filename", handlers.GetDesign)

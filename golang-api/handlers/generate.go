@@ -1,8 +1,6 @@
 package handlers
 
 import (
-	"database/sql"
-
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -15,7 +13,7 @@ type GenerateHandler struct {
 	Logger *zap.SugaredLogger
 }
 
-func NewGenerateHandler(service services.GenerateStlService, logger *zap.SugaredLogger, db *sql.DB) *GenerateHandler {
+func NewGenerateHandler(service services.GenerateStlService, logger *zap.SugaredLogger) *GenerateHandler {
 	return &GenerateHandler{
 		Service: service,
 		Logger: logger,
@@ -25,16 +23,15 @@ func NewGenerateHandler(service services.GenerateStlService, logger *zap.Sugared
 func (h *GenerateHandler) GenerateStl(c *gin.Context) {
 	// Get session id from headers
 	ssid := c.DefaultPostForm("ssid", "")
-
 	if ssid == "" {
-		services.ReturnError(c, h.Logger, "No session ID provided", nil)
+		services.ReturnError(c, h.Logger, "no session ID provided", nil)
 		return
 	}
 
 	// Get SVG file from the form
 	file, handler, err := c.Request.FormFile("svg")
 	if err != nil {
-		services.ReturnError(c, h.Logger, "No SVG file provided", nil)
+		services.ReturnError(c, h.Logger, "no SVG file provided", nil)
 		return
 	}
 	defer file.Close()
@@ -49,7 +46,8 @@ func (h *GenerateHandler) GenerateStl(c *gin.Context) {
 
 	stlURL, err := h.Service.GenerateStl(ssid, stlKey, file, filename, scale, h.Logger)
 	if err != nil {
-		services.ReturnError(c, h.Logger, "Unable to generate STL: ", err)
+		services.ReturnError(c, h.Logger, "unable to generate STL: ", err)
+		return
 	}
 
 	// Return success with the STL URL
