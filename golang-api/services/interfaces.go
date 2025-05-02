@@ -14,3 +14,9 @@ type CartService interface {
 type GenerateStlService interface {
 	GenerateStl(ssid string, stlKey string, file io.Reader, filename string, scale string, logger *zap.SugaredLogger) (string, error)
 }
+
+type DesignService interface {
+	ListDesigns() ([]string, error)
+	GetFilePath(filename string) string
+	FileExists(path string) bool
+}
