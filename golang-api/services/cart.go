@@ -2,7 +2,7 @@ package services
 
 import (
 	"database/sql"
-	"errors"
+	"fmt"
 
 	"github.com/ocamp09/fairway-ink-api/golang-api/structs"
 )
@@ -18,7 +18,7 @@ func NewCartService(db *sql.DB) CartService {
 func (cs *CartServiceImpl) InsertCartItem(item structs.CartItem) error {
 	tx, err := cs.DB.Begin()
 	if err != nil {
-		return errors.New("transaction failed: " + err.Error())
+		return fmt.Errorf("transaction failed: %w", err)
 	}
 	defer func() {
 		if err != nil {
@@ -29,12 +29,12 @@ func (cs *CartServiceImpl) InsertCartItem(item structs.CartItem) error {
 	query := `INSERT INTO cart_items (browser_ssid, stl_url, quantity, template_type) VALUES (?, ?, ?, ?)`
 	_, err = tx.Exec(query, item.SSID, item.StlURL, item.Quantity, item.TemplateType)
 	if err != nil {
-		return errors.New("insert failed: " + err.Error())
+		return fmt.Errorf("insert failed: %w", err)
 	}
 
 	err = tx.Commit()
 	if err != nil {
-		return errors.New("commit failed: " + err.Error())
+		return fmt.Errorf("commit failed: %w", err)
 	}
 
 	return nil
