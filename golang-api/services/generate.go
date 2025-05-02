@@ -2,7 +2,6 @@ package services
 
 import (
 	"database/sql"
-	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -24,68 +23,16 @@ func NewGenerateStlService(db *sql.DB) GenerateStlService {
 	return &GenerateStlServiceImpl{DB: db}
 }
 
-func (s *GenerateStlServiceImpl) CleanOldSTL(ssid string, stlKey string, filename string) error{
-	tx, err := s.DB.Begin()
-	if err != nil {
-		return errors.New("transaction failed: " + err.Error())
-
-	}
-
-	// Get cart items from DB
-	var cartStls []string
-	query := `SELECT stl_url FROM cart_items WHERE browser_ssid = ?`
-	rows, err := tx.Query(query, ssid)
-	if err != nil {
-		return errors.New("Unable to fetch cart items: " + err.Error())
-	}
-	defer rows.Close()
-
-	for rows.Next() {
-		var stlURL string
-		if err := rows.Scan(&stlURL); err != nil {
-			return errors.New("Unable to find any cart items: " + err.Error())
-		}
-		cartStls = append(cartStls, stlURL)
-	}
-
-	// remove old SVG's not in cart
-	key, err := strconv.Atoi(stlKey)
-	if err != nil {
-		return errors.New("Error converting STL key to int: " + err.Error())
-	}
-
-	if key > 0 {
-		prevKey := key - 1
-			prevFile := fmt.Sprintf("%d%s.stl", prevKey, filename[strings.Index(filename, "g"):])
-			filePath := filepath.Join("output", ssid, prevFile)
-			if _, err := os.Stat(filePath); err == nil {
-				fileUrl := fmt.Sprintf("https://api.fairway-ink.com/output/%s/%s", ssid, prevFile)
-				if !slices.Contains(cartStls, fileUrl) {
-					os.Remove(filePath)
-				}
-			}
-	}
-
-	return nil
-}
-
 // GenerateStl processes the SVG file, interacts with the database, and runs Blender to generate the STL file
-func (s *GenerateStlServiceImpl) GenerateStl(ssid string, file io.Reader, filename string, scale string, logger *zap.SugaredLogger) (string, error) {
-	// Save the SVG file
-	outputDir := filepath.Join("output", ssid)
-	if err := os.MkdirAll(outputDir, os.ModePerm); err != nil {
-		return "", fmt.Errorf("failed to create output directory: %w", err)
+func (s *GenerateStlServiceImpl) GenerateStl(ssid string, stlKey string, file io.Reader, filename string, scale string, logger *zap.SugaredLogger) (string, error) {
+	// Clean old files first
+	if err := cleanOldSTL(ssid, stlKey, filename, s.DB); err != nil {
+		return "", fmt.Errorf("failed to clean old STL: %w", err)
 	}
 
-	outputSvgPath := filepath.Join(outputDir, filename)
-	outFile, err := os.Create(outputSvgPath)
+	outputSvgPath, outputDir, err := saveSVG(file, filename, ssid)
 	if err != nil {
-		return "", fmt.Errorf("failed to create SVG file: %w", err)
-	}
-	defer outFile.Close()
-
-	if _, err := io.Copy(outFile, file); err != nil {
-		return "", fmt.Errorf("failed to save SVG file: %w", err)
+		return "", fmt.Errorf("failed to save svg: %w", err)
 	}
 
 	// Execute Blender to generate the STL
@@ -124,6 +71,51 @@ func (s *GenerateStlServiceImpl) GenerateStl(ssid string, file io.Reader, filena
 	return stlURL, nil
 }
 
+func cleanOldSTL(ssid string, stlKey string, filename string, db *sql.DB) error{
+	tx, err := db.Begin()
+	if err != nil {
+		return fmt.Errorf("transaction failed: %w", err)
+
+	}
+
+	// Get cart items from DB
+	var cartStls []string
+	query := `SELECT stl_url FROM cart_items WHERE browser_ssid = ?`
+	rows, err := tx.Query(query, ssid)
+	if err != nil {
+		return fmt.Errorf("unable to fetch cart items: %w", err)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var stlURL string
+		if err := rows.Scan(&stlURL); err != nil {
+			return fmt.Errorf("unable to find any cart items: %w", err)
+		}
+		cartStls = append(cartStls, stlURL)
+	}
+
+	// remove old SVG's not in cart
+	key, err := strconv.Atoi(stlKey)
+	if err != nil {
+		return fmt.Errorf("error converting STL key to int: %w", err)
+	}
+
+	if key > 0 {
+		prevKey := key - 1
+		prevFile := fmt.Sprintf("%d%s.stl", prevKey, filename[strings.Index(filename, "g"):])
+		filePath := filepath.Join("output", ssid, prevFile)
+		if _, err := os.Stat(filePath); err == nil {
+			fileUrl := fmt.Sprintf("https://api.fairway-ink.com/output/%s/%s", ssid, prevFile)
+			if !slices.Contains(cartStls, fileUrl) {
+				os.Remove(filePath)
+			}
+		}
+	}
+
+	return nil
+}
+
 // getBlenderPath returns the correct path for Blender depending on the operating system
 func getBlenderPath() string {
 	blenderPath := "/home/ec2-user/blender-4.3.2-linux-x64/blender"
@@ -133,4 +125,25 @@ func getBlenderPath() string {
 		blenderPath = `C:\\Program Files\\Blender Foundation\\Blender 4.3\\blender.exe`
 	}
 	return blenderPath
+}
+
+func saveSVG(file io.Reader, filename string, ssid string) (string, string, error) {
+	// Save the SVG file
+	outputDir := filepath.Join("output", ssid)
+	if err := os.MkdirAll(outputDir, os.ModePerm); err != nil {
+		return "", "", fmt.Errorf("failed to create output directory: %w", err)
+	}
+
+	outputSvgPath := filepath.Join(outputDir, filename)
+	outFile, err := os.Create(outputSvgPath)
+	if err != nil {
+		return "", "", fmt.Errorf("failed to create SVG file: %w", err)
+	}
+	defer outFile.Close()
+
+	if _, err := io.Copy(outFile, file); err != nil {
+		return "", "", fmt.Errorf("failed to save SVG file: %w", err)
+	}
+
+	return strings.ReplaceAll(outputSvgPath, "\\", "/"), outputDir, nil
 }

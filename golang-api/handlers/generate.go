@@ -46,12 +46,8 @@ func (h *GenerateHandler) GenerateStl(c *gin.Context) {
 
 	stlKey := c.DefaultPostForm("stlKey", "-1")
 
-	err = h.Service.CleanOldSTL(ssid, stlKey, filename)
-	if err != nil {
-		services.ReturnError(c, h.Logger, "Unable to clean old files: ", err)
-	}
 
-	stlURL, err := h.Service.GenerateStl(ssid, file, filename, scale, h.Logger)
+	stlURL, err := h.Service.GenerateStl(ssid, stlKey, file, filename, scale, h.Logger)
 	if err != nil {
 		services.ReturnError(c, h.Logger, "Unable to generate STL: ", err)
 	}

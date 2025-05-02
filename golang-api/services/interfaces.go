@@ -12,6 +12,5 @@ type CartService interface {
 }
 
 type GenerateStlService interface {
-	GenerateStl(ssid string, file io.Reader, filename string, scale string, logger *zap.SugaredLogger) (string, error)
-	CleanOldSTL(ssid string, stlKey string, filename string) error
+	GenerateStl(ssid string, stlKey string, file io.Reader, filename string, scale string, logger *zap.SugaredLogger) (string, error)
 }
