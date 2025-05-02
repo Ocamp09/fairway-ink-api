@@ -71,11 +71,10 @@ func (s *GenerateStlServiceImpl) GenerateStl(ssid string, stlKey string, file io
 	return stlURL, nil
 }
 
-func cleanOldSTL(ssid string, stlKey string, filename string, db *sql.DB) error{
+func cleanOldSTL(ssid string, stlKey string, filename string, db *sql.DB) error {
 	tx, err := db.Begin()
 	if err != nil {
 		return fmt.Errorf("transaction failed: %w", err)
-
 	}
 
 	// Get cart items from DB
@@ -90,7 +89,7 @@ func cleanOldSTL(ssid string, stlKey string, filename string, db *sql.DB) error{
 	for rows.Next() {
 		var stlURL string
 		if err := rows.Scan(&stlURL); err != nil {
-			return fmt.Errorf("unable to find any cart items: %w", err)
+			return fmt.Errorf("unable to find items stlUrl: %w", err)
 		}
 		cartStls = append(cartStls, stlURL)
 	}
