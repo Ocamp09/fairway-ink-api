@@ -16,20 +16,11 @@ import (
 	"go.uber.org/zap/zaptest/observer"
 )
 
-type RequestPayload struct {
+type CartPayload struct {
 	SSID string `json:"ssid"`
 	StlURL string `json:"stlUrl"`
 	Quantity int `json:"quantity"`
 	TemplateType string `json:"templateType"`
-}
-
-type TestFields struct {
-	desc string
-	request RequestPayload
-	mockService func() *MockCartService
-	wantStatus int
-	wantSuccess bool
-	wantLogs []observer.LoggedEntry
 }
 
 type MockCartService struct {
@@ -45,10 +36,17 @@ func (m *MockCartService) InsertCartItem(item structs.CartItem) error {
 }
 
 func TestAddToCart(t *testing.T) {
-	tests := []TestFields{ 
+	tests := []struct{
+		desc string
+		request CartPayload
+		mockService func() *MockCartService
+		wantStatus int
+		wantSuccess bool
+		wantLogs []observer.LoggedEntry	
+	}{ 
 		{
 			desc: "Missing ssid",
-			request: RequestPayload{
+			request: CartPayload{
 				StlURL: "example.com/test.stl",
 				Quantity: 1,
 				TemplateType: "custom",
@@ -69,7 +67,7 @@ func TestAddToCart(t *testing.T) {
 		},
 		{
 			desc: "Missing stl url",
-			request: RequestPayload{
+			request: CartPayload{
 				SSID: "1234",
 				Quantity: 1,
 				TemplateType: "custom",
@@ -90,7 +88,7 @@ func TestAddToCart(t *testing.T) {
 		},
 		{
 			desc: "Missing quantity",
-			request: RequestPayload{
+			request: CartPayload{
 				SSID: "1234",
 				StlURL: "example.com/test.stl",
 				TemplateType: "custom",
@@ -111,7 +109,7 @@ func TestAddToCart(t *testing.T) {
 		},
 		{
 			desc: "Missing template type",
-			request: RequestPayload{
+			request: CartPayload{
 				SSID: "1234",
 				StlURL: "example.com/test.stl",
 				Quantity: 1,
@@ -132,7 +130,7 @@ func TestAddToCart(t *testing.T) {
 		},
 		{
 			desc: "failed service call",
-			request: RequestPayload{
+			request: CartPayload{
 				SSID: "1234",
 				StlURL: "example.com/test.stl",
 				Quantity: 1,
@@ -158,7 +156,7 @@ func TestAddToCart(t *testing.T) {
 		},
 		{
 			desc: "successful cart upload",
-			request: RequestPayload{
+			request: CartPayload{
 				SSID: "1234",
 				StlURL: "example.com/test.stl",
 				Quantity: 1,
