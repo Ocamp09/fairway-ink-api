@@ -26,7 +26,6 @@ func NewOrderService(db *sql.DB) OrderService {
 func (os *OrderServiceImpl) ProcessOrder(orderInfo *structs.OrderInfo) (structs.OrderInfo, error) {
 	// Extract order details
 	total := float64(orderInfo.Amount) / 100.0
-	paymentStatus := orderInfo.PaymentStatus
 
 	tx, err := os.DB.Begin()
 	if err != nil {
@@ -41,83 +40,26 @@ func (os *OrderServiceImpl) ProcessOrder(orderInfo *structs.OrderInfo) (structs.
 		}
 	}()
 
-	// Insert into `orders` table
-	orderQuery := `
-		INSERT INTO orders (
-			purchaser_email, purchaser_name, address_1, address_2, city, state, zipcode, country,
-			browser_ssid, stripe_ssid, total_amount, payment_status
-		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-	`
-	result, err := tx.Exec(
-		orderQuery,
-		orderInfo.Email, orderInfo.Name, orderInfo.Address.Line1, orderInfo.Address.Line2, orderInfo.Address.City, orderInfo.Address.State, orderInfo.Address.PostalCode, orderInfo.Address.Country,
-		orderInfo.BrowserSSID, orderInfo.PaymentIntentID, total, paymentStatus,
-	)
+	orderID, err := os.insertOrder(tx, orderInfo, total)
 	if err != nil {
-		return *orderInfo, fmt.Errorf("failed to insert order into database: %w", err)
+		return *orderInfo, err
 	}
 
-	// Get inserted order ID
-	orderID, err := result.LastInsertId()
+	shipment, shipInfo, err := os.buyShippingLabel(orderInfo)
 	if err != nil {
-		return *orderInfo, fmt.Errorf("failed to retrieve order ID: %w", err)
-	}
-
-	// Generate shipping label
-	shipClient := easypost.New(config.EASYPOST_KEY)
-	toAddress := &easypost.Address{
-		Name:    orderInfo.Name,
-		Street1: orderInfo.Address.Line1,
-		Street2: orderInfo.Address.Line2,
-		City:    orderInfo.Address.City,
-		State:   orderInfo.Address.State,
-		Zip:     orderInfo.Address.PostalCode,
-		Country: orderInfo.Address.Country,
-	}
-
-	parcel := &easypost.Parcel{Length: 8, Width: 7, Height: 1.25, Weight: 15}
-	shipment, err := shipClient.CreateShipment(&easypost.Shipment{FromAddress: &config.SENDER_ADDRESS, ToAddress: toAddress, Parcel: parcel})
-	if err != nil {
-		return *orderInfo, fmt.Errorf("failed to create shipping label: %w", err)
-	}
-
-	lowestShipping, err := shipClient.LowestShipmentRate(shipment)
-	if err != nil {
-		return *orderInfo, fmt.Errorf("failed to get lowest shipping rate: %w", err)
-	}
-
-	shipment, err = shipClient.BuyShipment(shipment.ID, &easypost.Rate{ID: lowestShipping.ID}, "")
-	if err != nil {
-		return *orderInfo, fmt.Errorf("failed to buy shipping label: %w", err)
-	}
-
-	shipInfo := structs.ShippingInfo{
-		TrackingNumber: shipment.TrackingCode,
-		ToAddress: *toAddress,
-		Carrier:  shipment.SelectedRate.Carrier,
-		EstimatedDelivery: shipment.SelectedRate.EstDeliveryDays,
+		return *orderInfo, err
 	}
 
 	orderInfo.ShippingInfo = shipInfo
 
-	// Insert into `shipping` table
-	shipQuery := `INSERT INTO shipping (order_id, easypost_id, carrier, service, tracking_number, ship_rate, shipping_label_url) VALUES(?, ?, ?, ?, ?, ?, ?)`
-	_, err = tx.Exec(shipQuery, orderID, shipment.ID, shipment.SelectedRate.Carrier, shipment.SelectedRate.Service, shipment.TrackingCode, shipment.SelectedRate.Rate, shipment.PostageLabel.LabelURL)
+	err = os.insertShipping(tx, orderID, shipment)
 	if err != nil {
-		return *orderInfo, fmt.Errorf("failed to insert shipping info: %w", err)
+		return *orderInfo, err
 	}
-
-	// Insert print job
-	jobQuery := `INSERT INTO print_jobs (order_id, status) VALUES (?, ?)`
-	jobResult, err := tx.Exec(jobQuery, orderID, "queued")
+	
+	jobID, err := os.insertJob(tx, orderID)
 	if err != nil {
-		return *orderInfo, fmt.Errorf("failed to insert print job: %w", err)
-	}
-
-	// Get the inserted job ID
-	jobID, err := jobResult.LastInsertId()
-	if err != nil {
-		return *orderInfo, fmt.Errorf("failed to retrieve job ID: %w", err)
+		return *orderInfo, err
 	}
 
 	// Upload STL files and associate with job
@@ -136,15 +78,10 @@ func (os *OrderServiceImpl) ProcessOrder(orderInfo *structs.OrderInfo) (structs.
 		}
 
 		// Upload STL file to S3
-		splitUrl := strings.Split(stlURL, "/")
-		filename := splitUrl[len(splitUrl)-1]
+		filename := getFilenameFromURL(stlURL)
+		dir := getOutputDir(orderInfo.BrowserSSID, filename)
 		s3Key := fmt.Sprintf("%s/%s", orderInfo.BrowserSSID, filename)
-		dir := "./output/" + orderInfo.BrowserSSID + "/"
-
-		if strings.Contains(filename, "design") {
-			dir = "../designs/"
-		}
-
+		
 		if err := uploadToS3(dir + filename, s3Key); err != nil {
 			return *orderInfo, fmt.Errorf("failed to upload STL file: %w", err)
 		}
@@ -161,6 +98,99 @@ func (os *OrderServiceImpl) ProcessOrder(orderInfo *structs.OrderInfo) (structs.
 	}
 
 	return *orderInfo, nil
+}
+
+func (os *OrderServiceImpl) insertOrder(tx *sql.Tx, orderInfo *structs.OrderInfo, total float64) (int64, error) {
+	// Insert into `orders` table
+	orderQuery := `
+		INSERT INTO orders (
+			purchaser_email, purchaser_name, address_1, address_2, city, state, zipcode, country,
+			browser_ssid, stripe_ssid, total_amount, payment_status
+		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+	`
+	result, err := tx.Exec(
+		orderQuery,
+		orderInfo.Email, orderInfo.Name, orderInfo.Address.Line1, orderInfo.Address.Line2, orderInfo.Address.City, orderInfo.Address.State, orderInfo.Address.PostalCode, orderInfo.Address.Country,
+		orderInfo.BrowserSSID, orderInfo.PaymentIntentID, total, orderInfo.PaymentStatus,
+	)
+	if err != nil {
+		return -1, fmt.Errorf("failed to insert order into database: %w", err)
+	}
+
+	// Get inserted order ID
+	orderID, err := result.LastInsertId()
+	if err != nil {
+		return -1, fmt.Errorf("failed to retrieve order ID: %w", err)
+	}
+
+	return orderID, nil
+}
+
+func (os *OrderServiceImpl) buyShippingLabel(orderInfo *structs.OrderInfo) (*easypost.Shipment, structs.ShippingInfo, error) {
+	// Generate shipping label
+	shipClient := easypost.New(config.EASYPOST_KEY)
+	toAddress := &easypost.Address{
+		Name:    orderInfo.Name,
+		Street1: orderInfo.Address.Line1,
+		Street2: orderInfo.Address.Line2,
+		City:    orderInfo.Address.City,
+		State:   orderInfo.Address.State,
+		Zip:     orderInfo.Address.PostalCode,
+		Country: orderInfo.Address.Country,
+	}
+
+	parcel := &easypost.Parcel{Length: 8, Width: 7, Height: 1.25, Weight: 15}
+	shipment, err := shipClient.CreateShipment(&easypost.Shipment{FromAddress: &config.SENDER_ADDRESS, ToAddress: toAddress, Parcel: parcel})
+	if err != nil {
+		return nil, structs.ShippingInfo{}, fmt.Errorf("failed to create shipping label: %w", err)
+	}
+
+	lowestShipping, err := shipClient.LowestShipmentRate(shipment)
+	if err != nil {
+		return nil, structs.ShippingInfo{}, fmt.Errorf("failed to get lowest shipping rate: %w", err)
+	}
+
+	shipment, err = shipClient.BuyShipment(shipment.ID, &easypost.Rate{ID: lowestShipping.ID}, "")
+	if err != nil {
+		return nil, structs.ShippingInfo{}, fmt.Errorf("failed to buy shipping label: %w", err)
+	}
+
+	shipInfo := structs.ShippingInfo{
+		TrackingNumber: shipment.TrackingCode,
+		ToAddress: *toAddress,
+		Carrier:  shipment.SelectedRate.Carrier,
+		EstimatedDelivery: shipment.SelectedRate.EstDeliveryDays,
+	}
+
+	return shipment, shipInfo, nil
+}
+
+func (os *OrderServiceImpl) insertShipping(tx *sql.Tx, orderID int64, shipment *easypost.Shipment) (error) {
+	// Insert into `shipping` table
+	shipQuery := `INSERT INTO shipping (order_id, easypost_id, carrier, service, tracking_number, ship_rate, shipping_label_url) VALUES(?, ?, ?, ?, ?, ?, ?)`
+	_, err := tx.Exec(shipQuery, orderID, shipment.ID, shipment.SelectedRate.Carrier, shipment.SelectedRate.Service, shipment.TrackingCode, shipment.SelectedRate.Rate, shipment.PostageLabel.LabelURL)
+	if err != nil {
+		return fmt.Errorf("failed to insert shipping info: %w", err)
+	}
+
+	return nil
+}
+
+func (os *OrderServiceImpl) insertJob(tx *sql.Tx, orderID int64) (int64, error) {
+	// Insert print job
+	jobQuery := `INSERT INTO print_jobs (order_id, status) VALUES (?, ?)`
+	jobResult, err := tx.Exec(jobQuery, orderID, "queued")
+	if err != nil {
+		return -1, fmt.Errorf("failed to insert print job: %w", err)
+	}
+
+	// Get the inserted job ID
+	jobID, err := jobResult.LastInsertId()
+	if err != nil {
+		return -1, fmt.Errorf("failed to retrieve job ID: %w", err)
+	}
+
+	return jobID, nil
 }
 
 func uploadToS3(localPath, s3Key string) error {
@@ -194,4 +224,17 @@ func uploadToS3(localPath, s3Key string) error {
 
 	log.Printf("Successfully uploaded %s to S3 with key %s\n", localPath, s3Key)
 	return nil
+}
+
+func getFilenameFromURL(url string) string {
+	parts := strings.Split(url, "/")
+	return parts[len(parts)-1]
+}
+
+func getOutputDir(ssid string, filename string) string {
+	dir := "./output/" + ssid + "/"
+	if strings.Contains(filename, "design") {
+		dir = "../designs/"
+	}
+	return dir
 }
