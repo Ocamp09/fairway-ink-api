@@ -9,15 +9,17 @@ type OrderInfo struct {
 	PaymentStatus   string  `json:"payment_status"`
 	Name            string  `json:"name"`
 	Email           string  `json:"email"`
-	Address         struct {
-		Line1      string `json:"line1"`
+	Address       AddressInfo
+	ShippingInfo ShippingInfo `json:"shipping_info"`
+}
+
+type AddressInfo struct {
+	Line1      string `json:"line1"`
 		Line2      string `json:"line2"`
 		City       string `json:"city"`
 		State      string `json:"state"`
 		PostalCode string `json:"postal_code"`
 		Country    string `json:"country"`
-	}
-	ShippingInfo ShippingInfo `json:"shipping_info"`
 }
 
 type ShippingInfo struct {
