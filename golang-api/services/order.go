@@ -43,13 +43,7 @@ func (os *OrderServiceImpl) ProcessOrder(orderInfo *structs.OrderInfo) (structs.
 		return *orderInfo, fmt.Errorf("failed to begin transaction: %w", err)
 	}
 
-	defer func() {
-		if err != nil {
-			tx.Rollback()
-		} else {
-
-		}
-	}()
+	defer tx.Rollback()
 
 	orderID, err := os.insertOrderFunc(tx, orderInfo, total)
 	if err != nil {

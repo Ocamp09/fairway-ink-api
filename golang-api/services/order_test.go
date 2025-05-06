@@ -121,6 +121,19 @@ func TestProcessOrder(t *testing.T) {
             },
             wantErr: false,
         },
+		{
+            desc: "failed to start sql transaction",
+            orderInfo: structs.OrderInfo{
+                PaymentIntentID: "pi_123",
+                BrowserSSID:     "ssid123",
+            },
+            setupMocks: func(svc *OrderServiceImpl) {},
+            mockDB: func(mock sqlmock.Sqlmock) {
+                mock.ExpectBegin().WillReturnError(errors.New("transaction error"))
+            },
+            wantErr:    true,
+            wantErrMsg: "failed to begin transaction",
+        },
         {
             desc: "failed to insert order",
             orderInfo: structs.OrderInfo{
@@ -139,7 +152,207 @@ func TestProcessOrder(t *testing.T) {
             wantErr:    true,
             wantErrMsg: "database error",
         },
-        // Add more test cases as needed
+		{
+			desc: "failed to get shipping label",
+            orderInfo: structs.OrderInfo{
+                PaymentIntentID: "pi_123",
+                BrowserSSID:     "ssid123",
+            },
+            setupMocks: func(svc *OrderServiceImpl) {
+                // Mock insertOrder
+                svc.insertOrderFunc = func(tx *sql.Tx, orderInfo *structs.OrderInfo, total float64) (int64, error) {
+                    return 1, nil
+                }
+
+				svc.buyShippingLabelFunc = func(orderInfo *structs.OrderInfo) (*easypost.Shipment, structs.ShippingInfo, error) {
+					return nil, structs.ShippingInfo{}, errors.New("failed to buy shipping label")
+				}
+            },
+            mockDB: func(mock sqlmock.Sqlmock) {
+                mock.ExpectBegin()
+                mock.ExpectRollback()
+            },
+            wantErr:    true,
+            wantErrMsg: "failed to buy shipping label",
+        },
+		{
+			desc: "failed to insert shipping info",
+            orderInfo: structs.OrderInfo{
+                PaymentIntentID: "pi_123",
+                BrowserSSID:     "ssid123",
+            },
+            setupMocks: func(svc *OrderServiceImpl) {
+                // Mock insertOrder
+                svc.insertOrderFunc = func(tx *sql.Tx, orderInfo *structs.OrderInfo, total float64) (int64, error) {
+                    return 1, nil
+                }
+
+				// Mock buyShippingLabel
+                svc.buyShippingLabelFunc = func(orderInfo *structs.OrderInfo) (*easypost.Shipment, structs.ShippingInfo, error) {
+                    return &easypost.Shipment{
+                            TrackingCode: "TRACK123",
+                            SelectedRate: &easypost.Rate{
+                                Carrier:        "USPS",
+                                EstDeliveryDays: 2,
+                            },
+                        }, 
+                        structs.ShippingInfo{
+                            TrackingNumber: "TRACK123",
+                            Carrier:        "USPS",
+                            EstimatedDelivery: 2,
+                        }, 
+                        nil
+                }
+                
+                // Mock insertShipping
+                svc.insertShippingFunc = func(tx *sql.Tx, orderID int64, shipment *easypost.Shipment) error {
+                    return errors.New("failed to insert shipping info")
+                }
+            },
+            mockDB: func(mock sqlmock.Sqlmock) {
+                mock.ExpectBegin()
+                mock.ExpectRollback()
+            },
+            wantErr:    true,
+            wantErrMsg: "failed to insert shipping info",
+        },
+		{
+            desc: "job insert fail",
+            orderInfo: structs.OrderInfo{
+                PaymentIntentID: "pi_123",
+                BrowserSSID:     "ssid123",
+                Amount:         1000, // $10.00
+                PaymentStatus:   "requires_capture",
+                Name:           "John Doe",
+                Email:          "test@example.com",
+                Address: structs.AddressInfo{
+                    Line1:      "123 Main St",
+                    City:       "Boston",
+                    State:      "MA",
+                    PostalCode: "02108",
+                    Country:    "US",
+                },
+            },
+            setupMocks: func(svc *OrderServiceImpl) {
+                // Mock insertOrder
+                svc.insertOrderFunc = func(tx *sql.Tx, orderInfo *structs.OrderInfo, total float64) (int64, error) {
+                    return 1, nil
+                }
+                
+                // Mock buyShippingLabel
+                svc.buyShippingLabelFunc = func(orderInfo *structs.OrderInfo) (*easypost.Shipment, structs.ShippingInfo, error) {
+                    return &easypost.Shipment{
+                            TrackingCode: "TRACK123",
+                            SelectedRate: &easypost.Rate{
+                                Carrier:        "USPS",
+                                EstDeliveryDays: 2,
+                            },
+                        }, 
+                        structs.ShippingInfo{
+                            TrackingNumber: "TRACK123",
+                            Carrier:        "USPS",
+                            EstimatedDelivery: 2,
+                        }, 
+                        nil
+                }
+                
+                // Mock insertShipping
+                svc.insertShippingFunc = func(tx *sql.Tx, orderID int64, shipment *easypost.Shipment) error {
+                    return nil
+                }
+                
+                // Mock insertJob
+                svc.insertJobFunc = func(tx *sql.Tx, orderID int64) (int64, error) {
+                    return -1, errors.New("failed to insert job")
+                }
+            },
+            mockDB: func(mock sqlmock.Sqlmock) {
+				mock.ExpectBegin()
+				mock.ExpectRollback()
+			},
+            wantErr: true,
+			wantErrMsg: "failed to insert job",
+        },
+		{
+            desc: "failed to retrieve cart items",
+            orderInfo: structs.OrderInfo{
+                PaymentIntentID: "pi_123",
+                BrowserSSID:     "ssid123",
+                Amount:         1000, // $10.00
+                PaymentStatus:   "requires_capture",
+                Name:           "John Doe",
+                Email:          "test@example.com",
+                Address: structs.AddressInfo{
+                    Line1:      "123 Main St",
+                    City:       "Boston",
+                    State:      "MA",
+                    PostalCode: "02108",
+                    Country:    "US",
+                },
+            },
+            setupMocks: func(svc *OrderServiceImpl) {
+                // Mock insertOrder
+                svc.insertOrderFunc = func(tx *sql.Tx, orderInfo *structs.OrderInfo, total float64) (int64, error) {
+                    return 1, nil
+                }
+                
+                // Mock buyShippingLabel
+                svc.buyShippingLabelFunc = func(orderInfo *structs.OrderInfo) (*easypost.Shipment, structs.ShippingInfo, error) {
+                    return &easypost.Shipment{
+                            TrackingCode: "TRACK123",
+                            SelectedRate: &easypost.Rate{
+                                Carrier:        "USPS",
+                                EstDeliveryDays: 2,
+                            },
+                        }, 
+                        structs.ShippingInfo{
+                            TrackingNumber: "TRACK123",
+                            Carrier:        "USPS",
+                            EstimatedDelivery: 2,
+                        }, 
+                        nil
+                }
+                
+                // Mock insertShipping
+                svc.insertShippingFunc = func(tx *sql.Tx, orderID int64, shipment *easypost.Shipment) error {
+                    return nil
+                }
+                
+                // Mock insertJob
+                svc.insertJobFunc = func(tx *sql.Tx, orderID int64) (int64, error) {
+                    return 1, nil
+                }
+            },
+            mockDB: func(mock sqlmock.Sqlmock) {
+                mock.ExpectBegin()
+                // Mock the cart items query
+                mock.ExpectQuery(`SELECT stl_url, quantity FROM cart_items WHERE browser_ssid = ?`).
+                    WithArgs("ssid123").WillReturnError(errors.New("db error"))
+                mock.ExpectRollback()
+            },
+            wantOrderInfo: structs.OrderInfo{
+                PaymentIntentID: "pi_123",
+                BrowserSSID:     "ssid123",
+                Amount:         1000,
+                PaymentStatus:   "requires_capture",
+                Name:           "John Doe",
+                Email:          "test@example.com",
+                Address: structs.AddressInfo{
+                    Line1:      "123 Main St",
+                    City:       "Boston",
+                    State:      "MA",
+                    PostalCode: "02108",
+                    Country:    "US",
+                },
+                ShippingInfo: structs.ShippingInfo{
+                    TrackingNumber: "TRACK123",
+                    Carrier:        "USPS",
+                    EstimatedDelivery: 2,
+                },
+            },
+            wantErr: true,
+			wantErrMsg: "failed to retrieve cart items",
+        },
     }
 
     for _, tt := range tests {
