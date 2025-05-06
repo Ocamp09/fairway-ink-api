@@ -6,6 +6,7 @@ import (
 
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/EasyPost/easypost-go/v4"
+	"github.com/ocamp09/fairway-ink-api/golang-api/config"
 	"github.com/ocamp09/fairway-ink-api/golang-api/structs"
 	"github.com/stretchr/testify/assert"
 )
@@ -45,7 +46,7 @@ func TestProcessOrder(t *testing.T) {
 			tt.mockDB(mock)
 
 			// create service w/ mock
-			service := NewOrderService(db)
+			service := NewOrderService(db, easypost.New(config.EASYPOST_KEY))
 
 			// call service method
 			orderInfo, err := service.ProcessOrder(&tt.orderInfo)
@@ -162,6 +163,57 @@ func TestInsertOrder(t *testing.T) {
 			if err := mock.ExpectationsWereMet(); err != nil {
 				t.Errorf("there were unfulfilled expectations: %s", err)
 			}		
+		})
+	}
+}
+
+func TestBuyShippingLabel(t *testing.T) {
+	tests := []struct {
+		desc string
+		orderInfo structs.OrderInfo
+		wantShipment easypost.Shipment
+		wantShipInfo structs.ShippingInfo
+		wantErr bool
+		wantErrMsg string
+	} {
+		{
+			desc: "successfully create label",
+			orderInfo: structs.OrderInfo{
+				Email:          "test@example.com",
+				Name:           "John Doe",
+				Address:        structs.AddressInfo{Line1: "123 St", Line2: "", City: "City", State: "ST", PostalCode: "12345", Country: "US"},
+				BrowserSSID:    "ssid123",
+				PaymentIntentID: "pi_123",
+				PaymentStatus:  "paid",
+			},
+			wantShipment: easypost.Shipment{
+
+			},
+			wantShipInfo: structs.ShippingInfo{
+				TrackingNumber: "123",
+				ToAddress: easypost.Address{
+
+				},
+				Carrier: "usps",
+				EstimatedDelivery: 1,
+			},
+			wantErr: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.desc, func(t *testing.T) {
+			service := &OrderServiceImpl{ShipClient: easypost.New(config.EASYPOST_KEY)}
+			shipment, shipInfo, err := service.buyShippingLabel(&tt.orderInfo)
+			
+			if tt.wantErr {
+				assert.Error(t, err)
+				assert.Contains(t, err.Error(), tt.wantErrMsg)
+			} else {
+				assert.Equal(t, tt.wantShipment, shipment, "shipment does not match")
+				assert.Equal(t, tt.wantShipInfo, shipInfo, "shipping info does not match")
+				assert.NoError(t, err)
+			}
 		})
 	}
 }

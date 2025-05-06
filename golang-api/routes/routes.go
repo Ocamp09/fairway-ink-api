@@ -3,6 +3,8 @@ package routes
 import (
 	"database/sql"
 
+	"github.com/EasyPost/easypost-go/v4"
+	"github.com/ocamp09/fairway-ink-api/golang-api/config"
 	"github.com/ocamp09/fairway-ink-api/golang-api/handlers"
 	"github.com/ocamp09/fairway-ink-api/golang-api/services"
 	"go.uber.org/zap"
@@ -15,7 +17,7 @@ func RegisterRoutes(r *gin.Engine, db *sql.DB, logger *zap.SugaredLogger, stripe
 	generateService := services.NewGenerateStlService(db)
 	designService := services.NewDesignService("../designs", "https://api.fairway-ink.com")
 	outputService := services.NewDesignService("./output", "https://api.fairway-ink.com")
-	orderService := services.NewOrderService(db)
+	orderService := services.NewOrderService(db, easypost.New(config.EASYPOST_KEY))
 
 	cartHandler := handlers.NewCartHandler(cartService, logger)
 	generateHandler := handlers.NewGenerateHandler(generateService, logger)

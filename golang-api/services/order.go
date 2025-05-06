@@ -17,9 +17,10 @@ import (
 
 type OrderServiceImpl struct {
 	DB *sql.DB
+	ShipClient EasyPostClient
 }
 
-func NewOrderService(db *sql.DB) OrderService {
+func NewOrderService(db *sql.DB, shipClient *easypost.Client) OrderService {
 	return &OrderServiceImpl{DB: db}
 }
 
@@ -81,7 +82,7 @@ func (os *OrderServiceImpl) ProcessOrder(orderInfo *structs.OrderInfo) (structs.
 		filename := getFilenameFromURL(stlURL)
 		dir := getOutputDir(orderInfo.BrowserSSID, filename)
 		s3Key := fmt.Sprintf("%s/%s", orderInfo.BrowserSSID, filename)
-		
+
 		if err := uploadToS3(dir + filename, s3Key); err != nil {
 			return *orderInfo, fmt.Errorf("failed to upload STL file: %w", err)
 		}
@@ -128,7 +129,6 @@ func (os *OrderServiceImpl) insertOrder(tx *sql.Tx, orderInfo *structs.OrderInfo
 
 func (os *OrderServiceImpl) buyShippingLabel(orderInfo *structs.OrderInfo) (*easypost.Shipment, structs.ShippingInfo, error) {
 	// Generate shipping label
-	shipClient := easypost.New(config.EASYPOST_KEY)
 	toAddress := &easypost.Address{
 		Name:    orderInfo.Name,
 		Street1: orderInfo.Address.Line1,
@@ -140,17 +140,17 @@ func (os *OrderServiceImpl) buyShippingLabel(orderInfo *structs.OrderInfo) (*eas
 	}
 
 	parcel := &easypost.Parcel{Length: 8, Width: 7, Height: 1.25, Weight: 15}
-	shipment, err := shipClient.CreateShipment(&easypost.Shipment{FromAddress: &config.SENDER_ADDRESS, ToAddress: toAddress, Parcel: parcel})
+	shipment, err := os.ShipClient.CreateShipment(&easypost.Shipment{FromAddress: &config.SENDER_ADDRESS, ToAddress: toAddress, Parcel: parcel})
 	if err != nil {
 		return nil, structs.ShippingInfo{}, fmt.Errorf("failed to create shipping label: %w", err)
 	}
 
-	lowestShipping, err := shipClient.LowestShipmentRate(shipment)
+	lowestShipping, err := os.ShipClient.LowestShipmentRate(shipment)
 	if err != nil {
 		return nil, structs.ShippingInfo{}, fmt.Errorf("failed to get lowest shipping rate: %w", err)
 	}
 
-	shipment, err = shipClient.BuyShipment(shipment.ID, &easypost.Rate{ID: lowestShipping.ID}, "")
+	shipment, err = os.ShipClient.BuyShipment(shipment.ID, &easypost.Rate{ID: lowestShipping.ID}, "")
 	if err != nil {
 		return nil, structs.ShippingInfo{}, fmt.Errorf("failed to buy shipping label: %w", err)
 	}
