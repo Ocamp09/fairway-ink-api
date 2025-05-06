@@ -18,10 +18,20 @@ import (
 type OrderServiceImpl struct {
 	DB *sql.DB
 	ShipClient EasyPostClient
+
+	insertOrderFunc      func(tx *sql.Tx, orderInfo *structs.OrderInfo, total float64) (int64, error)
+	buyShippingLabelFunc func(orderInfo *structs.OrderInfo) (*easypost.Shipment, structs.ShippingInfo, error)
+	insertShippingFunc   func(tx *sql.Tx, orderID int64, shipment *easypost.Shipment) error
+	insertJobFunc        func(tx *sql.Tx, orderID int64) (int64, error)
 }
 
-func NewOrderService(db *sql.DB, shipClient *easypost.Client) OrderService {
-	return &OrderServiceImpl{DB: db}
+func NewOrderService(db *sql.DB, shipClient EasyPostClient) OrderService {
+	svc := &OrderServiceImpl{DB: db, ShipClient: shipClient}
+	svc.insertOrderFunc = svc.insertOrder
+	svc.buyShippingLabelFunc = svc.buyShippingLabel
+	svc.insertShippingFunc = svc.insertShipping
+	svc.insertJobFunc = svc.insertJob
+	return svc
 }
 
 func (os *OrderServiceImpl) ProcessOrder(orderInfo *structs.OrderInfo) (structs.OrderInfo, error) {
@@ -41,24 +51,24 @@ func (os *OrderServiceImpl) ProcessOrder(orderInfo *structs.OrderInfo) (structs.
 		}
 	}()
 
-	orderID, err := os.insertOrder(tx, orderInfo, total)
+	orderID, err := os.insertOrderFunc(tx, orderInfo, total)
 	if err != nil {
 		return *orderInfo, err
 	}
 
-	shipment, shipInfo, err := os.buyShippingLabel(orderInfo)
+	shipment, shipInfo, err := os.buyShippingLabelFunc(orderInfo)
 	if err != nil {
 		return *orderInfo, err
 	}
 
 	orderInfo.ShippingInfo = shipInfo
 
-	err = os.insertShipping(tx, orderID, shipment)
+	err = os.insertShippingFunc(tx, orderID, shipment)
 	if err != nil {
 		return *orderInfo, err
 	}
 	
-	jobID, err := os.insertJob(tx, orderID)
+	jobID, err := os.insertJobFunc(tx, orderID)
 	if err != nil {
 		return *orderInfo, err
 	}
