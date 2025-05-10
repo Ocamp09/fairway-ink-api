@@ -28,10 +28,12 @@ func (h *DesignHandler) GetDesign(c *gin.Context) {
 	filePath := h.Service.GetFilePath(filename)
 
 	if !h.Service.FileExists(filePath) {
+		h.Logger.Error("file not found")
 		services.ReturnError(c, h.Logger, "file does not exists", nil)
 		return
 	}
 
+	h.Logger.Info("file found")
 	c.File(filePath)
 }
 
@@ -39,8 +41,11 @@ func (h *DesignHandler) GetDesign(c *gin.Context) {
 func (h *DesignHandler) ListDesigns(c *gin.Context) {
 	urls, err := h.Service.ListDesigns()
 	if err != nil {
+		h.Logger.Errorf("error fetching designs: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not list designs", "details": err.Error()})
 		return
 	}
+
+	h.Logger.Info("designs found")
 	c.JSON(http.StatusOK, gin.H{"designs": urls})
 }
