@@ -176,6 +176,14 @@ func TestPaymentIntent(t *testing.T) {
 						Quantity: 1,
 						Type: "custom",
 					},
+					{
+						Quantity: 3,
+						Type: "solid",
+					},
+					{
+						Quantity: 2,
+						Type: "text",
+					},
 				},
 			},
 			wantStatus: http.StatusOK,
