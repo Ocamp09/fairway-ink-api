@@ -1,18 +1,40 @@
 package routes
 
 import (
+	"database/sql"
+
+	"github.com/ocamp09/fairway-ink-api/golang-api/config"
 	"github.com/ocamp09/fairway-ink-api/golang-api/handlers"
+	"github.com/ocamp09/fairway-ink-api/golang-api/services"
+	"go.uber.org/zap"
 
 	"github.com/gin-gonic/gin"
 )
 
-func RegisterRoutes(r *gin.Engine) {
-	r.GET("/designs", handlers.ListDesigns)
-	r.GET("/designs/:filename", handlers.GetDesign)
-	r.GET("/output/:ssid/:filename", handlers.OutputSTL)
+func RegisterRoutes(r *gin.Engine, db *sql.DB, logger *zap.SugaredLogger, stripe *services.StripePaymentService) {
+	cartService := services.NewCartService(db)
+	generateService := services.NewGenerateStlService(db)
+	designService := services.NewDesignService("../designs", "https://api.fairway-ink.com")
+	outputService := services.NewDesignService("./output", "https://api.fairway-ink.com")
+
+	easypostClient := services.NewEasyPostClient(config.EASYPOST_KEY)
+	stripeClient := services.NewStripeService(config.STRIPE_KEY)
+	orderService := services.NewOrderService(db, easypostClient)
+
+	cartHandler := handlers.NewCartHandler(cartService, logger)
+	generateHandler := handlers.NewGenerateHandler(generateService, logger)
+	designHandler := handlers.NewDesignHandler(designService, logger)
+	outputHandler := handlers.NewDesignHandler(outputService, logger)
+	orderHandler := handlers.NewOrderHandler(orderService, stripeClient, logger)
+
+	r.GET("/designs", designHandler.ListDesigns)
+	r.GET("/designs/:filename", designHandler.GetDesign)
+	r.GET("/output/:ssid/:filename", outputHandler.GetDesign)
 	r.POST("/upload", handlers.UploadFile)
-	r.POST("/generate", handlers.GenerateStl)
-	r.POST("/cart", handlers.AddToCart)
-	r.POST("/create-payment-intent", handlers.CreatePaymentIntent)
-	r.POST("/handle-order", handlers.HandleOrder)
+	r.POST("/generate", generateHandler.GenerateStl)
+	r.POST("/cart", cartHandler.AddToCart)
+	r.POST("/create-payment-intent", func(c *gin.Context) {
+		handlers.CreatePaymentIntent(c, logger, stripe)
+	})
+	r.POST("/handle-order", orderHandler.HandleOrder)
 }
