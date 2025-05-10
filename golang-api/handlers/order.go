@@ -40,20 +40,20 @@ func (h *OrderHandler) HandleOrder(c *gin.Context) {
 	}
 
 	if err := c.ShouldBindJSON(&requestBody); err != nil {
-		h.Logger.Errorf("Invalid request body: %v", err)
+		h.Logger.Errorf("invalid request body: %v", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
 		return
 	}
 
 	intent, err := h.StripeService.GetPaymentIntent(requestBody.PaymentIntentID)
 	if err != nil {
-		h.Logger.Errorf("Stripe error: %v", err)
+		h.Logger.Errorf("stripe error: %v", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	if intent.Status != "requires_capture" {
-		h.Logger.Warn("Payment not authorized")
+		h.Logger.Errorf("payment not authorized")
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Payment is not authorized"})
 		return
 	}
@@ -70,20 +70,21 @@ func (h *OrderHandler) HandleOrder(c *gin.Context) {
 
 	orderInfo, err = h.Service.ProcessOrder(&orderInfo)
 	if err != nil {
-		h.Logger.Errorf("Unable to process order: %v", err)
+		h.Logger.Errorf("unable to process order: %v", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	capturedIntent, err := h.StripeService.CapturePaymentIntent(requestBody.PaymentIntentID)
 	if err != nil {
-		h.Logger.Errorf("Failed to capture payment: %v", err)
+		h.Logger.Errorf("failed to capture payment: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
 	orderInfo.PaymentStatus = string(capturedIntent.Status)
 
+	h.Logger.Infof("Order processed: intentID=%s, email=%s", requestBody.PaymentIntentID, requestBody.Email)
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,
 		"order":   orderInfo,
