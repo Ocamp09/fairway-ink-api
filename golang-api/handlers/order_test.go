@@ -20,6 +20,7 @@ import (
 type MockStripeService struct {
 	GetPaymentIntentFn     func(id string) (*stripe.PaymentIntent, error)
 	CapturePaymentIntentFn func(id string) (*stripe.PaymentIntent, error)
+	CreatePaymentIntentFn func(cart []structs.CartItem) (*stripe.PaymentIntent, error)
 }
 
 func (m *MockStripeService) GetPaymentIntent(id string) (*stripe.PaymentIntent, error) {
@@ -50,7 +51,7 @@ func TestHandleOrder(t *testing.T) {
 		stripeService *MockStripeService
 		orderService  *MockOrderService
 		wantStatus    int
-		wantLogs []observer.LoggedEntry
+		wantLogs      []observer.LoggedEntry
 	}{
 		{
 			desc:        "invalid request",
@@ -59,7 +60,7 @@ func TestHandleOrder(t *testing.T) {
 			wantLogs: []observer.LoggedEntry{
 				{
 					Entry: zapcore.Entry{
-						Level: zapcore.ErrorLevel,
+						Level:   zapcore.ErrorLevel,
 						Message: "invalid request body",
 					},
 				},
@@ -90,7 +91,7 @@ func TestHandleOrder(t *testing.T) {
 			wantLogs: []observer.LoggedEntry{
 				{
 					Entry: zapcore.Entry{
-						Level: zapcore.ErrorLevel,
+						Level:   zapcore.ErrorLevel,
 						Message: "stripe error",
 					},
 				},
@@ -121,7 +122,7 @@ func TestHandleOrder(t *testing.T) {
 			wantLogs: []observer.LoggedEntry{
 				{
 					Entry: zapcore.Entry{
-						Level: zapcore.ErrorLevel,
+						Level:   zapcore.ErrorLevel,
 						Message: "payment not authorized",
 					},
 				},
@@ -157,7 +158,7 @@ func TestHandleOrder(t *testing.T) {
 			wantLogs: []observer.LoggedEntry{
 				{
 					Entry: zapcore.Entry{
-						Level: zapcore.ErrorLevel,
+						Level:   zapcore.ErrorLevel,
 						Message: "unable to process order",
 					},
 				},
@@ -196,7 +197,7 @@ func TestHandleOrder(t *testing.T) {
 			wantLogs: []observer.LoggedEntry{
 				{
 					Entry: zapcore.Entry{
-						Level: zapcore.ErrorLevel,
+						Level:   zapcore.ErrorLevel,
 						Message: "failed to capture payment",
 					},
 				},
@@ -235,7 +236,7 @@ func TestHandleOrder(t *testing.T) {
 			wantLogs: []observer.LoggedEntry{
 				{
 					Entry: zapcore.Entry{
-						Level: zapcore.InfoLevel,
+						Level:   zapcore.InfoLevel,
 						Message: "Order processed:",
 					},
 				},
@@ -266,17 +267,17 @@ func TestHandleOrder(t *testing.T) {
 			router.ServeHTTP(w, req)
 
 			assert.Equal(t, tt.wantStatus, w.Code, "Status codes do not match")
-	
+
 			allLogs := observedLogs.All()
 			assert.Equal(t, len(tt.wantLogs), len(allLogs), "Log counts do not match")
-	
+
 			for i, wantLog := range tt.wantLogs {
 				if i >= len(allLogs) {
 					break
 				}
 				assert.Equal(t, wantLog.Entry.Level, allLogs[i].Entry.Level)
 				assert.Contains(t, allLogs[i].Entry.Message, wantLog.Entry.Message)
-			}		
+			}
 		})
 	}
 }

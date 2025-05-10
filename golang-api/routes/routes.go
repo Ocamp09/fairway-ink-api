@@ -11,7 +11,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func RegisterRoutes(r *gin.Engine, db *sql.DB, logger *zap.SugaredLogger, stripe *services.StripePaymentService) {
+func RegisterRoutes(r *gin.Engine, db *sql.DB, logger *zap.SugaredLogger) {
 	cartService := services.NewCartService(db)
 	generateService := services.NewGenerateStlService(db)
 	designService := services.NewDesignService("../designs", "https://api.fairway-ink.com")
@@ -26,6 +26,7 @@ func RegisterRoutes(r *gin.Engine, db *sql.DB, logger *zap.SugaredLogger, stripe
 	designHandler := handlers.NewDesignHandler(designService, logger)
 	outputHandler := handlers.NewDesignHandler(outputService, logger)
 	orderHandler := handlers.NewOrderHandler(orderService, stripeClient, logger)
+	checkoutHandler := handlers.NewCheckoutHandler(stripeClient, logger)
 
 	r.GET("/designs", designHandler.ListDesigns)
 	r.GET("/designs/:filename", designHandler.GetDesign)
@@ -33,8 +34,6 @@ func RegisterRoutes(r *gin.Engine, db *sql.DB, logger *zap.SugaredLogger, stripe
 	r.POST("/upload", handlers.UploadFile)
 	r.POST("/generate", generateHandler.GenerateStl)
 	r.POST("/cart", cartHandler.AddToCart)
-	r.POST("/create-payment-intent", func(c *gin.Context) {
-		handlers.CreatePaymentIntent(c, logger, stripe)
-	})
+	r.POST("/create-payment-intent", checkoutHandler.BeginCheckout)
 	r.POST("/handle-order", orderHandler.HandleOrder)
 }
