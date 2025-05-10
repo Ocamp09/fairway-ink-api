@@ -29,7 +29,7 @@ func (h *DesignHandler) GetDesign(c *gin.Context) {
 
 	if !h.Service.FileExists(filePath) {
 		h.Logger.Error("file not found")
-		services.ReturnError(c, h.Logger, "file does not exists", nil)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "file not found"})
 		return
 	}
 
