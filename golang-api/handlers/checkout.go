@@ -66,12 +66,6 @@ func CreatePaymentIntent(c *gin.Context, logger *zap.SugaredLogger, paymentServi
 		totalAmount += price * int(item.Quantity)
 	}
 
-	if totalAmount <= 0 {
-		logger.Error("Invalid order amount")
-		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "error": "Invalid order amount"})
-		return
-	}
-
 	stripe.Key = config.STRIPE_KEY
 
 	params := &stripe.PaymentIntentParams{
