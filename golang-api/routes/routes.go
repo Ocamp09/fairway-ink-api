@@ -18,13 +18,14 @@ func RegisterRoutes(r *gin.Engine, db *sql.DB, logger *zap.SugaredLogger, stripe
 	outputService := services.NewDesignService("./output", "https://api.fairway-ink.com")
 
 	easypostClient := services.NewEasyPostClient(config.EASYPOST_KEY)
+	stripeClient := services.NewStripeService(config.STRIPE_KEY)
 	orderService := services.NewOrderService(db, easypostClient)
 
 	cartHandler := handlers.NewCartHandler(cartService, logger)
 	generateHandler := handlers.NewGenerateHandler(generateService, logger)
 	designHandler := handlers.NewDesignHandler(designService, logger)
 	outputHandler := handlers.NewDesignHandler(outputService, logger)
-	orderHandler := handlers.NewOrderHandler(orderService, logger)
+	orderHandler := handlers.NewOrderHandler(orderService, stripeClient, logger)
 
 	r.GET("/designs", designHandler.ListDesigns)
 	r.GET("/designs/:filename", designHandler.GetDesign)
