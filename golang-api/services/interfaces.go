@@ -6,7 +6,6 @@ import (
 	"github.com/EasyPost/easypost-go/v4"
 	"github.com/ocamp09/fairway-ink-api/golang-api/structs"
 	"github.com/stripe/stripe-go/v75"
-	"go.uber.org/zap"
 )
 
 type CartService interface {
@@ -14,7 +13,7 @@ type CartService interface {
 }
 
 type GenerateStlService interface {
-	GenerateStl(ssid string, stlKey string, file io.Reader, filename string, scale string, logger *zap.SugaredLogger) (string, error)
+	GenerateStl(ssid string, stlKey string, file io.Reader, filename string, scale string) (string, error)
 }
 
 type DesignService interface {
