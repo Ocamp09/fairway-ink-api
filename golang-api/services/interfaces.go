@@ -5,7 +5,7 @@ import (
 
 	"github.com/EasyPost/easypost-go/v4"
 	"github.com/ocamp09/fairway-ink-api/golang-api/structs"
-	"go.uber.org/zap"
+	"github.com/stripe/stripe-go/v75"
 )
 
 type CartService interface {
@@ -13,7 +13,7 @@ type CartService interface {
 }
 
 type GenerateStlService interface {
-	GenerateStl(ssid string, stlKey string, file io.Reader, filename string, scale string, logger *zap.SugaredLogger) (string, error)
+	GenerateStl(ssid string, stlKey string, file io.Reader, filename string, scale string) (string, error)
 }
 
 type DesignService interface {
@@ -30,4 +30,10 @@ type EasyPostClient interface {
 	CreateShipment(shipment *easypost.Shipment) (*easypost.Shipment, error)
 	LowestShipmentRate(shipment *easypost.Shipment) (*easypost.Rate, error)
 	BuyShipment(shipmentID string, rate *easypost.Rate, insurance string) (*easypost.Shipment, error)
+}
+
+type StripeService interface {
+	CreatePaymentIntent(cart []structs.CartItem) (*stripe.PaymentIntent, error)
+	GetPaymentIntent(id string) (*stripe.PaymentIntent, error)
+	CapturePaymentIntent(id string) (*stripe.PaymentIntent, error)
 }

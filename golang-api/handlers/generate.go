@@ -24,14 +24,16 @@ func (h *GenerateHandler) GenerateStl(c *gin.Context) {
 	// Get session id from headers
 	ssid := c.DefaultPostForm("ssid", "")
 	if ssid == "" {
-		services.ReturnError(c, h.Logger, "no session ID provided", nil)
+		h.Logger.Error("no session ID provided")
+		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "error": "no session ID provided"})
 		return
 	}
 
 	// Get SVG file from the form
 	file, handler, err := c.Request.FormFile("svg")
 	if err != nil {
-		services.ReturnError(c, h.Logger, "no SVG file provided", nil)
+		h.Logger.Errorf("no SVG file provided: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "error": "no SVG file provided"})
 		return
 	}
 	defer file.Close()
@@ -44,9 +46,10 @@ func (h *GenerateHandler) GenerateStl(c *gin.Context) {
 	stlKey := c.DefaultPostForm("stlKey", "-1")
 
 
-	stlURL, err := h.Service.GenerateStl(ssid, stlKey, file, filename, scale, h.Logger)
+	stlURL, err := h.Service.GenerateStl(ssid, stlKey, file, filename, scale)
 	if err != nil {
-		services.ReturnError(c, h.Logger, "unable to generate STL: ", err)
+		h.Logger.Errorf("unable to generate STL: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "error": "unable to generate STL"})
 		return
 	}
 

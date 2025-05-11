@@ -7,7 +7,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/ocamp09/fairway-ink-api/golang-api/config"
 	"github.com/ocamp09/fairway-ink-api/golang-api/routes"
-	"github.com/ocamp09/fairway-ink-api/golang-api/services"
 	"go.uber.org/zap"
 )
 
@@ -41,9 +40,6 @@ func main() {
 		logger.Fatal("failed to connect to the db", zap.Error(err))
 	}
 
-	// initialize stripe service
-	stripeService := &services.StripePaymentService{}
-
 	r := gin.Default()
 
 	// Apply CORS middleware
@@ -53,7 +49,7 @@ func main() {
 	config.LoadEnv()
 
 	// Register routes
-	routes.RegisterRoutes(r, db, logger.Sugar(), stripeService)
+	routes.RegisterRoutes(r, db, logger.Sugar())
 
 	log.Println("Server running on port 5000")
 	r.Run(":5000")

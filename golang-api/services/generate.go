@@ -7,36 +7,47 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"runtime"
 	"slices"
 	"strconv"
 	"strings"
-
-	"go.uber.org/zap"
 )
 
 type GenerateStlServiceImpl struct{
 	DB *sql.DB
+	OUT_PATH string
+	OS string
+
+	cleanOldStlFunc func(ssid string, stlKey string, filename string) error
+	saveSvgFunc func(file io.Reader, filename string, ssid string) (string, string, error)
+	commandExecutor func(name string, arg ...string) *exec.Cmd
 }
 
-func NewGenerateStlService(db *sql.DB) GenerateStlService {
-	return &GenerateStlServiceImpl{DB: db}
+func NewGenerateStlService(db *sql.DB, outPath string, os string) GenerateStlService {
+	svc := &GenerateStlServiceImpl{
+		DB: db, 
+		OUT_PATH: outPath,
+		OS: os,
+		commandExecutor: exec.Command,
+	}
+	svc.cleanOldStlFunc = svc.cleanOldStl
+	svc.saveSvgFunc = svc.saveSvg
+	return svc
 }
 
 // GenerateStl processes the SVG file, interacts with the database, and runs Blender to generate the STL file
-func (s *GenerateStlServiceImpl) GenerateStl(ssid string, stlKey string, file io.Reader, filename string, scale string, logger *zap.SugaredLogger) (string, error) {
+func (s *GenerateStlServiceImpl) GenerateStl(ssid string, stlKey string, file io.Reader, filename string, scale string) (string, error) {
 	// Clean old files first
-	if err := cleanOldSTL(ssid, stlKey, filename, s.DB); err != nil {
+	if err := s.cleanOldStlFunc(ssid, stlKey, filename); err != nil {
 		return "", fmt.Errorf("failed to clean old STL: %w", err)
 	}
 
-	outputSvgPath, outputDir, err := saveSVG(file, filename, ssid)
+	outputSvgPath, outputDir, err := s.saveSvgFunc(file, filename, ssid)
 	if err != nil {
 		return "", fmt.Errorf("failed to save svg: %w", err)
 	}
 
 	// Execute Blender to generate the STL
-	blenderPath := getBlenderPath()
+	blenderPath := s.getBlenderPath()
 
 	outputSvgPath = strings.ReplaceAll(outputSvgPath, "\\", "/")
 	blenderCommand := []string{
@@ -45,14 +56,11 @@ func (s *GenerateStlServiceImpl) GenerateStl(ssid string, stlKey string, file io
 		"--python", "./blender/blender_v1.py", outputSvgPath, scale,
 	}
 
-	cmd := exec.Command(blenderCommand[0], blenderCommand[1:]...)
-	cmdOutput, err := cmd.CombinedOutput()
+	cmd := s.commandExecutor(blenderCommand[0], blenderCommand[1:]...)
+    _, err = cmd.CombinedOutput()
 	if err != nil {
-		logger.Error(fmt.Sprintf("Error running Blender: %v", err))
 		return "", fmt.Errorf("error generating STL: %w", err)
 	}
-
-	logger.Debug(fmt.Sprintf("Blender output: %s", string(cmdOutput)))
 
 	// Remove original SVG file after conversion
 	os.Remove(outputSvgPath)
@@ -71,8 +79,8 @@ func (s *GenerateStlServiceImpl) GenerateStl(ssid string, stlKey string, file io
 	return stlURL, nil
 }
 
-func cleanOldSTL(ssid string, stlKey string, filename string, db *sql.DB) error {
-	tx, err := db.Begin()
+func (s *GenerateStlServiceImpl)cleanOldStl(ssid string, stlKey string, filename string) error {
+	tx, err := s.DB.Begin()
 	if err != nil {
 		return fmt.Errorf("transaction failed: %w", err)
 	}
@@ -102,8 +110,12 @@ func cleanOldSTL(ssid string, stlKey string, filename string, db *sql.DB) error 
 
 	if key > 0 {
 		prevKey := key - 1
-		prevFile := fmt.Sprintf("%d%s.stl", prevKey, filename[strings.Index(filename, "g"):])
+	
+		base := filepath.Base(filename)
+		name := strings.TrimSuffix(base, filepath.Ext(base))
+		prevFile := fmt.Sprintf("%d%s.stl", prevKey, name)
 		filePath := filepath.Join("output", ssid, prevFile)
+	
 		if _, err := os.Stat(filePath); err == nil {
 			fileUrl := fmt.Sprintf("https://api.fairway-ink.com/output/%s/%s", ssid, prevFile)
 			if !slices.Contains(cartStls, fileUrl) {
@@ -116,19 +128,19 @@ func cleanOldSTL(ssid string, stlKey string, filename string, db *sql.DB) error 
 }
 
 // getBlenderPath returns the correct path for Blender depending on the operating system
-func getBlenderPath() string {
+func(s *GenerateStlServiceImpl) getBlenderPath() string {
 	blenderPath := "/home/ec2-user/blender-4.3.2-linux-x64/blender"
-	if runtime.GOOS == "darwin" {
+	if s.OS == "darwin" {
 		blenderPath = "/Applications/Blender.app/Contents/MacOS/blender"
-	} else if runtime.GOOS == "windows" {
+	} else if s.OS == "windows" {
 		blenderPath = `C:\\Program Files\\Blender Foundation\\Blender 4.3\\blender.exe`
 	}
 	return blenderPath
 }
 
-func saveSVG(file io.Reader, filename string, ssid string) (string, string, error) {
+func (s *GenerateStlServiceImpl)saveSvg(file io.Reader, filename string, ssid string) (string, string, error) {
 	// Save the SVG file
-	outputDir := filepath.Join("output", ssid)
+	outputDir := filepath.Join(s.OUT_PATH, ssid)
 	if err := os.MkdirAll(outputDir, os.ModePerm); err != nil {
 		return "", "", fmt.Errorf("failed to create output directory: %w", err)
 	}

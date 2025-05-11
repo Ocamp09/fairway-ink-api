@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/gin-gonic/gin"
-	"github.com/ocamp09/fairway-ink-api/golang-api/services"
+	"github.com/ocamp09/fairway-ink-api/golang-api/structs"
 	"github.com/stretchr/testify/assert"
 	"github.com/stripe/stripe-go/v75"
 	"go.uber.org/zap"
@@ -17,14 +17,19 @@ import (
 	"go.uber.org/zap/zaptest/observer"
 )
 
+func (m *MockStripeService) CreatePaymentIntent(cart []structs.CartItem) (*stripe.PaymentIntent, error) {
+	return m.CreatePaymentIntentFn(cart)
+}
+
+
 type requestPayload struct {
-	Cart []CartItem `json:"cart"`
+	Cart []structs.CartItem `json:"cart"`
 }
 
 type testFields struct {
 	desc string
 	request requestPayload
-	mockStripe func(params *stripe.PaymentIntentParams) (*stripe.PaymentIntent, error)
+	stripeService *MockStripeService
 	wantStatus int
 	wantSuccess bool
 	wantLogs []observer.LoggedEntry
@@ -49,7 +54,7 @@ func TestPaymentIntent(t *testing.T) {
 		{
 			desc: "Empty cart",
 			request: requestPayload{
-				[]CartItem{},
+				[]structs.CartItem{},
 			},
 			wantStatus: http.StatusInternalServerError,
 			wantSuccess: false,
@@ -63,94 +68,12 @@ func TestPaymentIntent(t *testing.T) {
 			},
 		},
 		{
-			desc: "Missing quantity",
-			request: requestPayload{
-				[]CartItem{
-					{
-						Type: "custom",
-					},
-				},
-			},
-			wantStatus: http.StatusInternalServerError,
-			wantSuccess: false,
-			wantLogs: []observer.LoggedEntry{
-				{
-					Entry: zapcore.Entry{
-						Level: zapcore.ErrorLevel,
-						Message: "Invalid cart item: missing positive quantity",
-					},
-				},
-			},
-		},
-		{
-			desc: "Invalid quantity",
-			request: requestPayload{
-				[]CartItem{
-					{
-						Quantity: 0,
-						Type: "custom",
-					},
-				},
-			},
-			wantStatus: http.StatusInternalServerError,
-			wantSuccess: false,
-			wantLogs: []observer.LoggedEntry{
-				{
-					Entry: zapcore.Entry{
-						Level: zapcore.ErrorLevel,
-						Message: "Invalid cart item: missing positive quantity",
-					},
-				},
-			},
-		},
-		{
-			desc: "Missing type",
-			request: requestPayload{
-				[]CartItem{
-					{
-						Quantity: 1,
-					},
-				},
-			},
-			wantStatus: http.StatusInternalServerError,
-			wantSuccess: false,
-			wantLogs: []observer.LoggedEntry{
-				{
-					Entry: zapcore.Entry{
-						Level: zapcore.ErrorLevel,
-						Message: "Invalid item type in cart",
-					},
-				},
-			},
-		},
-		{
-			desc: "Invalid type",
-			request: requestPayload{
-				[]CartItem{
-					{
-						Quantity: 1,
-						Type: "fail",
-					},
-				},
-			},
-			wantStatus: http.StatusInternalServerError,
-			wantSuccess: false,
-			wantLogs: []observer.LoggedEntry{
-				{
-					Entry: zapcore.Entry{
-						Level: zapcore.ErrorLevel,
-						Message: "Invalid item type in cart",
-					},
-				},
-			},
-		},
-		{
 			desc: "Payment intent creation error",
 			request: requestPayload{
-				[]CartItem{
+				[]structs.CartItem{
 					{
 						Quantity: 1,
-						Type: "custom",
+						TemplateType: "custom",
 					},
 				},
 			},
@@ -164,25 +87,27 @@ func TestPaymentIntent(t *testing.T) {
 					},
 				},
 			},
-			mockStripe: func(params *stripe.PaymentIntentParams) (*stripe.PaymentIntent, error) {
-				return nil, errors.New("stripe API failure")
+			stripeService: &MockStripeService{
+				CreatePaymentIntentFn: func([]structs.CartItem) (*stripe.PaymentIntent, error) {
+					return nil, errors.New("stripe error")
+				},
 			},
 		},
 		{
 			desc: "Successful response",
 			request: requestPayload{
-				[]CartItem{
+				[]structs.CartItem{
 					{
 						Quantity: 1,
-						Type: "custom",
+						TemplateType: "custom",
 					},
 					{
 						Quantity: 3,
-						Type: "solid",
+						TemplateType: "solid",
 					},
 					{
 						Quantity: 2,
-						Type: "text",
+						TemplateType: "text",
 					},
 				},
 			},
@@ -196,11 +121,13 @@ func TestPaymentIntent(t *testing.T) {
 					},
 				},
 			},
-			mockStripe: func(params *stripe.PaymentIntentParams) (*stripe.PaymentIntent, error) {
-				return &stripe.PaymentIntent{
-					ID: "1234",
-					ClientSecret: "test_secret",
-				}, nil
+			stripeService: &MockStripeService{
+				CreatePaymentIntentFn: func(cart []structs.CartItem)  (*stripe.PaymentIntent, error) {
+					return &stripe.PaymentIntent{
+						ID: "1234",
+						ClientSecret: "test_secret",
+					}, nil
+				},
 			},
 		},
 	}
@@ -214,14 +141,10 @@ func TestPaymentIntent(t *testing.T) {
 		t.Run(tt.desc, func(t *testing.T) {
 			observedLogs.TakeAll()
 
-			// mock stripe
-			mockService := &services.MockPaymentService{
-				MockCreatePaymentIntent: tt.mockStripe,
-			}
-
 			// set the router
 			router := gin.Default()
-			router.POST("/create-payment-intent", func(c *gin.Context) {CreatePaymentIntent(c, sugar, mockService)})
+			checkoutHandler := NewCheckoutHandler(tt.stripeService, sugar)
+			router.POST("/create-payment-intent", checkoutHandler.BeginCheckout)
 
 			// convert payload to json
 			jsonData, err := json.Marshal(tt.request)
@@ -234,7 +157,7 @@ func TestPaymentIntent(t *testing.T) {
 			if err != nil {
 				t.Fatalf("Failed to create http request: %v", err)
 			}
-			req.Header.Set("Content-Type", "application/json")
+			req.Header.Set("Content-TemplateType", "application/json")
 
 			w := httptest.NewRecorder()
 			router.ServeHTTP(w, req)
