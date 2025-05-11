@@ -46,7 +46,7 @@ func (h *GenerateHandler) GenerateStl(c *gin.Context) {
 	stlKey := c.DefaultPostForm("stlKey", "-1")
 
 
-	stlURL, err := h.Service.GenerateStl(ssid, stlKey, file, filename, scale, h.Logger)
+	stlURL, err := h.Service.GenerateStl(ssid, stlKey, file, filename, scale)
 	if err != nil {
 		h.Logger.Errorf("unable to generate STL: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "error": "unable to generate STL"})
