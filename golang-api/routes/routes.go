@@ -2,6 +2,7 @@ package routes
 
 import (
 	"database/sql"
+	"runtime"
 
 	"github.com/ocamp09/fairway-ink-api/golang-api/config"
 	"github.com/ocamp09/fairway-ink-api/golang-api/handlers"
@@ -13,7 +14,7 @@ import (
 
 func RegisterRoutes(r *gin.Engine, db *sql.DB, logger *zap.SugaredLogger) {
 	cartService := services.NewCartService(db)
-	generateService := services.NewGenerateStlService(db)
+	generateService := services.NewGenerateStlService(db, "output", runtime.GOOS)
 	designService := services.NewDesignService("../designs", "https://api.fairway-ink.com")
 	outputService := services.NewDesignService("./output", "https://api.fairway-ink.com")
 

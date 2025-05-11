@@ -7,7 +7,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"runtime"
 	"slices"
 	"strconv"
 	"strings"
@@ -15,13 +14,21 @@ import (
 
 type GenerateStlServiceImpl struct{
 	DB *sql.DB
+	OUT_PATH string
+	OS string
 
 	cleanOldStlFunc func(ssid string, stlKey string, filename string) error
 	saveSvgFunc func(file io.Reader, filename string, ssid string) (string, string, error)
+	commandExecutor func(name string, arg ...string) *exec.Cmd
 }
 
-func NewGenerateStlService(db *sql.DB) GenerateStlService {
-	svc := &GenerateStlServiceImpl{DB: db}
+func NewGenerateStlService(db *sql.DB, outPath string, os string) GenerateStlService {
+	svc := &GenerateStlServiceImpl{
+		DB: db, 
+		OUT_PATH: outPath,
+		OS: os,
+		commandExecutor: exec.Command,
+	}
 	svc.cleanOldStlFunc = svc.cleanOldStl
 	svc.saveSvgFunc = svc.saveSvg
 	return svc
@@ -40,7 +47,7 @@ func (s *GenerateStlServiceImpl) GenerateStl(ssid string, stlKey string, file io
 	}
 
 	// Execute Blender to generate the STL
-	blenderPath := getBlenderPath()
+	blenderPath := s.getBlenderPath()
 
 	outputSvgPath = strings.ReplaceAll(outputSvgPath, "\\", "/")
 	blenderCommand := []string{
@@ -49,8 +56,8 @@ func (s *GenerateStlServiceImpl) GenerateStl(ssid string, stlKey string, file io
 		"--python", "./blender/blender_v1.py", outputSvgPath, scale,
 	}
 
-	cmd := exec.Command(blenderCommand[0], blenderCommand[1:]...)
-	_, err = cmd.CombinedOutput()
+	cmd := s.commandExecutor(blenderCommand[0], blenderCommand[1:]...)
+    _, err = cmd.CombinedOutput()
 	if err != nil {
 		return "", fmt.Errorf("error generating STL: %w", err)
 	}
@@ -121,11 +128,11 @@ func (s *GenerateStlServiceImpl)cleanOldStl(ssid string, stlKey string, filename
 }
 
 // getBlenderPath returns the correct path for Blender depending on the operating system
-func getBlenderPath() string {
+func(s *GenerateStlServiceImpl) getBlenderPath() string {
 	blenderPath := "/home/ec2-user/blender-4.3.2-linux-x64/blender"
-	if runtime.GOOS == "darwin" {
+	if s.OS == "darwin" {
 		blenderPath = "/Applications/Blender.app/Contents/MacOS/blender"
-	} else if runtime.GOOS == "windows" {
+	} else if s.OS == "windows" {
 		blenderPath = `C:\\Program Files\\Blender Foundation\\Blender 4.3\\blender.exe`
 	}
 	return blenderPath
@@ -133,7 +140,7 @@ func getBlenderPath() string {
 
 func (s *GenerateStlServiceImpl)saveSvg(file io.Reader, filename string, ssid string) (string, string, error) {
 	// Save the SVG file
-	outputDir := filepath.Join("output", ssid)
+	outputDir := filepath.Join(s.OUT_PATH, ssid)
 	if err := os.MkdirAll(outputDir, os.ModePerm); err != nil {
 		return "", "", fmt.Errorf("failed to create output directory: %w", err)
 	}
