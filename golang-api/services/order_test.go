@@ -3,6 +3,7 @@ package services
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 	"testing"
 
 	"github.com/DATA-DOG/go-sqlmock"
@@ -507,6 +508,112 @@ func TestBuyShippingLabel(t *testing.T) {
 		wantErr      bool
 		wantErrMsg   string
 	}{
+		{
+			desc: "Fail create label",
+			orderInfo: structs.OrderInfo{
+				Name: "John Doe",
+				Address: structs.AddressInfo{
+					Line1:      "123 St",
+					Line2:      "",
+					City:       "City",
+					State:      "ST",
+					PostalCode: "12345",
+					Country:    "US",
+				},
+			},
+			mockEasyPost: func(m *MockEasyPostClient) {
+				// Mock CreateShipment
+				m.On("CreateShipment", mock.AnythingOfType("*easypost.Shipment")).
+				Return((*easypost.Shipment)(nil), fmt.Errorf("create label failed"))
+			},
+			wantShipInfo: structs.ShippingInfo{},
+			wantErr: true,
+			wantErrMsg: "failed to create shipping label",
+		},
+		{
+			desc: "successfully create label",
+			orderInfo: structs.OrderInfo{
+				Name: "John Doe",
+				Address: structs.AddressInfo{
+					Line1:      "123 St",
+					Line2:      "",
+					City:       "City",
+					State:      "ST",
+					PostalCode: "12345",
+					Country:    "US",
+				},
+			},
+			mockEasyPost: func(m *MockEasyPostClient) {
+				// Create expected rate that will be returned and used
+				expectedRate := &easypost.Rate{
+					ID:             "rate_1",
+					Carrier:        "USPS",
+					Service:        "Priority",
+					Rate:           "10.00",
+					EstDeliveryDays: 2,
+				}
+
+				// Mock CreateShipment
+				m.On("CreateShipment", mock.AnythingOfType("*easypost.Shipment")).
+					Return(&easypost.Shipment{
+						ID:           "shp_123",
+						TrackingCode: "TRACK123",
+						Rates:        []*easypost.Rate{expectedRate},
+					}, nil)
+
+				// Mock LowestShipmentRate
+				m.On("LowestShipmentRate", mock.AnythingOfType("*easypost.Shipment")).
+					Return(expectedRate, nil)
+
+				// Mock BuyShipment - use mock.MatchedBy to match the rate
+				m.On("BuyShipment", "shp_123", mock.MatchedBy(func(rate *easypost.Rate) bool {
+					return rate.ID == "rate_1"
+				}), "").
+					Return(&easypost.Shipment{}, fmt.Errorf("failed easypost buy label"))
+			},
+			wantShipInfo: structs.ShippingInfo{},
+			wantErr: true,
+			wantErrMsg: "failed to buy shipping label",
+		},
+		{
+			desc: "successfully create label",
+			orderInfo: structs.OrderInfo{
+				Name: "John Doe",
+				Address: structs.AddressInfo{
+					Line1:      "123 St",
+					Line2:      "",
+					City:       "City",
+					State:      "ST",
+					PostalCode: "12345",
+					Country:    "US",
+				},
+			},
+			mockEasyPost: func(m *MockEasyPostClient) {
+				// Create expected rate that will be returned and used
+				expectedRate := &easypost.Rate{
+					ID:             "rate_1",
+					Carrier:        "USPS",
+					Service:        "Priority",
+					Rate:           "10.00",
+					EstDeliveryDays: 2,
+				}
+
+				// Mock CreateShipment
+				m.On("CreateShipment", mock.AnythingOfType("*easypost.Shipment")).
+					Return(&easypost.Shipment{
+						ID:           "shp_123",
+						TrackingCode: "TRACK123",
+						Rates:        []*easypost.Rate{expectedRate},
+					}, nil)
+
+				// Mock LowestShipmentRate
+				m.On("LowestShipmentRate", mock.AnythingOfType("*easypost.Shipment")).
+					Return(&easypost.Rate{}, fmt.Errorf("failed lowest rate call"))
+			},
+			wantShipInfo: structs.ShippingInfo{},
+			wantErr: true,
+			wantErrMsg: "failed to get lowest shipping rate:",
+		},
 		{
 			desc: "successfully create label",
 			orderInfo: structs.OrderInfo{
