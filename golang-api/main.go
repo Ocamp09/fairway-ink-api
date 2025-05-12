@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 
@@ -51,6 +52,6 @@ func main() {
 	// Register routes
 	routes.RegisterRoutes(r, db, logger.Sugar())
 
-	log.Println("Server running on port 5000")
-	r.Run(":5000")
+	log.Printf("Server running on port %s", config.PORT)
+	r.Run(fmt.Sprintf(":%s", config.PORT))
 }
