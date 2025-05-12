@@ -20,7 +20,9 @@ var (
 	DB_USER string
 	DB_PSWD string
 	DB_HOST string
+	DB_PORT string
 	DB_NAME string
+	PORT string
 )
 
 func LoadEnv() {
@@ -45,6 +47,11 @@ func LoadEnv() {
 		log.Fatal("Environment variable missing: S3_REGION")
 	}
 
+	PORT, exists = os.LookupEnv("PORT")
+	if !exists {
+		PORT="5000"
+	}
+
 	SENDER_ADDRESS = easypost.Address{
 		Company: "Fairway Ink",
 		Street1: "6729 Old Stagecoach Road",
@@ -67,6 +74,10 @@ func LoadEnv() {
 	if !exists {
 		log.Fatal("Environment variable missing: DB_HOST")
 	}
+	DB_PORT, exists = os.LookupEnv("DB_PORT")
+	if !exists {
+		DB_PORT = "3306"
+	}
 
 	DB_NAME, exists = os.LookupEnv("DB_NAME")
 	if !exists {
@@ -77,10 +88,11 @@ func LoadEnv() {
 func ConnectDB() (*sql.DB, error) {
 	var err error
 
-	dsn := fmt.Sprintf("%s:%s@tcp(%s:3306)/%s?parseTime=true",
+	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true",
 		DB_USER,
 		DB_PSWD,
 		DB_HOST,
+		DB_PORT,
 		DB_NAME,
 	)
 
