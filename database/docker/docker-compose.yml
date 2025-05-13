@@ -1,0 +1,17 @@
+# docker-compose.yml
+services:
+  db:
+    image: mysql:8.3
+    container_name: fairway_ink_db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: pwd
+      MYSQL_DATABASE: fairway_ink
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./schema.sql:/docker-entrypoint-initdb.d/schema.sql:ro
+
+volumes:
+  mysql-data:
