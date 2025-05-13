@@ -60,10 +60,10 @@ func (s *GenerateStlServiceImpl) GenerateStl(ssid string, stlKey string, file io
 	}
 
 	cmd := s.commandExecutor(blenderCommand[0], blenderCommand[1:]...)
-    _, err = cmd.CombinedOutput()
-	if err != nil {
-		return "", fmt.Errorf("error generating STL: %w", err)
-	}
+    _, _ = cmd.CombinedOutput()
+	// if err != nil {
+	// 	return "", fmt.Errorf("error generating STL: %w", err)
+	// }
 
 	// Remove original SVG file after conversion
 	os.Remove(outputSvgPath)
@@ -75,6 +75,11 @@ func (s *GenerateStlServiceImpl) GenerateStl(ssid string, stlKey string, file io
 	// Check if the file exists
 	if _, err := os.Stat(stlFilePath); os.IsNotExist(err) {
 		return "", fmt.Errorf("STL file was not generated")
+	}
+
+	domain := "https://api.fairway-ink.com"
+	if runtime.GOOS != "linux" {
+		domain = fmt.Sprintf("http://localhost:%s", config.PORT)
 	}
 
 	// Generate the URL for the STL file
