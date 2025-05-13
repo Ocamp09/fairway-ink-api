@@ -20,12 +20,11 @@ func NewDesignHandler(service services.DesignService, logger *zap.SugaredLogger)
 	}
 }
 
-const DESIGN_FOLDER = "../designs"
-const OUTPUT_FOLDER = "./output"
-
 func (h *DesignHandler) GetDesign(c *gin.Context) {
 	filename := c.Param("filename")
-	filePath := h.Service.GetFilePath(filename)
+	ssid := c.Param("ssid") 
+
+	filePath := h.Service.GetFilePath(filename, ssid)
 
 	if !h.Service.FileExists(filePath) {
 		h.Logger.Error("file not found")

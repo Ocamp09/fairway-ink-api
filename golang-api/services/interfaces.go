@@ -18,7 +18,7 @@ type GenerateStlService interface {
 
 type DesignService interface {
 	ListDesigns() ([]string, error)
-	GetFilePath(filename string) string
+	GetFilePath(filename string, ssid string) string
 	FileExists(path string) bool
 }
 

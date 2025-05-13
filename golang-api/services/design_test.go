@@ -86,7 +86,7 @@ func TestGetFilePath(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.desc, func(t *testing.T) {
 			svc := NewDesignService(tt.basePath, "")
-			assert.Equal(t, tt.expected, svc.GetFilePath(tt.filename))
+			assert.Equal(t, tt.expected, svc.GetFilePath(tt.filename, ""))
 		})
 	}
 }
