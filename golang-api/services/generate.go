@@ -23,7 +23,8 @@ type GenerateStlServiceImpl struct{
 	cleanOldStlFunc func(ssid string, stlKey string, filename string) error
 	saveSvgFunc func(file io.Reader, filename string, ssid string) (string, string, error)
 	commandExecutor func(name string, arg ...string) *exec.Cmd
-}
+
+	mkdirAllFunc   func(path string, perm os.FileMode) error}
 
 func NewGenerateStlService(db *sql.DB, outPath string, os string) GenerateStlService {
 	svc := &GenerateStlServiceImpl{
@@ -154,7 +155,14 @@ func(s *GenerateStlServiceImpl) getBlenderPath() string {
 func (s *GenerateStlServiceImpl)saveSvg(file io.Reader, filename string, ssid string) (string, string, error) {
 	// Save the SVG file
 	outputDir := filepath.Join(s.OUT_PATH, ssid)
-	if err := os.MkdirAll(outputDir, os.ModePerm); err != nil {
+
+	// setup our func as MkdirAll
+	mkdir := s.mkdirAllFunc
+	if mkdir == nil {
+		mkdir = os.MkdirAll
+	}
+
+	if err := mkdir(outputDir, os.ModePerm); err != nil {
 		return "", "", fmt.Errorf("failed to create output directory: %w", err)
 	}
 

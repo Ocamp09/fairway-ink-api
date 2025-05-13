@@ -462,7 +462,11 @@ func TestSaveSvg(t *testing.T) {
             filename: "test.svg",
             ssid:     "123",
             outPath:  "/invalid/path", // This will make MkdirAll fail
-            setupMocks: nil,
+            setupMocks: func(svc *GenerateStlServiceImpl) {
+                svc.mkdirAllFunc = func(path string, perm os.FileMode) error {
+                    return errors.New("mkdir failed")
+                }
+            },
             wantErr:    true,
             wantErrMsg: "failed to create output directory",
         },
