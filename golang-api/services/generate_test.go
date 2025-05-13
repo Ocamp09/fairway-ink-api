@@ -387,7 +387,8 @@ func TestCleanOldSTL(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.desc, func(t *testing.T) {
-			// create mock db
+			config.PORT = "5000"
+            // create mock db
 			db, mock, err := sqlmock.New()
 			if err != nil {
 				t.Fatalf("failed to create mock db: %v", err)

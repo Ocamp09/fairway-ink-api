@@ -125,7 +125,12 @@ func (s *GenerateStlServiceImpl)cleanOldStl(ssid string, stlKey string, filename
 		filePath := filepath.Join("output", ssid, prevFile)
 	
 		if _, err := os.Stat(filePath); err == nil {
-			fileUrl := fmt.Sprintf("https://api.fairway-ink.com/output/%s/%s", ssid, prevFile)
+			domain := "https://api.fairway-ink.com"
+			if runtime.GOOS != "linux" {
+				domain = fmt.Sprintf("http://localhost:%s", config.PORT) 
+			}
+			fileUrl := fmt.Sprintf("%s/output/%s/%s", domain, ssid, prevFile)
+			
 			if !slices.Contains(cartStls, fileUrl) {
 				os.Remove(filePath)
 			}
