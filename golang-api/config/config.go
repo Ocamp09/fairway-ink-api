@@ -96,6 +96,8 @@ func ConnectDB() (*sql.DB, error) {
 		DB_NAME,
 	)
 
+	log.Printf("db dsn %s", dsn)
+
 	// Open the database connection
 	db, err := sql.Open("mysql", dsn)
 	if err != nil {
