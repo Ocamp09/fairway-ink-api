@@ -1,104 +1,52 @@
 package handlers
 
 import (
-	"encoding/json"
-	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/ocamp09/fairway-ink-api/golang-api/config"
-	"github.com/stripe/stripe-go/v75"
-	"github.com/stripe/stripe-go/v75/paymentintent"
+	"github.com/ocamp09/fairway-ink-api/golang-api/services"
+	"github.com/ocamp09/fairway-ink-api/golang-api/structs"
+	"go.uber.org/zap"
 )
 
-var (
-	SOLID_PRICE  = 599
-	TEXT_PRICE   = 599
-	CUSTOM_PRICE = 799 
-)
+type CheckoutHandler struct {
+	StripeService services.StripeService
+	Logger *zap.SugaredLogger
+}
 
-func CreatePaymentIntent(c *gin.Context) {
-	var requestBody struct {
-		Cart string `form:"cart"`
+func NewCheckoutHandler( stripeService services.StripeService, logger *zap.SugaredLogger) *CheckoutHandler {
+	return &CheckoutHandler{
+		StripeService: stripeService,
+		Logger: logger,
+	}
+}
+
+func(h *CheckoutHandler) BeginCheckout(c *gin.Context) {
+		var requestBody struct {
+		Cart []structs.CartItem `json:"cart"`
 	}
 
-	if err := c.ShouldBind(&requestBody); err != nil {
-		log.Println("Error parsing request:", err)
+	if err := c.ShouldBindJSON(&requestBody); err != nil || requestBody.Cart == nil {
+		h.Logger.Error("Error parsing request: ", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "error": "No cart provided"})
 		return
 	}
 
-	if requestBody.Cart == "" {
-		c.JSON(http.StatusNotImplemented, gin.H{"success": false, "error": "No cart provided"})
-		return
-	}
-
-	var cart []map[string]interface{}
-	if err := json.Unmarshal([]byte(requestBody.Cart), &cart); err != nil {
-		log.Println("Error parsing cart JSON:", err)
-		c.JSON(http.StatusBadGateway, gin.H{"success": false, "error": "Invalid cart format"})
-		return
-	}
+	cart := requestBody.Cart
 
 	if len(cart) == 0 {
-		c.JSON(http.StatusBadGateway, gin.H{"success": false, "error": "Cart is empty"})
+		h.Logger.Error("Cart is empty")
+		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "error": "Cart is empty"})
 		return
 	}
 
-	// Prepare line items
-	totalAmount := 0
-
-	for _, item := range cart {
-		itemType, ok := item["type"].(string)
-		if !ok {
-			c.JSON(http.StatusBadGateway, gin.H{"success": false, "error": "Invalid item type in cart"})
-			return
-		}
-
-		quantity, ok := item["quantity"].(float64) // JSON unmarshalling gives float64 by default
-		if !ok {
-			c.JSON(http.StatusBadGateway, gin.H{"success": false, "error": "Invalid quantity in cart"})
-			return
-		}
-
-		var price int
-		switch itemType {
-		case "solid":
-			price = SOLID_PRICE
-		case "text":
-			price = TEXT_PRICE
-		case "custom":
-			price = CUSTOM_PRICE
-		default:
-			c.JSON(http.StatusBadGateway, gin.H{"success": false, "error": "Invalid item type in cart"})
-			return
-		}
-
-
-		totalAmount += price * int(quantity)
-	}
-
-	if totalAmount <= 0 {
-		c.JSON(http.StatusBadGateway, gin.H{"success": false, "error": "Invalid order amount"})
-		return
-	}
-
-	stripe.Key = config.STRIPE_KEY
-
-	params := &stripe.PaymentIntentParams{
-		Amount: stripe.Int64(int64(totalAmount)),
-		Currency: stripe.String(string(stripe.CurrencyUSD)),
-		PaymentMethodTypes: []*string{stripe.String("card")},
-		CaptureMethod: stripe.String(string(stripe.PaymentIntentCaptureMethodManual)),
-	}
-
-	intent, err := paymentintent.New(params)
+	intent, err := h.StripeService.CreatePaymentIntent(cart)
 	if err != nil {
-		log.Println("Error creating Stripe paymentIntent:", err)
+		h.Logger.Error("Error creating Stripe payment intent:", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "ERROR"})
 		return
 	}
 
-	println(intent.ID, intent.ClientSecret)
-	c.JSON(http.StatusOK, gin.H{"payment_intent": intent.ID, "client_secret": intent.ClientSecret})
+	h.Logger.Info("Successfully created payment intent")
+	c.JSON(http.StatusOK, gin.H{"success": true, "payment_intent": intent.ID, "client_secret": intent.ClientSecret})
 }

@@ -18,4 +18,3 @@ node_modules/
 python/
 *.log*
 api-binary
-!designs/**
