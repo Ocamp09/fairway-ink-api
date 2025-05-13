@@ -35,6 +35,9 @@ func main() {
 	}
 	defer logger.Sync()
 
+	// load environment
+	config.LoadEnv()
+
 	// initialize db connection
 	db, err := config.ConnectDB()
 	if err != nil {
@@ -45,9 +48,6 @@ func main() {
 
 	// Apply CORS middleware
 	r.Use(CORSMiddleware())
-
-	// load environment
-	config.LoadEnv()
 
 	// Register routes
 	routes.RegisterRoutes(r, db, logger.Sugar())
