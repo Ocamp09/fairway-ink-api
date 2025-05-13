@@ -7,9 +7,12 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"slices"
 	"strconv"
 	"strings"
+
+	"github.com/ocamp09/fairway-ink-api/golang-api/config"
 )
 
 type GenerateStlServiceImpl struct{
@@ -75,7 +78,7 @@ func (s *GenerateStlServiceImpl) GenerateStl(ssid string, stlKey string, file io
 	}
 
 	// Generate the URL for the STL file
-	stlURL := fmt.Sprintf("https://api.fairway-ink.com/output/%s/%s", ssid, stlFilename)
+	stlURL := fmt.Sprintf("%s/output/%s/%s", domain, ssid, stlFilename)
 	return stlURL, nil
 }
 
