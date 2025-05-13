@@ -75,15 +75,21 @@ func (os *OrderServiceImpl) ProcessOrder(orderInfo *structs.OrderInfo) (structs.
 	}
 	defer rows.Close()
 
+	var cartItems []structs.CartItem
+
+	// read the rows into our cart items slice
 	for rows.Next() {
-		var stlURL string
-		var quantity int
-		if err := rows.Scan(&stlURL, &quantity); err != nil {
+		var item structs.CartItem
+		if err := rows.Scan(&item.StlURL, &item.Quantity); err != nil {
 			return *orderInfo, fmt.Errorf("failed to scan cart item: %w", err)
 		}
+		cartItems = append(cartItems, item)
+	}
+	rows.Close() 
 
-		// Upload STL file to S3
-		filename := getFilenameFromURL(stlURL)
+	// loop through cart items and upload them
+	for _, item := range cartItems {
+		filename := getFilenameFromURL(item.StlURL)
 		dir := getOutputDir(orderInfo.BrowserSSID, filename)
 		s3Key := fmt.Sprintf("%s/%s", orderInfo.BrowserSSID, filename)
 
@@ -93,7 +99,7 @@ func (os *OrderServiceImpl) ProcessOrder(orderInfo *structs.OrderInfo) (structs.
 
 		// Insert into `stl_files` table
 		stlQuery := `INSERT INTO stl_files (browser_ssid, file_name, job_id, quantity) VALUES (?, ?, ?, ?)`
-		if _, err := tx.Exec(stlQuery, orderInfo.BrowserSSID, filename, jobID, quantity); err != nil {
+		if _, err := tx.Exec(stlQuery, orderInfo.BrowserSSID, filename, jobID, item.Quantity); err != nil {
 			return *orderInfo, fmt.Errorf("failed to insert STL file record: %w", err)
 		}
 	}
