@@ -29,7 +29,7 @@ func (m *MockDesignService) ListDesigns() ([]string, error) {
 	return nil, errors.New("designs error")
 }
 
-func (m *MockDesignService) GetFilePath(filename string) string {
+func (m *MockDesignService) GetFilePath(filename string, ssid string) string {
 	if m.GetFilePathFn != nil {
 		return m.GetFilePathFn(filename)
 	}
@@ -124,7 +124,7 @@ func TestGetDesign(t *testing.T) {
 			var tmpPath string
 			mockService := tt.mockService()
 			if tt.filename == "existing.stl" {
-				tmpPath = mockService.GetFilePath(tt.filename)
+				tmpPath = mockService.GetFilePath(tt.filename, "")
 				defer os.Remove(tmpPath)
 			}
 	

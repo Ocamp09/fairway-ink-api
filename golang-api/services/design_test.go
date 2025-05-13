@@ -6,6 +6,7 @@ import (
 	"runtime"
 	"testing"
 
+	"github.com/ocamp09/fairway-ink-api/golang-api/config"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -47,6 +48,8 @@ func TestListDesigns(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.desc, func(t *testing.T) {
+			config.PORT = "5000"
+			
 			var basePath string
 			if tt.setup != nil {
 				basePath = t.TempDir()
@@ -86,7 +89,7 @@ func TestGetFilePath(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.desc, func(t *testing.T) {
 			svc := NewDesignService(tt.basePath, "")
-			assert.Equal(t, tt.expected, svc.GetFilePath(tt.filename))
+			assert.Equal(t, tt.expected, svc.GetFilePath(tt.filename, ""))
 		})
 	}
 }

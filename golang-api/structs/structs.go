@@ -30,6 +30,7 @@ type ShippingInfo struct {
 }
 
 type CartItem struct {
+	ItemID 		 int 	`json:"id"`
 	SSID         string `json:"ssid" binding:"required"`
 	StlURL       string `json:"stlUrl" binding:"required"`
 	Quantity     int    `json:"quantity" binding:"required"`

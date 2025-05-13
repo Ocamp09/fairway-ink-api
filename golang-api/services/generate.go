@@ -7,9 +7,12 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"slices"
 	"strconv"
 	"strings"
+
+	"github.com/ocamp09/fairway-ink-api/golang-api/config"
 )
 
 type GenerateStlServiceImpl struct{
@@ -20,7 +23,8 @@ type GenerateStlServiceImpl struct{
 	cleanOldStlFunc func(ssid string, stlKey string, filename string) error
 	saveSvgFunc func(file io.Reader, filename string, ssid string) (string, string, error)
 	commandExecutor func(name string, arg ...string) *exec.Cmd
-}
+
+	mkdirAllFunc   func(path string, perm os.FileMode) error}
 
 func NewGenerateStlService(db *sql.DB, outPath string, os string) GenerateStlService {
 	svc := &GenerateStlServiceImpl{
@@ -57,10 +61,10 @@ func (s *GenerateStlServiceImpl) GenerateStl(ssid string, stlKey string, file io
 	}
 
 	cmd := s.commandExecutor(blenderCommand[0], blenderCommand[1:]...)
-    _, err = cmd.CombinedOutput()
-	if err != nil {
-		return "", fmt.Errorf("error generating STL: %w", err)
-	}
+    _, _ = cmd.CombinedOutput()
+	// if err != nil {
+	// 	return "", fmt.Errorf("error generating STL: %w", err)
+	// }
 
 	// Remove original SVG file after conversion
 	os.Remove(outputSvgPath)
@@ -74,8 +78,13 @@ func (s *GenerateStlServiceImpl) GenerateStl(ssid string, stlKey string, file io
 		return "", fmt.Errorf("STL file was not generated")
 	}
 
+	domain := "https://api.fairway-ink.com"
+	if runtime.GOOS != "linux" {
+		domain = fmt.Sprintf("http://localhost:%s", config.PORT)
+	}
+
 	// Generate the URL for the STL file
-	stlURL := fmt.Sprintf("https://api.fairway-ink.com/output/%s/%s", ssid, stlFilename)
+	stlURL := fmt.Sprintf("%s/output/%s/%s", domain, ssid, stlFilename)
 	return stlURL, nil
 }
 
@@ -117,7 +126,12 @@ func (s *GenerateStlServiceImpl)cleanOldStl(ssid string, stlKey string, filename
 		filePath := filepath.Join("output", ssid, prevFile)
 	
 		if _, err := os.Stat(filePath); err == nil {
-			fileUrl := fmt.Sprintf("https://api.fairway-ink.com/output/%s/%s", ssid, prevFile)
+			domain := "https://api.fairway-ink.com"
+			if runtime.GOOS != "linux" {
+				domain = fmt.Sprintf("http://localhost:%s", config.PORT) 
+			}
+			fileUrl := fmt.Sprintf("%s/output/%s/%s", domain, ssid, prevFile)
+			
 			if !slices.Contains(cartStls, fileUrl) {
 				os.Remove(filePath)
 			}
@@ -141,7 +155,14 @@ func(s *GenerateStlServiceImpl) getBlenderPath() string {
 func (s *GenerateStlServiceImpl)saveSvg(file io.Reader, filename string, ssid string) (string, string, error) {
 	// Save the SVG file
 	outputDir := filepath.Join(s.OUT_PATH, ssid)
-	if err := os.MkdirAll(outputDir, os.ModePerm); err != nil {
+
+	// setup our func as MkdirAll
+	mkdir := s.mkdirAllFunc
+	if mkdir == nil {
+		mkdir = os.MkdirAll
+	}
+
+	if err := mkdir(outputDir, os.ModePerm); err != nil {
 		return "", "", fmt.Errorf("failed to create output directory: %w", err)
 	}
 

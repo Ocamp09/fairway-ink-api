@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 
@@ -34,6 +35,9 @@ func main() {
 	}
 	defer logger.Sync()
 
+	// load environment
+	config.LoadEnv()
+
 	// initialize db connection
 	db, err := config.ConnectDB()
 	if err != nil {
@@ -45,12 +49,9 @@ func main() {
 	// Apply CORS middleware
 	r.Use(CORSMiddleware())
 
-	// load environment
-	config.LoadEnv()
-
 	// Register routes
 	routes.RegisterRoutes(r, db, logger.Sugar())
 
-	log.Println("Server running on port 5000")
-	r.Run(":5000")
+	log.Printf("Server running on port %s", config.PORT)
+	r.Run(fmt.Sprintf(":%s", config.PORT))
 }

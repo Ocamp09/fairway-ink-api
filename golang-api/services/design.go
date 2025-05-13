@@ -6,6 +6,8 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+
+	"github.com/ocamp09/fairway-ink-api/golang-api/config"
 )
 
 type DesignServiceImpl struct {
@@ -29,7 +31,7 @@ func (ds *DesignServiceImpl) ListDesigns() ([]string, error) {
 			url := fmt.Sprintf("%s/designs/%s", ds.Host, file.Name())
 
 			if runtime.GOOS != "linux" {
-				url = fmt.Sprintf("http://localhost:5000/designs/%s", file.Name())
+				url = fmt.Sprintf("http://localhost:%s/designs/%s", config.PORT, file.Name())
 			}
 			urls = append(urls, url)
 		}
@@ -37,8 +39,8 @@ func (ds *DesignServiceImpl) ListDesigns() ([]string, error) {
 	return urls, nil
 }
 
-func (ds *DesignServiceImpl) GetFilePath(filename string) string {
-	return filepath.Join(ds.BasePath, filename)
+func (ds *DesignServiceImpl) GetFilePath(filename string, ssid string) string {
+	return filepath.Join(ds.BasePath, ssid, filename)
 }
 
 func (ds *DesignServiceImpl) FileExists(path string) bool {
