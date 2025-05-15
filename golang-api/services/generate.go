@@ -7,7 +7,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"runtime"
 	"slices"
 	"strconv"
 	"strings"
@@ -79,7 +78,7 @@ func (s *GenerateStlServiceImpl) GenerateStl(ssid string, stlKey string, file io
 	}
 
 	domain := "https://api.fairway-ink.com"
-	if runtime.GOOS != "linux" {
+	if config.APP_ENV != "prod" {
 		domain = fmt.Sprintf("http://localhost:%s", config.PORT)
 	}
 
@@ -127,7 +126,7 @@ func (s *GenerateStlServiceImpl)cleanOldStl(ssid string, stlKey string, filename
 	
 		if _, err := os.Stat(filePath); err == nil {
 			domain := "https://api.fairway-ink.com"
-			if runtime.GOOS != "linux" {
+			if config.APP_ENV != "prod" {
 				domain = fmt.Sprintf("http://localhost:%s", config.PORT) 
 			}
 			fileUrl := fmt.Sprintf("%s/output/%s/%s", domain, ssid, prevFile)

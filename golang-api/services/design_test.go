@@ -3,7 +3,6 @@ package services
 import (
 	"os"
 	"path/filepath"
-	"runtime"
 	"testing"
 
 	"github.com/ocamp09/fairway-ink-api/golang-api/config"
@@ -25,7 +24,7 @@ func TestListDesigns(t *testing.T) {
 				_ = os.WriteFile(filepath.Join(dir, "other.txt"), []byte("data"), 0644)
 			},
 			expected: func() []string {
-				if runtime.GOOS == "linux" {
+				if config.APP_ENV == "prod" {
 					return []string{
 						"https://example.com/designs/design1_medium.png",
 						"https://example.com/designs/design2_medium.jpg",
