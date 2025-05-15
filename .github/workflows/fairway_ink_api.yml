@@ -3,6 +3,10 @@ on:
   push:
     branches:
       - main
+  pull_request:
+    branches:
+      - main
+      - prod
   workflow_dispatch: #manual trigger for prod
     inputs:
       deploy_to_prod:
@@ -65,32 +69,32 @@ jobs:
       #       ✅ Build & Tests Passed for `${{ github.repository }}` on branch `${{ github.ref_name }}`
       #       Triggered by: `${{ github.actor }}`
 
-  deploy:
-    name: Deploy to EC2 (manual)
-    runs-on: ubuntu-latest
-    needs: test-and-build
-    if: github.event.inputs.deploy_to_prod == 'true'
+  # deploy:
+  #   name: Deploy to EC2 (manual)
+  #   runs-on: ubuntu-latest
+  #   needs: test-and-build
+  #   if: github.event.inputs.deploy_to_prod == 'true'
 
-    steps:
-      - name: Deploy via SSH
-        uses: appleboy/ssh-action@v1.0.0
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.EC2_SSH_KEY }}
-          script: |
-            cd fairway-ink-api/golang-api
-            git fetch
-            git pull
-            go build -o api-binary
-            sudo systemctl restart grpc.service
-            sudo systemctl restart fairway-ink-api.service
+  #   steps:
+  #     - name: Deploy via SSH
+  #       uses: appleboy/ssh-action@v1.0.0
+  #       with:
+  #         host: ${{ secrets.EC2_HOST }}
+  #         username: ${{ secrets.EC2_USER }}
+  #         key: ${{ secrets.EC2_SSH_KEY }}
+  #         script: |
+  #           cd fairway-ink-api/golang-api
+  #           git fetch
+  #           git pull
+  #           go build -o api-binary
+  #           sudo systemctl restart grpc.service
+  #           sudo systemctl restart fairway-ink-api.service
 
-      # - name: Send Discord Notification
-      #   uses: Ilshidur/action-discord@master
-      #   env:
-      #     DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK_URL }}
-      #   with:
-      #     message: |
-      #       🚀 Production deployment triggered for `${{ github.repository }}`
-      #       Services restarted on EC2. Triggered by: `${{ github.actor }}`
+  #     # - name: Send Discord Notification
+  #     #   uses: Ilshidur/action-discord@master
+  #     #   env:
+  #     #     DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK_URL }}
+  #     #   with:
+  #     #     message: |
+  #     #       🚀 Production deployment triggered for `${{ github.repository }}`
+  #     #       Services restarted on EC2. Triggered by: `${{ github.actor }}`
