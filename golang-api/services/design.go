@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"runtime"
 	"strings"
 
 	"github.com/ocamp09/fairway-ink-api/golang-api/config"
@@ -30,7 +29,7 @@ func (ds *DesignServiceImpl) ListDesigns() ([]string, error) {
 		if !file.IsDir() && strings.Contains(file.Name(), "medium") {
 			url := fmt.Sprintf("%s/designs/%s", ds.Host, file.Name())
 
-			if runtime.GOOS != "linux" {
+			if config.APP_ENV != "prod" {
 				url = fmt.Sprintf("http://localhost:%s/designs/%s", config.PORT, file.Name())
 			}
 			urls = append(urls, url)

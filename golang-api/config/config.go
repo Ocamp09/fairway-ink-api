@@ -22,11 +22,17 @@ var (
 	DB_HOST string
 	DB_PORT string
 	DB_NAME string
+	APP_ENV string
 	PORT string
 )
 
 func LoadEnv() {
 	var exists bool
+	APP_ENV, exists = os.LookupEnv("APP_ENV")
+	if !exists {
+		APP_ENV = "dev"
+	}
+	
 	STRIPE_KEY, exists = os.LookupEnv("STRIPE_KEY")
 	if !exists {
 		log.Fatal("Environment variable missing: STRIPE_KEY")

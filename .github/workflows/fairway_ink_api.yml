@@ -1,0 +1,91 @@
+name: fairway-ink-api-pipeline
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch: #manual trigger for prod
+
+jobs:
+  test-and-build:
+    name: Run tests and build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup go
+        uses: actions/setup-go@v4
+        with:
+          go-version: "1.24"
+
+      - name: "Run unit tests"
+        working-directory: golang-api
+        env:
+          STRIPE_KEY: ${{ secrets.STRIPE_KEY }}
+          EASYPOST_KEY: ${{ secrets.EASYPOST_KEY }}
+          STL_S3_BUCKET: ${{ secrets.STL_S3_BUCKET }}
+          S3_REGION: ${{ secrets.S3_REGION }}
+          DB_USER: ${{ secrets.DB_USER }}
+          DB_PSWD: ${{ secrets.DB_PSWD }}
+          DB_HOST: ${{ secrets.DB_HOST }}
+          DB_PORT: ${{ secrets.DB_PORT }}
+          DB_NAME: ${{ secrets.DB_NAME }}
+          PORT: "5000"
+        run: |
+          go test -coverprofile=coverage.out ./...
+
+      - name: Build
+        working-directory: golang-api
+        env:
+          STRIPE_KEY: ${{ secrets.STRIPE_KEY }}
+          EASYPOST_KEY: ${{ secrets.EASYPOST_KEY }}
+          STL_S3_BUCKET: ${{ secrets.STL_S3_BUCKET }}
+          S3_REGION: ${{ secrets.S3_REGION }}
+          DB_USER: ${{ secrets.DB_USER }}
+          DB_PSWD: ${{ secrets.DB_PSWD }}
+          DB_HOST: ${{ secrets.DB_HOST }}
+          DB_PORT: ${{ secrets.DB_PORT }}
+          DB_NAME: ${{ secrets.DB_NAME }}
+          PORT: "5000"
+        run: |
+          go build ./...
+
+      # - name: Send Discord Notification
+      #   uses: Ilshidur/action-discord@master
+      #   env:
+      #     DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK_URL }}
+      #   with:
+      #     message: |
+      #       ✅ Build & Tests Passed for `${{ github.repository }}` on branch `${{ github.ref_name }}`
+      #       Triggered by: `${{ github.actor }}`
+
+  deploy:
+    name: Deploy to EC2 (manual)
+    runs-on: ubuntu-latest
+    needs: test-and-build
+    if: github.event_name == 'workflow_dispatch'
+
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            cd fairway-ink-api/golang-api
+            git fetch
+            git pull
+            go build -o api-binary
+            sudo systemctl restart grpc.service
+            sudo systemctl restart fairway-ink-api.service
+
+      # - name: Send Discord Notification
+      #   uses: Ilshidur/action-discord@master
+      #   env:
+      #     DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK_URL }}
+      #   with:
+      #     message: |
+      #       🚀 Production deployment triggered for `${{ github.repository }}`
+      #       Services restarted on EC2. Triggered by: `${{ github.actor }}`
