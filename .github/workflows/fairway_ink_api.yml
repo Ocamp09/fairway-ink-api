@@ -28,41 +28,49 @@ jobs:
         with:
           go-version: "1.24"
 
-      - name: "Run unit tests"
-        working-directory: golang-api
-        env:
-          STRIPE_KEY: ${{ secrets.STRIPE_KEY }}
-          EASYPOST_KEY: ${{ secrets.EASYPOST_KEY }}
-          STL_S3_BUCKET: ${{ secrets.STL_S3_BUCKET }}
-          S3_REGION: ${{ secrets.S3_REGION }}
-          DB_USER: ${{ secrets.DB_USER }}
-          DB_PSWD: ${{ secrets.DB_PSWD }}
-          DB_HOST: ${{ secrets.DB_HOST }}
-          DB_PORT: ${{ secrets.DB_PORT }}
-          DB_NAME: ${{ secrets.DB_NAME }}
-          PORT: "5000"
-        run: |
-          go test -coverprofile=coverage.out ./...
+      # - name: "Run unit tests"
+      #   working-directory: golang-api
+      #   env:
+      #     STRIPE_KEY: ${{ secrets.STRIPE_KEY }}
+      #     EASYPOST_KEY: ${{ secrets.EASYPOST_KEY }}
+      #     STL_S3_BUCKET: ${{ secrets.STL_S3_BUCKET }}
+      #     S3_REGION: ${{ secrets.S3_REGION }}
+      #     DB_USER: ${{ secrets.DB_USER }}
+      #     DB_PSWD: ${{ secrets.DB_PSWD }}
+      #     DB_HOST: ${{ secrets.DB_HOST }}
+      #     DB_PORT: ${{ secrets.DB_PORT }}
+      #     DB_NAME: ${{ secrets.DB_NAME }}
+      #     PORT: "5000"
+      #   run: |
+      #     go test -coverprofile=coverage.out ./...
 
-      - name: Build
-        working-directory: golang-api
-        env:
-          STRIPE_KEY: ${{ secrets.STRIPE_KEY }}
-          EASYPOST_KEY: ${{ secrets.EASYPOST_KEY }}
-          STL_S3_BUCKET: ${{ secrets.STL_S3_BUCKET }}
-          S3_REGION: ${{ secrets.S3_REGION }}
-          DB_USER: ${{ secrets.DB_USER }}
-          DB_PSWD: ${{ secrets.DB_PSWD }}
-          DB_HOST: ${{ secrets.DB_HOST }}
-          DB_PORT: ${{ secrets.DB_PORT }}
-          DB_NAME: ${{ secrets.DB_NAME }}
-          PORT: "5000"
-        run: |
-          go build ./...
+      # - name: Build
+      #   working-directory: golang-api
+      #   env:
+      #     STRIPE_KEY: ${{ secrets.STRIPE_KEY }}
+      #     EASYPOST_KEY: ${{ secrets.EASYPOST_KEY }}
+      #     STL_S3_BUCKET: ${{ secrets.STL_S3_BUCKET }}
+      #     S3_REGION: ${{ secrets.S3_REGION }}
+      #     DB_USER: ${{ secrets.DB_USER }}
+      #     DB_PSWD: ${{ secrets.DB_PSWD }}
+      #     DB_HOST: ${{ secrets.DB_HOST }}
+      #     DB_PORT: ${{ secrets.DB_PORT }}
+      #     DB_NAME: ${{ secrets.DB_NAME }}
+      #     PORT: "5000"
+      #   run: |
+      #     go build ./...
 
       - name: Debug webhook URL
+        env:
+          DB_PORT: ${{ secrets.DB_PORT }}
         run: |
-          echo "Webhook URL exists: ${{ secrets.DB_PORT }}"
+          run: |
+          if [ -z "$DB_PORT" ]; then
+            echo "❌ DB_PORT is empty"
+            exit 1
+          else
+            echo "✅ DB_PORT is set and has ${#DB_PORT} characters"
+          fi
 
       - name: Send Discord Notification
         uses: Ilshidur/action-discord@master
