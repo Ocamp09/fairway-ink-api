@@ -51,14 +51,14 @@ jobs:
         run: |
           go build ./...
 
-      - name: Send Discord Notification
-        uses: Ilshidur/action-discord@master
-        env:
-          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK_URL }}
-        with:
-          message: |
-            ✅ Build & Tests Passed for `${{ github.repository }}` on branch `${{ github.ref_name }}`
-            Triggered by: `${{ github.actor }}`
+      # - name: Send Discord Notification
+      #   uses: Ilshidur/action-discord@master
+      #   env:
+      #     DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK_URL }}
+      #   with:
+      #     message: |
+      #       ✅ Build & Tests Passed for `${{ github.repository }}` on branch `${{ github.ref_name }}`
+      #       Triggered by: `${{ github.actor }}`
 
   deploy:
     name: Deploy to EC2 (manual)
@@ -81,11 +81,11 @@ jobs:
             sudo systemctl restart grpc.service
             sudo systemctl restart fairway-ink-api.service
 
-      - name: Send Discord Notification
-        uses: Ilshidur/action-discord@master
-        env:
-          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK_URL }}
-        with:
-          message: |
-            🚀 Production deployment triggered for `${{ github.repository }}`
-            Services restarted on EC2. Triggered by: `${{ github.actor }}`
+      # - name: Send Discord Notification
+      #   uses: Ilshidur/action-discord@master
+      #   env:
+      #     DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK_URL }}
+      #   with:
+      #     message: |
+      #       🚀 Production deployment triggered for `${{ github.repository }}`
+      #       Services restarted on EC2. Triggered by: `${{ github.actor }}`
