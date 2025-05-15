@@ -53,8 +53,9 @@ jobs:
 
       - name: Send Discord Notification
         uses: Ilshidur/action-discord@master
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK_URL }}
         with:
-          webhook: ${{ secrets.DISCORD_WEBHOOK_URL }}
           message: |
             ✅ Build & Tests Passed for `${{ github.repository }}` on branch `${{ github.ref_name }}`
             Triggered by: `${{ github.actor }}`
@@ -82,8 +83,9 @@ jobs:
 
       - name: Send Discord Notification
         uses: Ilshidur/action-discord@master
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK_URL }}
         with:
-          webhook: ${{ secrets.DISCORD_WEBHOOK_URL }}
           message: |
             🚀 Production deployment triggered for `${{ github.repository }}`
             Services restarted on EC2. Triggered by: `${{ github.actor }}`
