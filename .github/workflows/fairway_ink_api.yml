@@ -18,6 +18,7 @@ jobs:
   test-and-build:
     name: Run tests and build
     runs-on: ubuntu-latest
+    environment: Pipeline
 
     steps:
       - name: Checkout code
