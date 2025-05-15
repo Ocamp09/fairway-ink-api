@@ -62,7 +62,7 @@ jobs:
 
       - name: Debug webhook URL
         run: |
-          echo "Webhook URL exists: ${{ secrets.DISCORD_WEBHOOK_URL }}"
+          echo "Webhook URL exists: ${{ secrets.DB_PORT }}"
 
       - name: Send Discord Notification
         uses: Ilshidur/action-discord@master
