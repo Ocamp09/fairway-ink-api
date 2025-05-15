@@ -60,6 +60,10 @@ jobs:
         run: |
           go build ./...
 
+      - name: Debug webhook URL
+        run: |
+          echo "Webhook URL exists: ${{ secrets.DISCORD_WEBHOOK_URL != '' }}"
+
       - name: Send Discord Notification
         uses: Ilshidur/action-discord@master
         env:
