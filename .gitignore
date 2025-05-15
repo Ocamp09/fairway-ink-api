@@ -4,7 +4,7 @@
 *.jpg
 *.jpeg
 *.gcode
-!default.stl
+!default*.stl
 .DS_Store
 *.pyc
 venv/
