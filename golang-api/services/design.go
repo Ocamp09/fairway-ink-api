@@ -39,6 +39,16 @@ func (ds *DesignServiceImpl) ListDesigns() ([]string, error) {
 }
 
 func (ds *DesignServiceImpl) GetFilePath(filename string, ssid string) string {
+	// Validate filename
+	if strings.Contains(filename, "/") || strings.Contains(filename, "\\") || strings.Contains(filename, "..") {
+		return ""
+	}
+
+	// Validate ssid
+	if strings.Contains(ssid, "/") || strings.Contains(ssid, "\\") || strings.Contains(ssid, "..") {
+		return ""
+	}
+
 	return filepath.Join(ds.BasePath, ssid, filename)
 }
 

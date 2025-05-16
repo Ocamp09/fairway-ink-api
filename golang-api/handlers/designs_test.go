@@ -67,12 +67,32 @@ func TestGetDesign(t *testing.T) {
 					},
 				}
 			},
-			wantStatus: http.StatusInternalServerError,
+			wantStatus: http.StatusBadRequest,
 			wantLogs: []observer.LoggedEntry{
 				{
 					Entry: zapcore.Entry{
 						Level:   zapcore.ErrorLevel,
 						Message: "file not found",
+					},
+				},
+			},
+		},
+		{
+			desc:     "non-existant filepath",
+			filename: "missing.stl",
+			mockService: func() *MockDesignService {
+				return &MockDesignService{
+					GetFilePathFn: func(filename string) string {
+						return ""
+					},
+				}
+			},
+			wantStatus: http.StatusBadRequest,
+			wantLogs: []observer.LoggedEntry{
+				{
+					Entry: zapcore.Entry{
+						Level:   zapcore.ErrorLevel,
+						Message: "path does not exist",
 					},
 				},
 			},

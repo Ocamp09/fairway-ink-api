@@ -75,22 +75,70 @@ func TestGetFilePath(t *testing.T) {
 		desc     string
 		basePath string
 		filename string
+		ssid 	 string
 		expected string
 	}{
+		{
+			desc:     "Invalid filename, contains /",
+			basePath: "/tmp/designs",
+			filename: "/sample.svg",
+			expected: "",
+		},
+		{
+			desc:     "Invalid filename, contains \\",
+			basePath: "/tmp/designs",
+			filename: "\\sample.svg",
+			expected: "",
+		},
+		{
+			desc:     "Invalid filename, contains ..",
+			basePath: "/tmp/designs",
+			filename: "..sample.svg",
+			expected: "",
+		},
+			{
+			desc:     "Invalid ssid, contains /",
+			basePath: "/tmp/designs",
+			filename: "sample.svg",
+			ssid: "123/",
+			expected: "",
+		},
+		{
+			desc:     "Invalid ssid, contains \\",
+			basePath: "/tmp/designs",
+			filename: "sample.svg",
+			ssid: "123\\",
+			expected: "",
+		},
+		{
+			desc:     "Invalid ssid, contains ..",
+			basePath: "/tmp/designs",
+			filename: "sample.svg",
+			ssid: "123..",
+			expected: "",
+		},
 		{
 			desc:     "returns correct full path",
 			basePath: "/tmp/designs",
 			filename: "sample.svg",
-			expected: filepath.Join("/tmp/designs", "sample.svg"),
+			expected: "\\tmp\\designs\\sample.svg",
+		},
+			{
+			desc:     "returns correct full path w/ ssid",
+			basePath: "/tmp/designs",
+			ssid: "123",
+			filename: "sample.svg",
+			expected: "\\tmp\\designs\\123\\sample.svg",
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.desc, func(t *testing.T) {
-			svc := NewDesignService(tt.basePath, "")
-			assert.Equal(t, tt.expected, svc.GetFilePath(tt.filename, ""))
-		})
-	}
+    // Run invalid path tests
+    for _, tt := range tests {
+        t.Run(tt.desc, func(t *testing.T) {
+            svc := NewDesignService(tt.basePath, "")
+            assert.Equal(t, tt.expected, svc.GetFilePath(tt.filename, tt.ssid))
+        })
+    }
 }
 
 func TestFileExists(t *testing.T) {
