@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/ocamp09/fairway-ink-api/golang-api/config"
+	"github.com/ocamp09/fairway-ink-api/golang-api/utils"
 )
 
 type DesignServiceImpl struct {
@@ -39,13 +40,8 @@ func (ds *DesignServiceImpl) ListDesigns() ([]string, error) {
 }
 
 func (ds *DesignServiceImpl) GetFilePath(filename string, ssid string) string {
-	// Validate filename
-	if strings.Contains(filename, "/") || strings.Contains(filename, "\\") || strings.Contains(filename, "..") {
-		return ""
-	}
-
-	// Validate ssid
-	if strings.Contains(ssid, "/") || strings.Contains(ssid, "\\") || strings.Contains(ssid, "..") {
+	// Validate filename & ssid
+	if !utils.SafeFilepathElement(filename) || !utils.SafeFilepathElement(ssid){
 		return ""
 	}
 

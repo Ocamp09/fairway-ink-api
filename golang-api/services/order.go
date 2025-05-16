@@ -13,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/ocamp09/fairway-ink-api/golang-api/config"
 	"github.com/ocamp09/fairway-ink-api/golang-api/structs"
+	"github.com/ocamp09/fairway-ink-api/golang-api/utils"
 )
 
 type OrderServiceImpl struct {
@@ -90,7 +91,11 @@ func (os *OrderServiceImpl) ProcessOrder(orderInfo *structs.OrderInfo) (structs.
 	// loop through cart items and upload them
 	for _, item := range cartItems {
 		filename := getFilenameFromURL(item.StlURL)
-		dir := getOutputDir(orderInfo.BrowserSSID, filename)
+		dir, err := getOutputDir(orderInfo.BrowserSSID, filename)
+		if err != nil {
+			return *orderInfo, err
+		}
+
 		s3Key := fmt.Sprintf("%s/%s", orderInfo.BrowserSSID, filename)
 
 		if err := uploadToS3(dir + filename, s3Key); err != nil {
@@ -241,10 +246,15 @@ func getFilenameFromURL(url string) string {
 	return parts[len(parts)-1]
 }
 
-func getOutputDir(ssid string, filename string) string {
+func getOutputDir(ssid string, filename string) (string, error) {
+	// Validate filename & ssid
+	if !utils.SafeFilepathElement(filename) || !utils.SafeFilepathElement(ssid){
+		return "", fmt.Errorf("invalid filename or ssid")
+	}
+
 	dir := "./output/" + ssid + "/"
 	if strings.Contains(filename, "design") {
 		dir = "../designs/"
 	}
-	return dir
+	return dir, nil
 }
