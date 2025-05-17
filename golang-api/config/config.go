@@ -32,6 +32,10 @@ func LoadEnv() {
 	if !exists {
 		APP_ENV = "dev"
 	}
+
+	if APP_ENV != "prod" && APP_ENV != "dev" {
+		APP_ENV = "dev"
+	}
 	
 	STRIPE_KEY, exists = os.LookupEnv("STRIPE_KEY")
 	if !exists {

@@ -13,7 +13,12 @@ import (
 
 func CORSMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		c.Writer.Header().Set("Access-Control-Allow-Origin", "*") // Allow all origins
+		ui_domain := "https://fairway-ink.com"
+		if config.APP_ENV == "dev" {
+			ui_domain = "*"
+		}
+
+		c.Writer.Header().Set("Access-Control-Allow-Origin", ui_domain) // Allow only our UI in prod
 		c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
 		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
 

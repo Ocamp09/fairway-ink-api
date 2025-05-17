@@ -26,9 +26,15 @@ func (h *DesignHandler) GetDesign(c *gin.Context) {
 
 	filePath := h.Service.GetFilePath(filename, ssid)
 
+	if filePath == "" {
+		h.Logger.Error("path does not exist")
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid filepath"})
+		return
+	}
+
 	if !h.Service.FileExists(filePath) {
 		h.Logger.Error("file not found")
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "file not found"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "non-existant file"})
 		return
 	}
 
