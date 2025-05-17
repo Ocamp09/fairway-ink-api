@@ -33,7 +33,7 @@ func LoadEnv() {
 		APP_ENV = "dev"
 	}
 
-	if APP_ENV != "prod" || APP_ENV != "dev" {
+	if APP_ENV != "prod" && APP_ENV != "dev" {
 		APP_ENV = "dev"
 	}
 	
