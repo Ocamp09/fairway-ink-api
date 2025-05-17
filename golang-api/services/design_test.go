@@ -121,14 +121,14 @@ func TestGetFilePath(t *testing.T) {
 			desc:     "returns correct full path",
 			basePath: "/tmp/designs",
 			filename: "sample.svg",
-			expected: "\\tmp\\designs\\sample.svg",
+			expected: filepath.Join("/tmp/designs", "sample.svg"),
 		},
 			{
 			desc:     "returns correct full path w/ ssid",
 			basePath: "/tmp/designs",
 			ssid: "123",
 			filename: "sample.svg",
-			expected: "\\tmp\\designs\\123\\sample.svg",
+			expected: filepath.Join("/tmp/designs", "123", "sample.svg"),
 		},
 	}
 
