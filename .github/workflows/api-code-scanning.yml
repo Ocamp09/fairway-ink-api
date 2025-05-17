@@ -1,4 +1,6 @@
 name: Code Scanning - Golang API
+permissions:
+  contents: read
 
 on:
   schedule:

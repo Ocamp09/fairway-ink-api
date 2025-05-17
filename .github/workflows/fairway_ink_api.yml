@@ -1,4 +1,7 @@
 name: fairway-ink-api-pipeline
+permissions:
+  contents: read
+
 on:
   push:
     branches:
