@@ -60,7 +60,7 @@ jobs:
         env:
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK_URL }}
         with:
-          message: |
+          args: |
             ✅ Build & Tests Passed for `${{ github.repository }}` on branch `${{ github.ref_name }}`
             Triggered by: `${{ github.actor }}`
 
