@@ -3,6 +3,7 @@ name: Code Scanning - Golang API
 on:
   schedule:
     - cron: "0 10 * * 1" # Every Monday at 5:00 AM EST (10:00 UTC)
+  workflow_dispatch:
 
 jobs:
   codeql:
