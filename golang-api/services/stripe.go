@@ -10,9 +10,9 @@ import (
 )
 
 const (
-	SOLID_PRICE  = 599
-	TEXT_PRICE   = 599
-	CUSTOM_PRICE = 799 
+	SOLID_PRICE  = 1499
+	TEXT_PRICE   = 1899
+	CUSTOM_PRICE = 1599 
 )
 
 type StripeServiceImpl struct {}
