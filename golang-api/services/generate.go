@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -53,14 +54,58 @@ func (s *GenerateStlServiceImpl) GenerateStl(ssid string, stlKey string, file io
 	blenderPath := s.getBlenderPath()
 
 	outputSvgPath = strings.ReplaceAll(outputSvgPath, "\\", "/")
+
 	blenderCommand := []string{
 		blenderPath,
 		"--background",
-		"--python", "./blender/blender_v1.py", outputSvgPath, scale,
+		"--python", 
+		"./blender/blender_v1.py", 
+		outputSvgPath, 
+		scale,
 	}
-
 	cmd := s.commandExecutor(blenderCommand[0], blenderCommand[1:]...)
     _, _ = cmd.CombinedOutput()
+
+	if (config.APP_ENV == "designs") {
+		nextIndex, err := getNextDesignIndex("./designs")
+		if err != nil {
+			return "", fmt.Errorf("failed to get next STL index: %w", err)
+		}
+		scaleFloat, err := strconv.ParseFloat(scale, 64)
+		if err != nil {
+			return "", fmt.Errorf("invalid scale input: %w", err)
+		}
+		
+		scaleMap := map[string]float64{
+			"xs": scaleFloat * 0.6,
+			"sm": scaleFloat * 0.8,
+			"md": scaleFloat,       // base
+			"lg": scaleFloat * 1.2,
+			"xl": scaleFloat * 1.4,
+		}
+		
+		sizes := []string{"xs", "sm", "md", "lg", "xl"}
+		
+		for _, size := range sizes {
+			adjustedScale := fmt.Sprintf("%.4f", scaleMap[size])
+			stlFilename := fmt.Sprintf("%d_design_%s.stl", nextIndex, size)
+		
+			blenderCommand := []string{
+				blenderPath,
+				"--background",
+				"--python",
+				"./blender/blender_v1.py",
+				outputSvgPath,
+				adjustedScale,
+				stlFilename,
+			}
+		
+			cmd := s.commandExecutor(blenderCommand[0], blenderCommand[1:]...)
+			_, _ = cmd.CombinedOutput()
+		}		
+	}
+
+	
 	// if err != nil {
 	// 	return "", fmt.Errorf("error generating STL: %w", err)
 	// }
@@ -178,3 +223,41 @@ func (s *GenerateStlServiceImpl)saveSvg(file io.Reader, filename string, ssid st
 
 	return strings.ReplaceAll(outputSvgPath, "\\", "/"), outputDir, nil
 }
+
+func getNextDesignIndex(dirPath string) (int, error) {
+	files, err := os.ReadDir(dirPath)
+	if err != nil {
+		return 0, fmt.Errorf("failed to read directory: %w", err)
+	}
+
+	maxIndex := 0
+	for _, file := range files {
+		name := file.Name()
+		log.Print(name)
+		if strings.HasPrefix(name, "_design_") || !strings.Contains(name, "_design_") {
+			log.Print("break1")
+			continue
+		}
+
+		parts := strings.SplitN(name, "_", 2)
+		if len(parts) < 2 {
+			log.Print("break2")
+			continue
+		}
+
+		log.Printf("int: %s", parts[0])
+
+		index, err := strconv.Atoi(parts[0])
+		if err != nil {
+			continue
+		}
+
+		if index > maxIndex {
+			maxIndex = index
+		}
+	}
+
+	log.Print(maxIndex)
+	return maxIndex + 1, nil
+}
+

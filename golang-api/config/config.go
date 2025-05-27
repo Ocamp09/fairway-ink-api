@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"slices"
 
 	_ "github.com/go-sql-driver/mysql"
 
@@ -33,10 +34,11 @@ func LoadEnv() {
 		APP_ENV = "dev"
 	}
 
-	if APP_ENV != "prod" && APP_ENV != "dev" {
+	ALLOWED_ENV := []string{"prod", "dev", "designs"}
+	if !slices.Contains(ALLOWED_ENV, APP_ENV) {
 		APP_ENV = "dev"
 	}
-	
+
 	STRIPE_KEY, exists = os.LookupEnv("STRIPE_KEY")
 	if !exists {
 		log.Fatal("Environment variable missing: STRIPE_KEY")

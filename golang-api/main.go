@@ -14,7 +14,7 @@ import (
 func CORSMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ui_domain := "https://fairway-ink.com"
-		if config.APP_ENV == "dev" {
+		if config.APP_ENV != "prod" {
 			ui_domain = "*"
 		}
 
