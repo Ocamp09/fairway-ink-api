@@ -2,6 +2,7 @@ package routes
 
 import (
 	"database/sql"
+	"net/http"
 	"runtime"
 
 	"github.com/ocamp09/fairway-ink-api/golang-api/config"
@@ -29,6 +30,7 @@ func RegisterRoutes(r *gin.Engine, db *sql.DB, logger *zap.SugaredLogger) {
 	orderHandler := handlers.NewOrderHandler(orderService, stripeClient, logger)
 	checkoutHandler := handlers.NewCheckoutHandler(stripeClient, logger)
 
+	r.GET("/health", func(c *gin.Context) {c.JSON(http.StatusOK, gin.H{"success": true})})
 	r.GET("/designs", designHandler.ListDesigns)
 	r.GET("/designs/:filename", designHandler.GetDesign)
 	r.GET("/output/:ssid/:filename", outputHandler.GetDesign)
