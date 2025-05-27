@@ -104,8 +104,6 @@ func (s *GenerateStlServiceImpl) GenerateStl(ssid string, stlKey string, file io
 			_, _ = cmd.CombinedOutput()
 		}		
 	}
-
-	
 	// if err != nil {
 	// 	return "", fmt.Errorf("error generating STL: %w", err)
 	// }
