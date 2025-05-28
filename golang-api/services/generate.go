@@ -39,7 +39,7 @@ func NewGenerateStlService(db *sql.DB, outPath string, os string) GenerateStlSer
 }
 
 // GenerateStl processes the SVG file, interacts with the database, and runs Blender to generate the STL file
-func (s *GenerateStlServiceImpl) GenerateStl(ssid string, stlKey string, file io.Reader, filename string, scale string) (string, error) {
+func (s *GenerateStlServiceImpl) GenerateStl(ssid string, stlKey string, file io.Reader, filename string, scale string, stlName string) (string, error) {
 	// Clean old files first
 	if err := s.cleanOldStlFunc(ssid, stlKey, filename); err != nil {
 		return "", fmt.Errorf("failed to clean old STL: %w", err)
@@ -88,7 +88,7 @@ func (s *GenerateStlServiceImpl) GenerateStl(ssid string, stlKey string, file io
 		
 		for _, size := range sizes {
 			adjustedScale := fmt.Sprintf("%.4f", scaleMap[size])
-			stlFilename := fmt.Sprintf("%d_design_%s.stl", nextIndex, size)
+			stlFilename := fmt.Sprintf("%d_%s_%s.stl", nextIndex, stlName, size)
 		
 			blenderCommand := []string{
 				blenderPath,

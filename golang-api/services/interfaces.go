@@ -13,7 +13,7 @@ type CartService interface {
 }
 
 type GenerateStlService interface {
-	GenerateStl(ssid string, stlKey string, file io.Reader, filename string, scale string) (string, error)
+	GenerateStl(ssid string, stlKey string, file io.Reader, filename string, scale string, stlName string) (string, error)
 }
 
 type DesignService interface {

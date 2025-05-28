@@ -225,7 +225,7 @@ func TestGenerateStl(t *testing.T) {
                 tt.setupMocks(svc)
             }
 
-            url, err := svc.GenerateStl(tt.ssid, tt.stlKey, tt.file, tt.filename, tt.scale)
+            url, err := svc.GenerateStl(tt.ssid, tt.stlKey, tt.file, tt.filename, tt.scale, "")
 
             if tt.wantErr {
                 assert.Error(t, err)

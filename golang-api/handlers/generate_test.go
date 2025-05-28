@@ -24,12 +24,12 @@ type GeneratePayload struct {
 }
 
 type MockGenerateService struct {
-	GenerateStlFn func(ssid string, stlKey string, file io.Reader, filename string, scale string) (string, error)
+	GenerateStlFn func(ssid string, stlKey string, file io.Reader, filename string, scale string, stlName string) (string, error)
 }
 
-func (m *MockGenerateService) GenerateStl(ssid string, stlKey string, file io.Reader, filename string, scale string) (string, error) {
+func (m *MockGenerateService) GenerateStl(ssid string, stlKey string, file io.Reader, filename string, scale string, stlName string) (string, error) {
 	if m.GenerateStlFn != nil {
-		return m.GenerateStlFn(ssid, stlKey, file, filename, scale)
+		return m.GenerateStlFn(ssid, stlKey, file, filename, scale, stlName)
 	}
 	return "", nil
 }
@@ -87,7 +87,7 @@ func TestGenerateStl(t *testing.T) {
 			request:     GeneratePayload{SSID: "123", Scale: "1", StlKey: "test-key"},
 			mockService: func() *MockGenerateService {
 				return &MockGenerateService{
-					GenerateStlFn: func(ssid, stlKey string, file io.Reader, filename, scale string) (string, error) {
+					GenerateStlFn: func(ssid, stlKey string, file io.Reader, filename, scale string, stlName string) (string, error) {
 						return "", errors.New("unable to generate STL")
 					},
 				}
@@ -109,7 +109,7 @@ func TestGenerateStl(t *testing.T) {
 			request:     GeneratePayload{SSID: "123", Scale: "1", StlKey: "test-key"},
 			mockService: func() *MockGenerateService {
 				return &MockGenerateService{
-					GenerateStlFn: func(ssid, stlKey string, file io.Reader, filename, scale string) (string, error) {
+					GenerateStlFn: func(ssid, stlKey string, file io.Reader, filename, scale string, stlName string) (string, error) {
 						return "successful.stl", nil
 					},
 				}
