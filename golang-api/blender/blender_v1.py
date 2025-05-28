@@ -141,6 +141,8 @@ def main():
 
         # Download the file as STL
         download_path = dir_path / in_file.replace("svg", "stl")
+        if len(sys.argv) == 7:
+            download_path = dir_path / "designs" / sys.argv[6]
         bpy.ops.wm.stl_export(filepath=str(download_path))
         logging.info(f"Exported STL to {download_path}")
 

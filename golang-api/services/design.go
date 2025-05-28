@@ -27,7 +27,7 @@ func (ds *DesignServiceImpl) ListDesigns() ([]string, error) {
 
 	var urls []string
 	for _, file := range files {
-		if !file.IsDir() && strings.Contains(file.Name(), "medium") {
+		if !file.IsDir() && strings.Contains(file.Name(), "md") {
 			url := fmt.Sprintf("%s/designs/%s", ds.Host, file.Name())
 
 			if config.APP_ENV != "prod" {
