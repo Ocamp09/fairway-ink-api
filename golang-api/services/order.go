@@ -98,7 +98,7 @@ func (os *OrderServiceImpl) ProcessOrder(orderInfo *structs.OrderInfo) (structs.
 
 		s3Key := fmt.Sprintf("%s/%s", orderInfo.BrowserSSID, filename)
 
-		if err := uploadToS3(dir + filename, s3Key); err != nil {
+		if err := uploadToS3(dir + filename, s3Key, config.STL_S3_BUCKET); err != nil {
 			return *orderInfo, fmt.Errorf("failed to upload STL file: %w", err)
 		}
 
@@ -208,7 +208,7 @@ func (os *OrderServiceImpl) insertJob(tx *sql.Tx, orderID int64) (int64, error) 
 	return jobID, nil
 }
 
-func uploadToS3(localPath, s3Key string) error {
+func uploadToS3(localPath, s3Key, bucketName string) error {
 	// Initialize AWS session
 	sess, err := aws_session.NewSession(&aws.Config{
 		Region:      aws.String(config.S3_REGION),
@@ -229,7 +229,7 @@ func uploadToS3(localPath, s3Key string) error {
 
 	// Upload the file to S3
 	_, err = s3Client.PutObject(&s3.PutObjectInput{
-		Bucket: aws.String(config.STL_S3_BUCKET),
+		Bucket: aws.String(bucketName),
 		Key:    aws.String(s3Key),
 		Body:   file,
 	})
@@ -253,8 +253,8 @@ func getOutputDir(ssid string, filename string) (string, error) {
 	}
 
 	dir := "./output/" + ssid + "/"
-	if strings.Contains(filename, "design") {
-		dir = "../designs/"
+	if !strings.Contains(filename, "golfball") {
+		dir = "./designs/"
 	}
 	return dir, nil
 }

@@ -16,6 +16,7 @@ var (
 	STRIPE_KEY string
 	EASYPOST_KEY string
 	STL_S3_BUCKET string
+	DESIGN_S3_BUCKET string
 	S3_REGION string
 	SENDER_ADDRESS easypost.Address
 	DB_USER string
@@ -52,6 +53,11 @@ func LoadEnv() {
 	STL_S3_BUCKET, exists = os.LookupEnv("STL_S3_BUCKET")
 	if !exists {
 		log.Fatal("Environment variable missing: STL_S3_BUCKET")
+	}
+
+	DESIGN_S3_BUCKET, exists = os.LookupEnv("DESIGN_S3_BUCKET")
+	if !exists && APP_ENV == "designs" {
+		log.Fatal("Environment variable missing: DESIGN_S3_BUCKET")
 	}
 
 	S3_REGION, exists = os.LookupEnv("S3_REGION")

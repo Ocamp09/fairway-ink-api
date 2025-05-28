@@ -78,13 +78,13 @@ func (s *GenerateStlServiceImpl) GenerateStl(ssid string, stlKey string, file io
 		
 		scaleMap := map[string]float64{
 			"xs": scaleFloat * 0.6,
-			"sm": scaleFloat * 0.8,
+			"sm": scaleFloat * 0.6,
 			"md": scaleFloat,       // base
-			"lg": scaleFloat * 1.2,
+			"lg": scaleFloat * 1.4,
 			"xl": scaleFloat * 1.4,
 		}
 		
-		sizes := []string{"xs", "sm", "md", "lg", "xl"}
+		sizes := []string{"sm", "md", "lg"}
 		
 		for _, size := range sizes {
 			adjustedScale := fmt.Sprintf("%.4f", scaleMap[size])
@@ -102,6 +102,16 @@ func (s *GenerateStlServiceImpl) GenerateStl(ssid string, stlKey string, file io
 		
 			cmd := s.commandExecutor(blenderCommand[0], blenderCommand[1:]...)
 			_, _ = cmd.CombinedOutput()
+
+			dir, err := getOutputDir("", stlFilename)
+			if err != nil {
+				return "", err
+			}
+
+			err = uploadToS3(dir + stlFilename, stlFilename, config.DESIGN_S3_BUCKET)
+			if err != nil {
+				return "", err
+			}
 		}		
 	}
 	// if err != nil {
