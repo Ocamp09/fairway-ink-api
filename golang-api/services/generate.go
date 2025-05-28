@@ -11,6 +11,7 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/ocamp09/fairway-ink-api/golang-api/config"
 )
@@ -67,10 +68,9 @@ func (s *GenerateStlServiceImpl) GenerateStl(ssid string, stlKey string, file io
     _, _ = cmd.CombinedOutput()
 
 	if (config.APP_ENV == "designs") {
-		nextIndex, err := getNextDesignIndex("./designs")
-		if err != nil {
-			return "", fmt.Errorf("failed to get next STL index: %w", err)
-		}
+		currTime := time.Now()
+		currDate := currTime.Format("2006-01-02")
+		
 		scaleFloat, err := strconv.ParseFloat(scale, 64)
 		if err != nil {
 			return "", fmt.Errorf("invalid scale input: %w", err)
@@ -88,7 +88,7 @@ func (s *GenerateStlServiceImpl) GenerateStl(ssid string, stlKey string, file io
 		
 		for _, size := range sizes {
 			adjustedScale := fmt.Sprintf("%.4f", scaleMap[size])
-			stlFilename := fmt.Sprintf("%d_%s_%s.stl", nextIndex, stlName, size)
+			stlFilename := fmt.Sprintf("%s_%s_%s.stl", currDate, stlName, size)
 		
 			blenderCommand := []string{
 				blenderPath,
