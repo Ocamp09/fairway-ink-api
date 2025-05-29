@@ -22,25 +22,28 @@ func NewDesignHandler(service services.DesignService, logger *zap.SugaredLogger)
 
 func (h *DesignHandler) GetDesign(c *gin.Context) {
 	filename := c.Param("filename")
-	ssid := c.Param("ssid") 
+	ssid := c.Param("ssid")
 
-	filePath := h.Service.GetFilePath(filename, ssid)
-
-	if filePath == "" {
-		h.Logger.Error("path does not exist")
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid filepath"})
+	url, err := h.Service.GetPresignedURL(ssid, filename)
+	if err != nil {
+		h.Logger.Errorf("failed to get presigned url: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to generate download link"})
 		return
 	}
 
-	if !h.Service.FileExists(filePath) {
-		h.Logger.Error("file not found")
-		c.JSON(http.StatusBadRequest, gin.H{"error": "non-existant file"})
-		return
-	}
+	c.Redirect(http.StatusTemporaryRedirect, url)
 
-	h.Logger.Info("file found")
-	c.File(filePath)
+	// 	if !h.Service.FileExists(filePath) {
+	// 	h.Logger.Error("file not found")
+	// 	c.JSON(http.StatusBadRequest, gin.H{"error": "non-existant file"})
+	// 	return
+	// }
+
+	// h.Logger.Info("file found")
+	// c.File(filePath)
+
 }
+
 
 // GetDesigns lists all design files in the "designs/" folder
 func (h *DesignHandler) ListDesigns(c *gin.Context) {

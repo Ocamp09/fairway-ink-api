@@ -17,9 +17,8 @@ type GenerateStlService interface {
 }
 
 type DesignService interface {
-	ListDesigns() ([]string, error)
-	GetFilePath(filename string, ssid string) string
-	FileExists(path string) bool
+	ListDesigns() ([]structs.Design, error)
+	GetPresignedURL(ssid, filename string) (string, error)
 }
 
 type OrderService interface {

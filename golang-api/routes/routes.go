@@ -16,8 +16,8 @@ import (
 func RegisterRoutes(r *gin.Engine, db *sql.DB, logger *zap.SugaredLogger) {
 	cartService := services.NewCartService(db)
 	generateService := services.NewGenerateStlService(db, "output", runtime.GOOS)
-	designService := services.NewDesignService("./designs", "https://api.fairway-ink.com")
-	outputService := services.NewDesignService("./output", "https://api.fairway-ink.com")
+	designService := services.NewDesignService(config.DESIGN_S3_BUCKET)
+	outputService := services.NewDesignService(config.STL_S3_BUCKET)
 
 	easypostClient := services.NewEasyPostClient(config.EASYPOST_KEY)
 	stripeClient := services.NewStripeService(config.STRIPE_KEY)

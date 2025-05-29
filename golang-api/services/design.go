@@ -5,47 +5,104 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/ocamp09/fairway-ink-api/golang-api/config"
-	"github.com/ocamp09/fairway-ink-api/golang-api/utils"
+	"github.com/ocamp09/fairway-ink-api/golang-api/structs"
 )
 
 type DesignServiceImpl struct {
-	BasePath string
-	Host     string
+	Bucket string
 }
 
-func NewDesignService(basePath string, host string) DesignService {
-	return &DesignServiceImpl{BasePath: basePath, Host: host}
+func NewDesignService(bucket string) DesignService {
+	return &DesignServiceImpl{Bucket: bucket}
 }
 
-func (ds *DesignServiceImpl) ListDesigns() ([]string, error) {
-	files, err := os.ReadDir(ds.BasePath)
+func (ds *DesignServiceImpl) ListDesigns() ([]structs.Design, error) {
+	sess, err := session.NewSession(&aws.Config{
+		Region: aws.String(config.S3_REGION),
+	})
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to create AWS session: %v", err)
 	}
 
-	var urls []string
-	for _, file := range files {
-		if !file.IsDir() && strings.Contains(file.Name(), "md") {
-			url := fmt.Sprintf("%s/designs/%s", ds.Host, file.Name())
+	s3Client := s3.New(sess)
 
-			if config.APP_ENV != "prod" {
-				url = fmt.Sprintf("http://localhost:%s/designs/%s", config.PORT, file.Name())
-			}
-			urls = append(urls, url)
+	resp, err := s3Client.ListObjectsV2(&s3.ListObjectsV2Input{
+		Bucket: aws.String(ds.Bucket),
+		Prefix: aws.String(""), // optionally filter by prefix
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to list objects: %v", err)
+	}
+
+	designMap := make(map[string]map[string]string) // name -> size -> url
+
+	for _, item := range resp.Contents {
+		key := *item.Key
+		if !strings.HasSuffix(key, ".stl") {
+			continue
 		}
+
+		base := filepath.Base(key)
+		parts := strings.Split(base, "-")
+		if len(parts) < 2 {
+			continue // skip files not matching name-size.stl
+		}
+
+		name := strings.Join(parts[:len(parts)-1], "-")
+		sizePart := strings.TrimSuffix(parts[len(parts)-1], ".stl")
+
+		publicURL := fmt.Sprintf("https://%s.s3.%s.amazonaws.com/%s", ds.Bucket, config.S3_REGION, key)
+
+		if _, ok := designMap[name]; !ok {
+			designMap[name] = make(map[string]string)
+		}
+		designMap[name][sizePart] = publicURL
 	}
-	return urls, nil
+
+	var designs []structs.Design
+	for name, urls := range designMap {
+		designs = append(designs, structs.Design{
+			Name: name,
+			URLs: urls,
+		})
+	}
+
+	return designs, nil
 }
 
-func (ds *DesignServiceImpl) GetFilePath(filename string, ssid string) string {
-	// Validate filename & ssid
-	if !utils.SafeFilepathElement(filename) || !utils.SafeFilepathElement(ssid){
-		return ""
+// GetPresignedURL returns a presigned URL to download a session-specific design
+func (ds *DesignServiceImpl) GetPresignedURL(ssid, filename string) (string, error) {
+	if ssid == "" || filename == "" {
+		return "", fmt.Errorf("ssid or filename missing")
 	}
 
-	return filepath.Join(ds.BasePath, ssid, filename)
+	key := fmt.Sprintf("%s/%s", ssid, filename)
+
+	sess, err := session.NewSession(&aws.Config{
+		Region: aws.String(config.S3_REGION),
+	})
+	if err != nil {
+		return "", fmt.Errorf("failed to create AWS session: %v", err)
+	}
+
+	s3Client := s3.New(sess)
+	req, _ := s3Client.GetObjectRequest(&s3.GetObjectInput{
+		Bucket: aws.String(ds.Bucket),
+		Key:    aws.String(key),
+	})
+
+	urlStr, err := req.Presign(15 * time.Minute)
+	if err != nil {
+		return "", fmt.Errorf("failed to presign URL: %v", err)
+	}
+
+	return urlStr, nil
 }
 
 func (ds *DesignServiceImpl) FileExists(path string) bool {

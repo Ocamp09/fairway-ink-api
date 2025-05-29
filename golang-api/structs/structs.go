@@ -36,3 +36,8 @@ type CartItem struct {
 	Quantity     int    `json:"quantity" binding:"required"`
 	TemplateType string `json:"templateType" binding:"required"`
 }
+
+type Design struct {
+	Name string            `json:"name"`
+	URLs map[string]string `json:"urls"` // size: presigned URL
+}
