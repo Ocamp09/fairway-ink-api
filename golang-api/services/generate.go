@@ -42,9 +42,9 @@ func NewGenerateStlService(db *sql.DB, outPath string, os string) GenerateStlSer
 // GenerateStl processes the SVG file, interacts with the database, and runs Blender to generate the STL file
 func (s *GenerateStlServiceImpl) GenerateStl(ssid string, stlKey string, file io.Reader, filename string, scale string, stlName string) (string, error) {
 	// Clean old files first
-	// if err := s.cleanOldStlFunc(ssid, stlKey, filename); err != nil {
-	// 	return "", fmt.Errorf("failed to clean old STL: %w", err)
-	// }
+	if err := s.cleanOldStlFunc(ssid, stlKey, filename); err != nil {
+		return "", fmt.Errorf("failed to clean old STL: %w", err)
+	}
 
 	outputSvgPath, outputDir, err := s.saveSvgFunc(file, filename, ssid)
 	if err != nil {
