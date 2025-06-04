@@ -82,7 +82,7 @@ func TestListDesigns(t *testing.T) {
 				host = "http://localhost:" + tt.port
 			}
 
-			svc := NewDesignService(basePath, host)
+			svc := NewDesignService(basePath, host, "./output")
 			designs, err := svc.ListDesigns()
 
 			if tt.expectErr {
@@ -161,7 +161,7 @@ func TestGetFilePath(t *testing.T) {
     // Run invalid path tests
     for _, tt := range tests {
         t.Run(tt.desc, func(t *testing.T) {
-            svc := NewDesignService(tt.basePath, "")
+            svc := NewDesignService(tt.basePath, "", "")
             assert.Equal(t, tt.expected, svc.GetFilePath(tt.filename, tt.ssid))
         })
     }
@@ -194,7 +194,7 @@ func TestFileExists(t *testing.T) {
 				_ = os.WriteFile(path, []byte("test"), 0644)
 			}
 
-			svc := NewDesignService(basePath, "")
+			svc := NewDesignService(basePath, "", "./output")
 			assert.Equal(t, tt.expect, svc.FileExists(path))
 		})
 	}

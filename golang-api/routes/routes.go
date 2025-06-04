@@ -16,8 +16,7 @@ import (
 func RegisterRoutes(r *gin.Engine, db *sql.DB, logger *zap.SugaredLogger) {
 	cartService := services.NewCartService(db)
 	generateService := services.NewGenerateStlService(db, "output", runtime.GOOS)
-	designService := services.NewDesignService(config.DESIGN_S3_BUCKET)
-	outputService := services.NewDesignService(config.STL_S3_BUCKET)
+	designService := services.NewDesignService(config.DESIGN_S3_BUCKET, config.HOST, "./output")
 
 	easypostClient := services.NewEasyPostClient(config.EASYPOST_KEY)
 	stripeClient := services.NewStripeService(config.STRIPE_KEY)
@@ -26,13 +25,12 @@ func RegisterRoutes(r *gin.Engine, db *sql.DB, logger *zap.SugaredLogger) {
 	cartHandler := handlers.NewCartHandler(cartService, logger)
 	generateHandler := handlers.NewGenerateHandler(generateService, logger)
 	designHandler := handlers.NewDesignHandler(designService, logger)
-	outputHandler := handlers.NewDesignHandler(outputService, logger)
+	outputHandler := handlers.NewDesignHandler(designService, logger)
 	orderHandler := handlers.NewOrderHandler(orderService, stripeClient, logger)
 	checkoutHandler := handlers.NewCheckoutHandler(stripeClient, logger)
 
 	r.GET("/health", func(c *gin.Context) {c.JSON(http.StatusOK, gin.H{"success": true})})
 	r.GET("/designs", designHandler.ListDesigns)
-	r.GET("/designs/:filename", designHandler.GetDesign)
 	r.GET("/output/:ssid/:filename", outputHandler.GetDesign)
 	r.POST("/upload", handlers.UploadFile)
 	r.POST("/generate", generateHandler.GenerateStl)

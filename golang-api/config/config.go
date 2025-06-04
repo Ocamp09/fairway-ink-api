@@ -25,6 +25,7 @@ var (
 	DB_PORT string
 	DB_NAME string
 	APP_ENV string
+	HOST string
 	PORT string
 )
 
@@ -38,6 +39,16 @@ func LoadEnv() {
 	ALLOWED_ENV := []string{"prod", "dev", "designs"}
 	if !slices.Contains(ALLOWED_ENV, APP_ENV) {
 		APP_ENV = "dev"
+	}
+
+	PORT, exists = os.LookupEnv("PORT")
+	if !exists {
+		PORT="8000"
+	}
+
+	HOST = fmt.Sprintf("http://localhost:%s", PORT)
+	if APP_ENV == "prod" {
+		HOST = "https://api.fairway-ink.com"
 	}
 
 	STRIPE_KEY, exists = os.LookupEnv("STRIPE_KEY")
@@ -63,11 +74,6 @@ func LoadEnv() {
 	S3_REGION, exists = os.LookupEnv("S3_REGION")
 	if !exists {
 		log.Fatal("Environment variable missing: S3_REGION")
-	}
-
-	PORT, exists = os.LookupEnv("PORT")
-	if !exists {
-		PORT="5000"
 	}
 
 	SENDER_ADDRESS = easypost.Address{

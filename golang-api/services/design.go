@@ -5,7 +5,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -16,10 +15,16 @@ import (
 
 type DesignServiceImpl struct {
 	Bucket string
+	Host string
+	OutputPath string
 }
 
-func NewDesignService(bucket string) DesignService {
-	return &DesignServiceImpl{Bucket: bucket}
+func NewDesignService(bucket, host, outputPath string) DesignService {
+	return &DesignServiceImpl{
+		Bucket: bucket, 
+		Host: host, 
+		OutputPath: outputPath,
+	}
 }
 
 func (ds *DesignServiceImpl) ListDesigns() ([]structs.Design, error) {
@@ -45,13 +50,13 @@ func (ds *DesignServiceImpl) ListDesigns() ([]structs.Design, error) {
 	for _, item := range resp.Contents {
 		key := *item.Key
 		if !strings.HasSuffix(key, ".stl") {
-			continue
+			continue // skip files that are not stls
 		}
 
 		base := filepath.Base(key)
-		parts := strings.Split(base, "-")
-		if len(parts) < 2 {
-			continue // skip files not matching name-size.stl
+		parts := strings.Split(base, "_")
+		if len(parts) < 3 {
+			continue // skip files not matching date_name_size.stl
 		}
 
 		name := strings.Join(parts[:len(parts)-1], "-")
@@ -76,33 +81,8 @@ func (ds *DesignServiceImpl) ListDesigns() ([]structs.Design, error) {
 	return designs, nil
 }
 
-// GetPresignedURL returns a presigned URL to download a session-specific design
-func (ds *DesignServiceImpl) GetPresignedURL(ssid, filename string) (string, error) {
-	if ssid == "" || filename == "" {
-		return "", fmt.Errorf("ssid or filename missing")
-	}
-
-	key := fmt.Sprintf("%s/%s", ssid, filename)
-
-	sess, err := session.NewSession(&aws.Config{
-		Region: aws.String(config.S3_REGION),
-	})
-	if err != nil {
-		return "", fmt.Errorf("failed to create AWS session: %v", err)
-	}
-
-	s3Client := s3.New(sess)
-	req, _ := s3Client.GetObjectRequest(&s3.GetObjectInput{
-		Bucket: aws.String(ds.Bucket),
-		Key:    aws.String(key),
-	})
-
-	urlStr, err := req.Presign(15 * time.Minute)
-	if err != nil {
-		return "", fmt.Errorf("failed to presign URL: %v", err)
-	}
-
-	return urlStr, nil
+func (ds *DesignServiceImpl) GetFilePath(filename string, ssid string) string {
+	return filepath.Join(ds.OutputPath, ssid, filename)
 }
 
 func (ds *DesignServiceImpl) FileExists(path string) bool {

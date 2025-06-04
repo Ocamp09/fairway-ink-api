@@ -2,11 +2,14 @@ package handlers
 
 import (
 	"net/http"
+	"path/filepath"
 
 	"github.com/gin-gonic/gin"
 	"github.com/ocamp09/fairway-ink-api/golang-api/services"
 	"go.uber.org/zap"
 )
+
+var OUTPUT_FOLDER string = "./output"
 
 type DesignHandler struct {
 	Service services.DesignService
@@ -23,24 +26,16 @@ func NewDesignHandler(service services.DesignService, logger *zap.SugaredLogger)
 func (h *DesignHandler) GetDesign(c *gin.Context) {
 	filename := c.Param("filename")
 	ssid := c.Param("ssid")
+	filePath := filepath.Join(OUTPUT_FOLDER, ssid, filename)
 
-	url, err := h.Service.GetPresignedURL(ssid, filename)
-	if err != nil {
-		h.Logger.Errorf("failed to get presigned url: %v", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to generate download link"})
+	if !h.Service.FileExists(filePath) {
+		h.Logger.Error("file not found")
+		c.JSON(http.StatusBadRequest, gin.H{"error": "non-existant file"})
 		return
 	}
 
-	c.Redirect(http.StatusTemporaryRedirect, url)
-
-	// 	if !h.Service.FileExists(filePath) {
-	// 	h.Logger.Error("file not found")
-	// 	c.JSON(http.StatusBadRequest, gin.H{"error": "non-existant file"})
-	// 	return
-	// }
-
-	// h.Logger.Info("file found")
-	// c.File(filePath)
+	h.Logger.Info("file found")
+	c.File(filePath)
 
 }
 
