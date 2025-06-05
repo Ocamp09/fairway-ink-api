@@ -11,36 +11,36 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/ocamp09/fairway-ink-api/golang-api/config"
 	"github.com/ocamp09/fairway-ink-api/golang-api/structs"
+	"github.com/ocamp09/fairway-ink-api/golang-api/utils"
 )
 
 type DesignServiceImpl struct {
 	Bucket string
 	Host string
 	OutputPath string
+	s3Client   S3API
 }
 
 func NewDesignService(bucket, host, outputPath string) DesignService {
+	sess, _ := session.NewSession(&aws.Config{
+		Region: aws.String(config.S3_REGION),
+	})
+	
 	return &DesignServiceImpl{
-		Bucket: bucket, 
-		Host: host, 
+		Bucket:     bucket,
+		Host:       host,
 		OutputPath: outputPath,
+		s3Client:   s3.New(sess),
 	}
 }
 
+
 func (ds *DesignServiceImpl) ListDesigns() ([]structs.Design, error) {
-	sess, err := session.NewSession(&aws.Config{
-		Region: aws.String(config.S3_REGION),
-	})
-	if err != nil {
-		return nil, fmt.Errorf("failed to create AWS session: %v", err)
-	}
-
-	s3Client := s3.New(sess)
-
-	resp, err := s3Client.ListObjectsV2(&s3.ListObjectsV2Input{
+	resp, err := ds.s3Client.ListObjectsV2(&s3.ListObjectsV2Input{
 		Bucket: aws.String(ds.Bucket),
-		Prefix: aws.String(""), // optionally filter by prefix
+		Prefix: aws.String(""),
 	})
+
 	if err != nil {
 		return nil, fmt.Errorf("failed to list objects: %v", err)
 	}
@@ -82,6 +82,11 @@ func (ds *DesignServiceImpl) ListDesigns() ([]structs.Design, error) {
 }
 
 func (ds *DesignServiceImpl) GetFilePath(filename string, ssid string) string {
+	// Validate filename & ssid
+	if !utils.SafeFilepathElement(filename) || !utils.SafeFilepathElement(ssid){
+		return ""
+	}
+	
 	return filepath.Join(ds.OutputPath, ssid, filename)
 }
 

@@ -5,95 +5,100 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/ocamp09/fairway-ink-api/golang-api/config"
+	"github.com/ocamp09/fairway-ink-api/golang-api/structs"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 )
 
-func TestListDesigns(t *testing.T) {
-	originalPort := config.PORT
-	originalEnv := config.APP_ENV
-	defer func() {
-		config.PORT = originalPort
-		config.APP_ENV = originalEnv
-	}()
+func newTestDesignServiceWithMock(bucket, host, outputPath string, mockS3 S3API) *DesignServiceImpl {
+	return &DesignServiceImpl{
+		Bucket:     bucket,
+		Host:       host,
+		OutputPath: outputPath,
+		s3Client:   mockS3,
+	}
+}
+type MockS3Client struct {
+	mock.Mock
+}
 
+func (m *MockS3Client) ListObjectsV2(input *s3.ListObjectsV2Input) (*s3.ListObjectsV2Output, error) {
+	args := m.Called(input)
+	return args.Get(0).(*s3.ListObjectsV2Output), args.Error(1)
+}
+
+
+func TestListDesigns(t *testing.T) {
 	tests := []struct {
-		desc      string
-		setup     func(dir string)
-		appEnv    string
-		port      string
-		expected  []string
-		expectErr bool
+		desc       string
+		mockOutput *s3.ListObjectsV2Output
+		mockErr    error
+		expected   []structs.Design
+		expectErr  bool
 	}{
 		{
-			desc: "successfully returns list of designs in non-prod env",
-			setup: func(dir string) {
-				_ = os.WriteFile(filepath.Join(dir, "design1_md.png"), []byte("data"), 0644)
-				_ = os.WriteFile(filepath.Join(dir, "design2_md.jpg"), []byte("data"), 0644)
-				_ = os.WriteFile(filepath.Join(dir, "other.txt"), []byte("data"), 0644)
+			desc: "successfully returns structured designs",
+			mockOutput: &s3.ListObjectsV2Output{
+				Contents: []*s3.Object{
+					{Key: aws.String("2024-06-01_design1_md.stl")},
+					{Key: aws.String("2024-06-01_design1_lg.stl")},
+					{Key: aws.String("2024-06-02_design2_sm.stl")},
+					{Key: aws.String("README.md")}, // should be skipped
+				},
 			},
-			appEnv: "dev",
-			port:   "8000",
-			expected: []string{
-				"http://localhost:8000/designs/design1_md.png",
-				"http://localhost:8000/designs/design2_md.jpg",
+			mockErr: nil,
+			expected: []structs.Design{
+				{
+					Name: "2024-06-01-design1",
+					URLs: map[string]string{
+						"md": "https://my-bucket.s3.us-east-1.amazonaws.com/2024-06-01_design1_md.stl",
+						"lg":  "https://my-bucket.s3.us-east-1.amazonaws.com/2024-06-01_design1_lg.stl",
+					},
+				},
+				{
+					Name: "2024-06-02-design2",
+					URLs: map[string]string{
+						"sm": "https://my-bucket.s3.us-east-1.amazonaws.com/2024-06-02_design2_sm.stl",
+					},
+				},
 			},
 			expectErr: false,
 		},
 		{
-			desc: "successfully returns list of designs in prod env",
-			setup: func(dir string) {
-				_ = os.WriteFile(filepath.Join(dir, "design1_md.png"), []byte("data"), 0644)
-				_ = os.WriteFile(filepath.Join(dir, "design2_md.jpg"), []byte("data"), 0644)
-			},
-			appEnv: "prod",
-			port:   "443", // doesn't matter in prod path
-			expected: []string{
-				"https://example.com/designs/design1_md.png",
-				"https://example.com/designs/design2_md.jpg",
-			},
-			expectErr: false,
-		},
-		{
-			desc:      "returns error when directory does not exist",
-			setup:     nil,
-			appEnv:    "dev",
-			port:      "8000",
-			expected:  nil,
-			expectErr: true,
+			desc:       "returns error from s3 client",
+			mockOutput: nil,
+			mockErr:    assert.AnError,
+			expected:   nil,
+			expectErr:  true,
 		},
 	}
 
+	config.S3_REGION = "us-east-1"
+
 	for _, tt := range tests {
 		t.Run(tt.desc, func(t *testing.T) {
-			config.PORT = tt.port
-			config.APP_ENV = tt.appEnv
+			mockS3 := new(MockS3Client)
+			mockS3.On("ListObjectsV2", mock.AnythingOfType("*s3.ListObjectsV2Input")).
+				Return(tt.mockOutput, tt.mockErr)
 
-			var basePath string
-			if tt.setup != nil {
-				basePath = t.TempDir()
-				tt.setup(basePath)
-			} else {
-				basePath = "/nonexistent/path"
-			}
+			svc := newTestDesignServiceWithMock("my-bucket", "https://my-bucket", "./output", mockS3)
 
-			host := "https://example.com"
-			if tt.appEnv != "prod" {
-				host = "http://localhost:" + tt.port
-			}
-
-			svc := NewDesignService(basePath, host, "./output")
-			designs, err := svc.ListDesigns()
+			result, err := svc.ListDesigns()
 
 			if tt.expectErr {
 				assert.Error(t, err)
 			} else {
 				assert.NoError(t, err)
-				assert.ElementsMatch(t, tt.expected, designs)
+				assert.Equal(t, tt.expected, result)
 			}
+			mockS3.AssertExpectations(t)
 		})
 	}
 }
+
 
 
 func TestGetFilePath(t *testing.T) {
@@ -161,7 +166,7 @@ func TestGetFilePath(t *testing.T) {
     // Run invalid path tests
     for _, tt := range tests {
         t.Run(tt.desc, func(t *testing.T) {
-            svc := NewDesignService(tt.basePath, "", "")
+            svc := NewDesignService(tt.basePath, "", tt.basePath)
             assert.Equal(t, tt.expected, svc.GetFilePath(tt.filename, tt.ssid))
         })
     }

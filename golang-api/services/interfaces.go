@@ -4,6 +4,7 @@ import (
 	"io"
 
 	"github.com/EasyPost/easypost-go/v4"
+	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/ocamp09/fairway-ink-api/golang-api/structs"
 	"github.com/stripe/stripe-go/v75"
 )
@@ -21,6 +22,11 @@ type DesignService interface {
 	GetFilePath(filename string, ssid string) string
 	FileExists(path string) bool
 }
+
+type S3API interface {
+	ListObjectsV2(input *s3.ListObjectsV2Input) (*s3.ListObjectsV2Output, error)
+}
+
 
 type OrderService interface {
 	ProcessOrder(orderInfo *structs.OrderInfo) (structs.OrderInfo, error)
