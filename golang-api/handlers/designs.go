@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"net/http"
-	"path/filepath"
 
 	"github.com/gin-gonic/gin"
 	"github.com/ocamp09/fairway-ink-api/golang-api/services"
@@ -26,7 +25,13 @@ func NewDesignHandler(service services.DesignService, logger *zap.SugaredLogger)
 func (h *DesignHandler) GetDesign(c *gin.Context) {
 	filename := c.Param("filename")
 	ssid := c.Param("ssid")
-	filePath := filepath.Join(OUTPUT_FOLDER, ssid, filename)
+
+	filePath := h.Service.GetFilePath(filename, ssid)
+	if filePath == "" {
+		h.Logger.Error("path does not exist")
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid filepath"})
+		return
+	}
 
 	if !h.Service.FileExists(filePath) {
 		h.Logger.Error("file not found")
