@@ -47,6 +47,7 @@ func TestListDesigns(t *testing.T) {
 					{Key: aws.String("2024-06-01_design1_lg.stl")},
 					{Key: aws.String("2024-06-02_design2_sm.stl")},
 					{Key: aws.String("README.md")}, // should be skipped
+					{Key: aws.String("test.stl")},
 				},
 			},
 			mockErr: nil,
