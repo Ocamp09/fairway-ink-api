@@ -1,5 +1,5 @@
 # Dockerfile
-FROM mysql:8.3
+FROM mysql:8.4.6
 
 ENV MYSQL_DATABASE=fairway_ink
 ENV MYSQL_ROOT_PASSWORD=pwd
